@@ -25,30 +25,56 @@ class Token:
     def get_lexeme(self):
         return self._lexeme
 
+class State:
+    def __init__(self, next_chk_list, acc):
+        self._next_state = next_chk_list # [ ( sig_estado, loop, lambda_checkeo ) , ... ] <-- se asume que check da True para un solo posible char de entrada en toda la lista
+        self.accepts = acc
+
+    def check(self, ch):
+        for (next, loop, chk) in self._next_state:
+            if chk() and next != None:
+                return next
+            elif chk():
+                return self
+
+        return None
+
+    def proc(self, ch):
+        nst = self.check(ch)
+        # si es aceptador y se termino lo buscado ent retorna todo bien
+        if self.accepts and nst == None:
+            return None
+        # si hay una transicion siguiente
+        # ya sea porque no acepta o porque todavia queda algo del token por leer
+        # retorna el estado por el que hay que seguir
+        elif nst != None:
+            return nst
+        # sino algo malo paso
+        else:
+            raise Exception("error")
+
 class Lexor:
     # States
-    self.ST_INITIAL        = 0
-    self.ST_IDENTIFIER     = 1
-    self.ST_ESCAPE_CHAR    = 2
-    self.ST_ZERO_LITERAL   = 3
-    self.ST_INT_LITERAL    = 4
-    self.ST_CHAR_LITERAL   = 5
-    self.ST_CHAR_1         = 6
-    self.ST_CHAR_2         = 7
-    self.ST_CHAR_3         = 8
-    self.ST_STRING_LITERAL = 9
-    self.ST_STRING_1       = 10
-    self.ST_STRING_2       = 11
-    self.ST_EOF            = 12
+    # se definen los estados al reves, primero vamos por los terminales hacia el inicial
+    # proque ahora necesitamos el estado siguiente para definir el actual, salvo qeu sea terminal
+    self._check_IDENTIFIER = lambda c: return c in string.letters+"_$"
+    self.ST_IDENTIFIER = State([(None, True, self._check_IDENTIFIER), # el siguiente estado es un loop que va a si mismo (por eso el None) si se da check
+                                 (None, False, lambda c: not self._checl_IDENTIFIER(c))], # o finaliza si se da lo contrario de check
+                                True) # si esto estuviera en False, el caso de arriba daria un error
 
-    self._acceptors = [ self.ST_IDENTIFIER
-                      , self.ST_ESCAPE_CHAR 
-                      , self.ST_ZERO_LITERAL
-                      , self.ST_INT_LITERAL 
-                      , self.ST_CHAR_LITERAL  
-                      , self.ST_STRING_LITERAL
-                      , self.ST_EOF           
-                      ]
+    self._check_ZERO = lambda c: return c == "0"
+    self.ST_ZERO_LITERAL = State([(None, True, self._check_IDENTIFIER),
+                                  (None, False, lambda c: not self._check_ZERO(c))],
+                                 True)
+
+    self._check_INT = lambda c: return c in range(1,10)
+    self.ST_INT_LITERAL = State([(None, True, self._check_INT),
+                                 (None, False, lambda c: not self._check_INT(c))],
+                                True)
+
+    self.ST_INITIAL = State([(self.ST_IDENTIFIER, False, self._check_IDENTIFIER),
+                          (self.ST_ZERO_LITERAL, False, self._check_ZERO)],
+                          False)
 
     self._whitespace = frozenset([ " ", "\n", "\r", "\t" ])
 
@@ -56,69 +82,36 @@ class Lexor:
         self._cursor = 0
         self._line   = 1
         self._col    = 0
-        self._state  = self.INITIAL
+        self._state  = self.ST_INITIAL
         self._current_token = Token()
         self._current_char  = ""
 
     def get_token(self):
-        self._state = self.INITIAL
-        while (True):
+        # todas las vueltas, se empieza desde el estado inicial
+        self._state = self.ST_INITIAL
+        # se limpia el token
+        self._current_token = Token()
+        # si es el primer token, levanta un char
+        if self._current_char == "":
             self._current_char = self._next_char()
-            if   ((self._state == self.INITIAL) and (self._current_char in string.letters + "_$"))):
-                print "state:", self._state, " current_char:", self._current_char
-                self._state = self.ST_IDENTIFIER
-                self._current_token.append(self._current_char)
-            #elif ((self._state == self.INITIAL) and (self._current_char in ". \t\n\r")):
-            #    self._state = self.ST_ESCAPE_CHAR
-            #    self._current_token.append(self._current_char)
-            elif ((self._state == self.INITIAL) and (self._current_char in "0")):
-                self._state = self.ST_ZERO_LITERAL
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.INITIAL) and (self._current_char in "123456789")):
-                self._state = self.ST_INT_LITERAL
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.INITIAL) and (self._current_char in "\'")):
-                self._state = self.ST_CHAR_1
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.INITIAL) and (self._current_char in "\"")):
-                self._state = self.ST_STRING_1
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.INITIAL) and (self._current_char in "")):
-                self._state = self.ST_EOF
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.ST_IDENTIFIER) and (self._current_char not in self._whitespace) and (self._current_char in string.letters + "_$")):
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.ST_IDENTIFIER) and (self._current_char in self._whitespace)):
-                return self._current_token
-            #elif (self._state == self.ST_ESCAPE_CHAR):
-            #    return self._current_token
-            elif ((self._state == self.ST_) and (self._current_char in )):
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.) and (self._current_char in )):
-                self._current_token.append(self._current_char)
-            elif ((self._state == self.) and (self._current_char in )):
-                self._current_token.append(self._current_char)
-                return self._current_token
-            else:
-                raise LexicalException(self._current_token)
-
-        if self._state in self._acceptors:
+        # dado este caracter, decime si hay una transicion posible
+        # y devolveme el estado al que saltar
+        self._state = self._state.proc(self._current_char)
+        # mientras exista un estado al cual saltar
+        while self._state != None:
+            # entonces el char leido es valido, appendealo al token actual
+            self._current_token.append(self._current_char)
+            # agarra un char nuevo
+            self._current_char = self._next_char()
+            # y fijate si hay un siguiente estado
+            self._state = self._state.proc(self._current_char)
+        # si es none, y todavia estamos aca, es porque acepto
+        if self._state == None:
             return self._current_token
-        else:
-            self._current_char = self._next_char()
-            try:
-                new_state = self._transitions[self._state][self._current_char]
-                self._current_token.append(self._current_char):
-                return self._states[trans_new_state[1]]()
-            except:
-                raise LexicalException(self._current_token)
-    
+   
     def _next_char(self):
         # eat self._whitespace
         # increment self._line when \n is found and set self._col = 0
         # increment self._col otherwise
         # blabla yield char
         pass
-
-    def _initial(self):
-       pass 
