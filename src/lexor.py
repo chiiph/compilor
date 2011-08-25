@@ -3,7 +3,7 @@ from states import *
 
 import os
 
-class Token:
+class Token(object):
     def __init__(self):
         self._lexeme = ""
         self._line   = 1
@@ -28,7 +28,7 @@ class Token:
     def __str__(self):
         return "%d:%d\t-\t%s\t:: %s" % (self._line, self._col, self._type, self._lexeme)
 
-class Lexor:
+class Lexor(object):
     _whitespace = frozenset([ " ", "\n", "\r", "\t" ])
 
     def __init__(self, file_path):
