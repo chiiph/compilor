@@ -64,13 +64,13 @@ class Lexor:
             print "EOF!"
             return self._current_token
 
-        self._state = self._state.proc(self._current_char)
+        self._state = self._state.proc(self._current_char, self._line, self._col)
         while self._state != None:
             self._current_token.append(self._current_char)
             self._current_token._type = self._state.get_token_type()
 
             self._current_char = self._next_char()
-            self._state = self._state.proc(self._current_char)
+            self._state = self._state.proc(self._current_char, self._line, self._col)
 
         if self._current_token.get_lexeme() in reserved_words.keys():
             self._current_token._type = reserved_words[self._current_token.get_lexeme()]

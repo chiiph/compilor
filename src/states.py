@@ -36,8 +36,7 @@ class State(object):
             return nst
         # sino algo malo paso
         else:
-            print nst, self.accepts, self._token_type, repr(ch)
-            raise LexicalError(line,col)
+            raise LexicalError(line, col)
 
     def get_token_type(self):
         return self._token_type
