@@ -1,10 +1,6 @@
 from constants import *
 from states import *
 
-class LexicalError(Exception):
-    def __init__(self, line, col):
-        self.message = "ERROR: Line: %d, Col: %d :: Unrecognize token." % (line, col)
-
 class Token:
     def __init__(self):
         self._lexeme = ""
