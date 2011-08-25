@@ -1,10 +1,9 @@
 from constants import *
+from states import *
 
 class LexicalError(Exception):
-    def __init__(self, tok):
-        self.message = "ERROR: Line: %d, Col: %d :: Unrecognize expression: %s" % (tok.get_line(), 
-                                                                                   tok.get_col(),
-                                                                                   tok.get_lexeme())
+    def __init__(self, line, col):
+        self.message = "ERROR: Line: %d, Col: %d :: Unrecognize token." % (line, col)
 
 class Token:
     def __init__(self):
@@ -25,93 +24,73 @@ class Token:
     def get_lexeme(self):
         return self._lexeme
 
-class State:
-    def __init__(self, next_chk_list, acc):
-        self._next_state = next_chk_list # [ ( sig_estado, loop, lambda_checkeo ) , ... ] <-- se asume que check da True para un solo posible char de entrada en toda la lista
-        self.accepts = acc
+    def get_type(self):
+        return self._type
 
-    def check(self, ch):
-        for (next, loop, chk) in self._next_state:
-            if chk() and next != None:
-                return next
-            elif chk():
-                return self
-
-        return None
-
-    def proc(self, ch):
-        nst = self.check(ch)
-        # si es aceptador y se termino lo buscado ent retorna todo bien
-        if self.accepts and nst == None:
-            return None
-        # si hay una transicion siguiente
-        # ya sea porque no acepta o porque todavia queda algo del token por leer
-        # retorna el estado por el que hay que seguir
-        elif nst != None:
-            return nst
-        # sino algo malo paso
-        else:
-            raise Exception("error")
+    def __str__(self):
+        return "%d:%d - %d :: %s" % (self._line, self._col, self._type, self._lexeme)
 
 class Lexor:
-    # States
-    # se definen los estados al reves, primero vamos por los terminales hacia el inicial
-    # proque ahora necesitamos el estado siguiente para definir el actual, salvo qeu sea terminal
-    self._check_IDENTIFIER = lambda c: return c in string.letters+"_$"
-    self.ST_IDENTIFIER = State([(None, True, self._check_IDENTIFIER), # el siguiente estado es un loop que va a si mismo (por eso el None) si se da check
-                                 (None, False, lambda c: not self._checl_IDENTIFIER(c))], # o finaliza si se da lo contrario de check
-                                True) # si esto estuviera en False, el caso de arriba daria un error
+    _whitespace = frozenset([ " ", "\n", "\r", "\t" ])
 
-    self._check_ZERO = lambda c: return c == "0"
-    self.ST_ZERO_LITERAL = State([(None, True, self._check_IDENTIFIER),
-                                  (None, False, lambda c: not self._check_ZERO(c))],
-                                 True)
-
-    self._check_INT = lambda c: return c in range(1,10)
-    self.ST_INT_LITERAL = State([(None, True, self._check_INT),
-                                 (None, False, lambda c: not self._check_INT(c))],
-                                True)
-
-    self.ST_INITIAL = State([(self.ST_IDENTIFIER, False, self._check_IDENTIFIER),
-                          (self.ST_ZERO_LITERAL, False, self._check_ZERO)],
-                          False)
-
-    self._whitespace = frozenset([ " ", "\n", "\r", "\t" ])
-
-    def __init__(self):
+    def __init__(self, file_path):
         self._cursor = 0
         self._line   = 1
         self._col    = 0
-        self._state  = self.ST_INITIAL
+        self._state  = ST_INITIAL
         self._current_token = Token()
         self._current_char  = ""
+        self._file_path = file_path
+        self._file = open(self._file_path, "r")
+        self._one_sep = False
 
     def get_token(self):
-        # todas las vueltas, se empieza desde el estado inicial
-        self._state = self.ST_INITIAL
-        # se limpia el token
+        self._state = ST_INITIAL
         self._current_token = Token()
-        # si es el primer token, levanta un char
-        if self._current_char == "":
+
+        if len(self._current_char) == 0:
             self._current_char = self._next_char()
-        # dado este caracter, decime si hay una transicion posible
-        # y devolveme el estado al que saltar
+
+        self._current_token._line = self._line
+        self._current_token._col = self._col
+
+        # si a esta altura el current_char es "" entonces estamos
+        # en EOF
+        if len(self._current_char) == 0:
+            # TODO: cambiar por un set_type()
+            self._current_token._type = EOF
+            print "EOF!"
+            return self._current_token
+
         self._state = self._state.proc(self._current_char)
-        # mientras exista un estado al cual saltar
         while self._state != None:
-            # entonces el char leido es valido, appendealo al token actual
             self._current_token.append(self._current_char)
-            # agarra un char nuevo
+            self._current_token._type = self._state.get_token_type()
+
             self._current_char = self._next_char()
-            # y fijate si hay un siguiente estado
+
             self._state = self._state.proc(self._current_char)
-        # si es none, y todavia estamos aca, es porque acepto
+
         if self._state == None:
             return self._current_token
-   
+
     def _next_char(self):
-        # eat self._whitespace
-        # increment self._line when \n is found and set self._col = 0
-        # increment self._col otherwise
-        # blabla yield char
-        pass
+        ch = self._file.read(1)
+        self._col += 1
+
+        if ch in self._whitespace and not self._one_sep:
+            self._one_sep = True
+            if ch == "\n":
+                self._line += 1
+                self._col = 0
+            return " "
+
+        while ch in self._whitespace:
+            if ch == "\n":
+                self._line += 1
+                self._col = 0
+            ch = self._file.read(1)
+            self._col += 1
+
+        self._one_sep = False
+        return ch

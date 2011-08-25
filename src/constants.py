@@ -42,4 +42,5 @@ MUL = 40
 DIV = 41
 MOD = 42
 NOT = 43
-EOF = 44
+ACCESOR = 44
+EOF = 45
