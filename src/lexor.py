@@ -26,7 +26,7 @@ class Token:
         return self._type
 
     def __str__(self):
-        return "%d:%d - %s :: %s" % (self._line, self._col, self._type, self._lexeme)
+        return "%d:%d\t-\t%s\t:: %s" % (self._line, self._col, self._type, self._lexeme)
 
 class Lexor:
     _whitespace = frozenset([ " ", "\n", "\r", "\t" ])
@@ -108,14 +108,17 @@ class Lexor:
             self._col = 0
             ch = self._next_char()
         elif ch == "/" and ch2 == "*":
-            print "THE OTHER COMMENT"
+            init_col = self._col
+            init_line = self._line
             ch = self._file.read(1)
             self._col += 1
             while True:
                 while ch != "*":
                     ch = self._next_char()
                     if len(ch) == 0:
-                        raise LexicalError(0,0)
+                        raise LexicalError(self._line, self._col,
+                                           "Comentario no cerrado :: Comienza en la linea %d, columna %d" % (init_line,
+                                                                                                             init_col))
                 ch = self._file.read(1)
                 self._col += 1
                 if ch == "/":

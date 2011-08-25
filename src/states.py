@@ -1,10 +1,7 @@
 import string
 
 from constants import *
-
-class LexicalError(Exception):
-    def __init__(self, line, col):
-        self.message = "ERROR: Line: %d, Col: %d :: Unrecognize token." % (line, col)
+from errors import *
 
 class State(object):
     def __init__(self, next_chk_list, acc, tok_type):
@@ -24,7 +21,7 @@ class State(object):
 
         return None
 
-    def proc(self, ch):
+    def proc(self, ch, line = 0, col = 0):
         if len(ch) == 0 and not self.accepts:
             raise LexicalError(0,0)
 
@@ -40,7 +37,7 @@ class State(object):
         # sino algo malo paso
         else:
             print nst, self.accepts, self._token_type, repr(ch)
-            raise LexicalError(0,0)
+            raise LexicalError(line,col)
 
     def get_token_type(self):
         return self._token_type
