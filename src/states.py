@@ -100,12 +100,12 @@ _check_PAREN_CLOSE = lambda c: c == ")"
 ST_PAREN_CLOSE = State([], True, PAREN_CLOSE)
 
 _check_LT = lambda c: c == "<"
-ST_LT = State([(ST_LT_EQ, False, _check_EQUALS)], True, LT)
 ST_LT_EQ = State([], True, LT_EQ)
+ST_LT = State([(ST_LT_EQ, False, _check_EQUALS)], True, LT)
 
 _check_GT = lambda c: c == ">"
+ST_GT_EQ = State([], True, GT_EQ)
 ST_GT = State([(ST_GT_EQ, False, _check_EQUALS)], True, GT)
-ST_GT_EQ = State([], True, LT_EQ)
 
 _check_ADD = lambda c: c == "+"
 ST_ADD = State([], True, ADD)
@@ -123,8 +123,8 @@ _check_MOD = lambda c: c == "%"
 ST_MOD = State([], True, MOD)
 
 _check_NOT = lambda c: c == "!"
-ST_NOT = State([(ST_NOT_EQUALS, False, _check_EQUALS)], True, NOT)
 ST_NOT_EQUALS = State([], True, NOT_EQUALS)
+ST_NOT = State([(ST_NOT_EQUALS, False, _check_EQUALS)], True, NOT)
 
 _check_ACCESSOR = lambda c: c == "."
 ST_ACCESSOR = State([], True, ACCESSOR)
@@ -155,7 +155,5 @@ ST_INITIAL = State([(ST_IDENTIFIER, False, _check_IDENTIFIER),
                     (ST_MOD, False, _check_MOD),
                     (ST_NOT, False, _check_NOT),
                     (ST_ACCESSOR, False, _check_ACCESSOR),
-                    (ST_CONDITIONAL_AND, False, _check_AMP),
-
-                    ],
-                   False, None)
+                    (ST_CONDITIONAL_AND, False, _check_AMP)],
+                    False, None)

@@ -60,3 +60,24 @@ MOD = TT(42, "<MOD>")
 NOT = TT(43, "<NOT>")
 ACCESSOR = TT(44, "<ACCESSOR>")
 EOF = TT(45, "<EOF>")
+
+reserved_words = {"class" : CLASS,
+                  "extends" : EXTENDS,
+                  "public" : PUBLIC,
+                  "protected" : PROTECTED,
+                  "static" : STATIC,
+                  "this" : THIS,
+                  "super" : SUPER,
+                  "void" : VOID_TYPE,
+                  "bool" : BOOLEAN_TYPE,
+                  "int" : INT_TYPE,
+                  "char" : CHAR_TYPE,
+                  "if" : IF,
+                  "then" : THEN,
+                  "else" : ELSE,
+                  "while" : WHILE,
+                  "return" : RETURN,
+                  "true" : TRUE,
+                  "false" : FALSE,
+                  "null" : NULL,
+                  "new" : NEW }

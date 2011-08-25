@@ -24,7 +24,7 @@ class Token:
         return self._type
 
     def __str__(self):
-        return "%d:%d - %d :: %s" % (self._line, self._col, self._type, self._lexeme)
+        return "%d:%d - %s :: %s" % (self._line, self._col, self._type, self._lexeme)
 
 class Lexor:
     _whitespace = frozenset([ " ", "\n", "\r", "\t" ])
@@ -64,11 +64,11 @@ class Lexor:
             self._current_token._type = self._state.get_token_type()
 
             self._current_char = self._next_char()
-
             self._state = self._state.proc(self._current_char)
 
-        if self._state == None:
-            return self._current_token
+        if self._current_token.get_lexeme() in reserved_words.keys():
+            self._current_token._type = reserved_words[self._current_token.get_lexeme()]
+        return self._current_token
 
     def _next_char(self):
         ch = self._file.read(1)
