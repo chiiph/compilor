@@ -1,6 +1,8 @@
 from constants import *
 from states import *
 
+import os
+
 class Token:
     def __init__(self):
         self._lexeme = ""
@@ -39,6 +41,10 @@ class Lexor:
         self._file_path = file_path
         self._file = open(self._file_path, "r")
         self._one_sep = False
+        self._maybe_start_comment = False
+
+    def __del__(self):
+        self._file.close()
 
     def get_token(self):
         self._state = ST_INITIAL
@@ -89,4 +95,36 @@ class Lexor:
             self._col += 1
 
         self._one_sep = False
+
+        ch2 = self._file.read(1)
+
+        if ch == "/" and ch2 == "/":
+            print "DEFINITELY A COMMENT"
+            while ch != "\n":
+                ch = self._file.read(1)
+                if len(ch) == 0:
+                    return ch
+            self._line += 1
+            self._col = 0
+            ch = self._next_char()
+        elif ch == "/" and ch2 == "*":
+            print "THE OTHER COMMENT"
+            ch = self._file.read(1)
+            self._col += 1
+            while True:
+                while ch != "*":
+                    ch = self._next_char()
+                    if len(ch) == 0:
+                        raise LexicalError(0,0)
+                ch = self._file.read(1)
+                self._col += 1
+                if ch == "/":
+                    break
+            ch = self._next_char()
+        else:
+            if len(ch2) > 0:
+                self._file.seek(-1, os.SEEK_CUR)
+
+        if self._one_sep:
+            ch = self._next_char()
         return ch
