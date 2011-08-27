@@ -50,11 +50,18 @@ class Lexor(object):
     def __del__(self):
         self._file.close()
 
+    def _replacer(self, match):
+        st = match.group()
+        retcount = st.count("\n")
+        return " "*(len(st)-retcount)+"\n"*retcount
+
     def _remove_comments(self):
         regex = re.compile("(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?",
                         re.DOTALL | re.MULTILINE)
-        tmp = regex.sub(lambda m: " ", self._file_data)
+        tmp = regex.sub(self._replacer, self._file_data)
         self._file_data = tmp
+
+        print self._file_data
 
     def get_token(self):
         self._state = ST_INITIAL
@@ -64,7 +71,7 @@ class Lexor(object):
             self._current_char = self._next_char()
 
         self._current_token._line = self._line
-        self._current_token._col = self._col
+        self._current_token._col = self._col-1
 
         # si a esta altura el current_char es "" entonces estamos
         # en EOF
