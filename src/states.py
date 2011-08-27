@@ -23,7 +23,7 @@ class State(object):
 
     def proc(self, ch, line = 0, col = 0):
         if len(ch) == 0 and not self.accepts:
-            raise LexicalError(0,0)
+            raise LexicalError(line,col)
 
         nst = self.check(ch)
         # si es aceptador y se termino lo buscado ent retorna todo bien

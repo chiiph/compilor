@@ -1,4 +1,0 @@
-Convencion para los nombres de archivos de los tests:
-los tests se nombraran 'test' seguido de un numero de tres digitos, seguido de 
-'err' si contiene un error, y 'cor' si es correcto, seguido de un '-' y una 
-palabra descriptiva de lo que testea.
