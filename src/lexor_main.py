@@ -3,6 +3,25 @@ from lexor     import *
 from constants import *
 from errors    import LexicalError
 
+def pretty_print_error_message(input_filepath, exc):
+    input_file = open(input_filepath, 'r')
+    line = exc.line
+    col  = exc.col
+    print exc
+    print "In line %s:%s" % (line, col)
+    i = 0
+    line_str = ""
+    while (i < line):
+        line_str = input_file.readline()
+        i += 1
+    print line_str,
+    i = 0
+    while (i < col):
+        sys.stdout.write("-")
+        i += 1
+    print "^"
+    input_file.close()
+
 def usage():
     usage_str = """
     Error: two arguments required.
@@ -15,7 +34,7 @@ def usage():
 if __name__ == "__main__":
     argv_len = len(sys.argv)
     if ((argv_len == 3) or (argv_len == 2)):
-        input_filepath  = sys.argv[1]
+        input_filepath = sys.argv[1]
         try:
             lex = Lexor(input_filepath)
         except IOError as ioe:
@@ -32,8 +51,9 @@ if __name__ == "__main__":
                 tok = lex.get_token()
                 if tok.get_type() == EOF:
                     break
-            except LexicalError as e:
-                print "\n", e
+            except LexicalError as le:
+                #print "\n", e
+                pretty_print_error_message(input_filepath, le)
                 quit()
             print tok
         
