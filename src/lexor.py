@@ -51,7 +51,9 @@ class Lexor(object):
         self._file.close()
 
     def _remove_comments(self):
-        tmp = re.sub("//.*?\n|/\*.*?\*/", " ", self._file_data, re.S)
+        regex = re.compile("(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?",
+                        re.DOTALL | re.MULTILINE)
+        tmp = regex.sub(lambda m: " ", self._file_data)
         self._file_data = tmp
 
     def get_token(self):
@@ -107,6 +109,17 @@ class Lexor(object):
                 self._col = 0
             ch = self._real_next_char()
             self._col += 1
+
+        if ch == "/":
+            if self._cursor+1 < len(self._file_data):
+                if self._file_data[self._cursor+1] == "*":
+                    raise LexicalError(self._line, self._col-1,
+                                       "Comentario no cerrado.")
+        if ch == "*":
+            if self._cursor+1 < len(self._file_data):
+                if self._file_data[self._cursor+1] == "/":
+                    raise LexicalError(self._line, self._col-1,
+                                       "Comentario que no ha sido abierto.")
 
         self._one_sep = False
 
