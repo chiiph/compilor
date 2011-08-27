@@ -50,9 +50,18 @@ class Lexor(object):
     def __del__(self):
         self._file.close()
 
+    def _replacer(self, match):
+        st = match.group()
+        retcount = st.count("\n")
+        return " "*(len(st)-retcount)+"\n"*retcount
+
     def _remove_comments(self):
-        tmp = re.sub("//.*?\n|/\*.*?\*/", " ", self._file_data, re.S)
+        regex = re.compile("(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?",
+                        re.DOTALL | re.MULTILINE)
+        tmp = regex.sub(self._replacer, self._file_data)
         self._file_data = tmp
+
+        print self._file_data
 
     def get_token(self):
         self._state = ST_INITIAL
@@ -62,7 +71,7 @@ class Lexor(object):
             self._current_char = self._next_char()
 
         self._current_token._line = self._line
-        self._current_token._col = self._col
+        self._current_token._col = self._col-1
 
         # si a esta altura el current_char es "" entonces estamos
         # en EOF
@@ -107,6 +116,17 @@ class Lexor(object):
                 self._col = 0
             ch = self._real_next_char()
             self._col += 1
+
+        if ch == "/":
+            if self._cursor+1 < len(self._file_data):
+                if self._file_data[self._cursor+1] == "*":
+                    raise LexicalError(self._line, self._col-1,
+                                       "Comentario no cerrado.")
+        if ch == "*":
+            if self._cursor+1 < len(self._file_data):
+                if self._file_data[self._cursor+1] == "/":
+                    raise LexicalError(self._line, self._col-1,
+                                       "Comentario que no ha sido abierto.")
 
         self._one_sep = False
 
