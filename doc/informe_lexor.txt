@@ -10,13 +10,14 @@ decisiones de diseño
 clases utilizadas
 
 ////
-== Instrucciones
+
+== Instrucciones de uso
 
 == Decisiones de diseño
 
 == Alfabeto de entrada
 
-El alfabeto de entrada son todos los carácteres de la tabla ASCII.
+El alfabeto de entrada son todos los caracteres de la tabla ASCII.
 
 == Definición de Tokens
 
@@ -77,6 +78,12 @@ El alfabeto de entrada son todos los carácteres de la tabla ASCII.
 
 == Detalles de implementación
 
+=== Clases
+
+==== Lexor
+
+==== LexicalError
+
 Para implementar el analizador léxico se realizó la especificación de la máquina 
 de estados basándose en las expresiones regulares definidas en la sección 
 anterior, para luego representarlo en código Python.
@@ -109,3 +116,7 @@ archivo errors.py.
 El analizador léxico reconoce los siguientes tipos de errores:
 1. Comentario del tipo /* */ que no esté propiamente cerrado.
 2. Informa de tokens no reconocidos.
+
+== Casos de prueba
+
+
