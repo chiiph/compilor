@@ -49,12 +49,12 @@ ST_IDENTIFIER = State([(None, True, _check_rest_IDENTIFIER)],
 _check_ZERO = lambda c: c == "0"
 ST_ZERO_LITERAL = State([], True, INT_LITERAL)
 
-_check_INT = lambda c: c in str(range(1,10))
-_check_rest_INT = lambda c: c in str(range(0,10))
+_check_INT = lambda c: c in string.digits[1:]
+_check_rest_INT = lambda c: c in string.digits
 ST_INT_LITERAL = State([(None, True, _check_rest_INT)],
                        True, INT_LITERAL)
 
-_check_SEPARATOR = lambda c: c in [" ","."]
+_check_SEPARATOR = lambda c: c in [" ",","]
 ST_SEPARATOR = State([], True, SEPARATOR)
 
 _check_CHAR_QUOTE = lambda c: c == "\'"
