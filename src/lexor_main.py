@@ -39,8 +39,8 @@ if __name__ == "__main__":
             lex = Lexor(input_filepath)
         except IOError as ioe:
             print "Error: no such file."
-            quit()
-        
+            sys.exit()
+
         if (argv_len == 3):
             output_filepath = sys.argv[2]
             output_file = open(output_filepath, 'w')
@@ -54,9 +54,9 @@ if __name__ == "__main__":
             except LexicalError as le:
                 #print "\n", e
                 pretty_print_error_message(input_filepath, le)
-                quit()
+                sys.exit()
             print tok
-        
+
         if (argv_len == 3):
             output_file.close()
     else:

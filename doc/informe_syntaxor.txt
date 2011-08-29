@@ -1,0 +1,86 @@
+Programas
+<compilation unit>                ::=    [ <type declarations> ]
+
+Declaraciones
+<type declarations>               ::=    <type declaration> | <type declarations> <type declaration>
+<type declaration>                ::=    <class declaration>
+<class declaration>               ::=    public class <identifier> [ <super> ] <class body>
+<super>                           ::=    extends <class type>
+<class body>                      ::=    { [ <class body declarations> ] }
+<class body declarations>         ::=    <class body declaration> | <class body declarations> <class body declaration>
+<class body declaration>          ::=    <class member declaration> | <constructor declaration>
+<class member declaration>        ::=    <field declaration> | <method declaration>
+<constructor declaration>         ::=    <constructor modifier> <constructor declarator> <constructor body>
+<constructor modifier>            ::=    public | protected
+<constructor declarator>          ::=    <simple type name> ( [ <formal parameter list> ] )
+<simple type name>                ::=    <identifier>
+<formal parameter list>           ::=    <formal parameter> | <formal parameter list> , <formal parameter>
+<formal parameter>                ::=    <type> <variable declarator id> 
+<constructor body>                ::=    { [ <explicit constructor invocation> ] [ <block statements> ] } 
+<explicit constructor invocation> ::=    this([<argumentlist>]);|super([<argumentlist>]); 
+<field declaration>               ::=    <field modifiers> <type> <variable declarators> ; 
+<field modifiers>                 ::=    <field modifier> | <field modifiers> <field modifier>
+<field modifier>                  ::=    public | protected | static
+<variable declarators>             ::=  <variable declarator> | <variable declarators> , <variable declarator>
+<variable declarator>              ::=  <variable declarator id> | <variable declarator id> = <variable initializer>
+<variable declarator id>           ::=  <identifier>
+<variable initializer>             ::=  <expression>
+<method declaration>               ::=  <method header> <method body>
+<method header>                    ::=  <method modifiers> <result type> <method declarator>
+<result type>                      ::=  <type> | void
+<method modifiers>                 ::=  <method modifier> | <method modifiers> <method modifier>
+<method modifier>                  ::=  public | protected | static
+<method declarator>                ::=  <identifier> ( [ <formal parameter list> ] )
+<method body>                      ::=  <block>
+
+Tipos
+<type>                             ::=  <primitive type> | <reference type>
+<primitive type>                   ::=  <numeric type> | boolean
+<numeric type>                     ::=  <integral type>
+<integral type>                    ::=  int | char
+<reference type>                   ::=  <class type>
+<class type>                       ::=  <type name>
+<type name>                        ::=  <identifier>
+
+Bloques y Sentencias
+<block>                                  ::=   { [ <block statements> ] } 
+<block statements>                       ::=    <block statement> | <block statements> <block statement>
+<block statement>                        ::=    <local variable declaration statement> | <statement>
+<local variable declaration statement>   ::=    <local variable declaration> ;
+<local variable declaration>             ::=    <type> <variable declarators>
+<statement>                              ::=    <statement without trailing substatement> | <if then statement> | <if then else statement> | <while statement>
+<statement no short if>                      ::=    <statement without trailing substatement> | <if then else statement no short if> | <while statement no short if>
+<statement without trailing substatement>    ::=    <block> | <empty statement> | <expression statement> | <return statement>
+<empty statement>                            ::=    ;
+<expression statement>                       ::=    <statement expression> ;
+<statement expression>                       ::=    <assignment> | <method invocation> | <class instance creation expression>
+<if then statement>                          ::=    if ( <expression> ) <statement>
+<if then else statement>                     ::=    if ( <expression> ) <statement no short if> else <statement>
+<if then else statement no short if>         ::=    if ( <expression> ) <statement no short if> else <statement no short if>
+<while statement>                            ::=    while ( <expression> ) <statement> 
+<while statement no short if>                ::=    while ( <expression> ) <statement no short if>
+<return statement>                           ::=    return [ <expression> ] ;
+
+Expresiones
+<expression>                       ::=   <assignment expression>
+<assignment expression>            ::=   <conditional expression> | <assignment>
+<assignment>                       ::=   <left hand side> <assignment operator> <assignment expression>
+<left hand side>                   ::=   <expression name> | <field access>
+<expression name>                  ::=   <identifier>
+<assignment operator>              ::=   =
+<conditional expression>           ::=   <conditional or expression> 
+<conditional or expression>        ::=   <conditional and expression> | <conditional or expression> || <conditional and expression> 
+<conditional and expression>       ::=   <equality expression> | <conditional and expression> && <equality expression>
+<equality expression>              ::=   <relational expression> | <equality expression> == <relational expression> | <equality expression> != <relational expression>
+<relational expression>            ::=   <additive expression> | <relational expression> < <additive expression> | <relational expression> > <additive expression> | <relational expression> <= <additive expression> | <relational expression> >= <additive expression>
+<additive expression>                   ::=         <multiplicative expression> | <additive expression> + <multiplicative expression> | <additive expression> - <multiplicative expression>
+<multiplicative expression>             ::=         <unary expression> | <multiplicative expression> * <unary expression> | <multiplicative expression> / <unary expression> | <multiplicative expression> % <unary expression>
+<unary expression>                      ::=         + <unary expression> | - <unary expression> | <unary expression not plus minus>
+<unary expression not plus minus>       ::=       <postfix expression> | ! <unary expression>
+<postfix expression>                    ::=   <primary> | <expression name>
+<primary>                               ::=         <literal> | this | ( <expression> ) | <class instance creation expression> | <field access> | <method invocation>
+<class instance creation expression>    ::=            new <class type> ( [ <argument list> ] )
+<argument list>                         ::=      <expression> | <argument list> , <expression>
+<field access>                          ::=  <primary> . <identifier> | super . <identifier>
+<method invocation>                     ::=   <method name> ( [ <argument list> ] ) | <primary> . <identifier> ( [ <argument list> ] ) | super . <identifier> ( [ <argument list> ] )
+<method name>                           ::=   <identifier>
