@@ -1,0 +1,13 @@
+Convencion para los nombres de archivos de los tests:
+Los casos de tests estarán clasificados según el módulo que prueben en
+distintos directorios.
+El módulo lexor.py tendrá sus tests correspondientes en tests/lexor.
+
+Los tests se nombraran comenzando con un número de tres dígitos único
+en el directorio, seguido de 'err' si se debería detectar error, y
+'cor' si debería resultar correcto, seguido de un '-', una palabra
+descriptiva de lo que testea, y extensión ".java".
+
+Cada test tendrá asociado un archivo de objetivos y resultados
+esperados nombrado de la misma forma que el caso de test, pero con
+extensión ".res".

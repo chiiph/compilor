@@ -1,5 +1,5 @@
 = Analizador Lexico
-:Author:    Touceda, Tomas ; Garay, Iñaki
+:Author:    Touceda, Tomás ; Garay, Iñaki
 :Date:      30/08/2011
 
 ////
@@ -22,8 +22,12 @@ El alfabeto de entrada son todos los caracteres de la tabla ASCII.
 == Definición de Tokens
 
 *Aclaraciones:*
-1. Para evitar ambiguedades, las expresiones regulares se expresaron utilizando la sintaxis válidad para JLex.
-2. Las entradas que no cuentan con ejemplos tienen un unico representante, igual a la expresion regular con la cual coincide.
+
+1. Para evitar ambiguedades, las expresiones regulares se expresaron
+utilizando la sintaxis válidad para JLex.
+
+2. Las entradas que no cuentan con ejemplos tienen un unico
+representante, igual a la expresion regular con la cual coincide.
 
 |===
 [options="header"]
@@ -88,28 +92,31 @@ Para implementar el analizador léxico se realizó la especificación de la máq
 de estados basándose en las expresiones regulares definidas en la sección 
 anterior, para luego representarlo en código Python.
 
-De esta forma, la clase principal utilizada es la llamada State. Esta no es más 
-que una abstracción de la idea es estado de un autómata finito, que cuenta con 
-una serie de funciones de checkeo para determinar si se debe pasar a un 
-siguiente estado o no, y alrededor de esta idea se estableció la lógica para la 
-detección de ciertos errores léxicos.
+De esta forma, la clase principal utilizada es la llamada State. Esta
+no es más que una abstracción de la idea es estado de un autómata
+finito, que cuenta con una serie de funciones de checkeo para
+determinar si se debe pasar a un siguiente estado o no, y alrededor de
+esta idea se estableció la lógica para la detección de ciertos errores
+léxicos.
 
-En el archivo states.py se encuentra la definición de esta clase mencionada, y 
-la del autómata finito reconocedor utilizado.
+En el archivo states.py se encuentra la definición de esta clase
+mencionada, y la del autómata finito reconocedor utilizado.
 
-Para representar a los tokens se armaron dos clases: TokenType y Token. 
-TokenType, definida en constants.py, es una abstracción sobre los distintos 
-tipos de tokens reconocidos y especificados en la sección anterior. 
-Token, definida en lexor.py, abstrae un token instanciado según el análisis del 
-archivo de código fuente en cuestión.
+Para representar a los tokens se armaron dos clases: TokenType y
+Token.  TokenType, definida en constants.py, es una abstracción sobre
+los distintos tipos de tokens reconocidos y especificados en la
+sección anterior.  Token, definida en lexor.py, abstrae un token
+instanciado según el análisis del archivo de código fuente en
+cuestión.
 
-Por último, Lexor es la clase que representa al analizador léxico propiamente. 
-Este implementa el método get_token() que devuelve secuencialmente todos los 
-tokens reconocidos en un dado archivo que contiene código en MiniJava. Esta 
-clase se encuentra definida en lexor.py.
+Por último, Lexor es la clase que representa al analizador léxico
+propiamente.  Este implementa el método get_token() que devuelve
+secuencialmente todos los tokens reconocidos en un dado archivo que
+contiene código en MiniJava. Esta clase se encuentra definida en
+lexor.py.
 
-Para el manejo de errores, se creó el tipo de excepción LexicalError dentro del 
-archivo errors.py.
+Para el manejo de errores, se creó el tipo de excepción LexicalError
+dentro del archivo errors.py.
 
 == Manejo de errores
 
@@ -119,4 +126,15 @@ El analizador léxico reconoce los siguientes tipos de errores:
 
 == Casos de prueba
 
+Cuando un error es detectado, también se muestra por pantalla la
+ubicación de la porción del texto que presenta el error. Por ejemplo:
 
+ERROR: Line: 3, Col: 4 :: Comentario no cerrado.
+In line 3:4
+    /* comment
+----^
+
+ERROR: Line: 2, Col: 10 :: Token no reconocido.
+In line 2:10
+    a = 1 # 2
+----------^

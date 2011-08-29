@@ -61,8 +61,6 @@ class Lexor(object):
         tmp = regex.sub(self._replacer, self._file_data)
         self._file_data = tmp
 
-        print self._file_data
-
     def get_token(self):
         self._state = ST_INITIAL
         self._current_token = Token()
@@ -71,23 +69,27 @@ class Lexor(object):
             self._current_char = self._next_char()
 
         self._current_token._line = self._line
-        self._current_token._col = self._col-1
+        if self._col > 0:
+            self._current_token._col = self._col-1
 
         # si a esta altura el current_char es "" entonces estamos
         # en EOF
         if len(self._current_char) == 0:
             # TODO: cambiar por un set_type()
             self._current_token._type = EOF
-            print "EOF!"
             return self._current_token
 
-        self._state = self._state.proc(self._current_char, self._line, self._col)
+        self._state = self._state.proc(self._current_char,
+                                       self._line,
+                                       self._col-len(self._current_token.get_lexeme())-1)
         while self._state != None:
             self._current_token.append(self._current_char)
             self._current_token._type = self._state.get_token_type()
 
             self._current_char = self._next_char()
-            self._state = self._state.proc(self._current_char, self._line, self._col)
+            self._state = self._state.proc(self._current_char,
+                                           self._line,
+                                           self._col-len(self._current_token.get_lexeme())-1)
 
         if self._current_token.get_lexeme() in reserved_words.keys():
             self._current_token._type = reserved_words[self._current_token.get_lexeme()]
