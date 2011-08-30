@@ -46,6 +46,7 @@ NULL            = TT(28, "<NULL>")
 NEW             = TT(29, "<NEW>")
 ASSIGNMENT      = TT(30, "<ASSIGNMENT>")
 CONDITIONAL_AND = TT(31, "<CONDITIONAL_AND>")
+CONDITIONAL_OR  = TT(31, "<CONDITIONAL_OR>")
 EQUALS          = TT(32, "<EQUALS>")
 NOT_EQUALS      = TT(33, "<NOT_EQUALS>")
 LT              = TT(34, "<LT>")
@@ -61,7 +62,7 @@ NOT             = TT(43, "<NOT>")
 ACCESSOR        = TT(44, "<ACCESSOR>")
 EOF             = TT(45, "<EOF>")
 
-reserved_words = { "class"      : CLASS,
+reserved_words = { "class"      : CLASS
                  , "extends"    : EXTENDS
                  , "public"     : PUBLIC
                  , "protected"  : PROTECTED

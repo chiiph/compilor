@@ -11,9 +11,10 @@ class Test {
         if(a!= b)
             numero = 4;;
 
-        while(numero <= 2) {
+        while(numero <= 2 || (true && false)) {
             booleando = b == a/*a*/-2;
             numero /** comentario en el medio */ = numero - 1;
+            string = "un strinnnggg";
         }
     }
 

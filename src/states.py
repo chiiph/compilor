@@ -129,6 +129,10 @@ _check_AMP                  = lambda c: c == "&"
 ST_CONDITIONAL_AND_END      = State([], True, CONDITIONAL_AND)
 ST_CONDITIONAL_AND          = State([(ST_CONDITIONAL_AND_END, False, _check_AMP)], False, None)
 
+_check_PIPE                 = lambda c: c == "|"
+ST_CONDITIONAL_OR_END       = State([], True, CONDITIONAL_OR)
+ST_CONDITIONAL_OR           = State([(ST_CONDITIONAL_OR_END, False, _check_PIPE)], False, None)
+
 ST_INITIAL                  = State([ (ST_IDENTIFIER,       False, _check_IDENTIFIER)
                                     , (ST_ZERO_LITERAL,     False, _check_ZERO)
                                     , (ST_SEPARATOR,        False, _check_SEPARATOR)
@@ -149,8 +153,9 @@ ST_INITIAL                  = State([ (ST_IDENTIFIER,       False, _check_IDENTI
                                     , (ST_DIV,              False, _check_DIV)
                                     , (ST_MOD,              False, _check_MOD)
                                     , (ST_NOT,              False, _check_NOT)
-                                    , (ST_ACCES SOR,        False, _check_ACCESSOR)
+                                    , (ST_ACCESSOR,         False, _check_ACCESSOR)
                                     , (ST_CONDITIONAL_AND,  False, _check_AMP)
+                                    , (ST_CONDITIONAL_OR,   False, _check_PIPE)
                                     ],
                                     False, 
                                     None)
