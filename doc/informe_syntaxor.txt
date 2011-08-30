@@ -70,17 +70,17 @@ Expresiones
 <assignment operator>              ::=   ASSIGNMENT
 <conditional expression>           ::=   <conditional or expression> 
 <conditional or expression>        ::=   <conditional and expression> | <conditional or expression> CONDITIONAL_OR <conditional and expression> 
-<conditional and expression>       ::=   <equality expression> | <conditional and expression> && <equality expression>
-<equality expression>              ::=   <relational expression> | <equality expression> == <relational expression> | <equality expression> != <relational expression>
-<relational expression>            ::=   <additive expression> | <relational expression> < <additive expression> | <relational expression> > <additive expression> | <relational expression> <= <additive expression> | <relational expression> >= <additive expression>
-<additive expression>                   ::=         <multiplicative expression> | <additive expression> + <multiplicative expression> | <additive expression> - <multiplicative expression>
-<multiplicative expression>             ::=         <unary expression> | <multiplicative expression> * <unary expression> | <multiplicative expression> / <unary expression> | <multiplicative expression> % <unary expression>
-<unary expression>                      ::=         + <unary expression> | - <unary expression> | <unary expression not plus minus>
-<unary expression not plus minus>       ::=       <postfix expression> | ! <unary expression>
+<conditional and expression>       ::=   <equality expression> | <conditional and expression> CONDITIONAL_AND <equality expression>
+<equality expression>              ::=   <relational expression> | <equality expression> EQUAL <relational expression> | <equality expression> NOT_EQUAL <relational expression>
+<relational expression>            ::=   <additive expression> | <relational expression> LT <additive expression> | <relational expression> GT <additive expression> | <relational expression> LT_EQ <additive expression> | <relational expression> GT_EQ <additive expression>
+<additive expression>                   ::=         <multiplicative expression> | <additive expression> ADD <multiplicative expression> | <additive expression> SUB <multiplicative expression>
+<multiplicative expression>             ::=         <unary expression> | <multiplicative expression> MUL <unary expression> | <multiplicative expression> DIV <unary expression> | <multiplicative expression> MOD <unary expression>
+<unary expression>                      ::=         ADD <unary expression> | SUB <unary expression> | <unary expression not plus minus>
+<unary expression not plus minus>       ::=       <postfix expression> | NOT <unary expression>
 <postfix expression>                    ::=   <primary> | <expression name>
-<primary>                               ::=         <literal> | this | ( <expression> ) | <class instance creation expression> | <field access> | <method invocation>
-<class instance creation expression>    ::=            new <class type> ( [ <argument list> ] )
-<argument list>                         ::=      <expression> | <argument list> , <expression>
-<field access>                          ::=  <primary> . <identifier> | super . <identifier>
-<method invocation>                     ::=   <method name> ( [ <argument list> ] ) | <primary> . <identifier> ( [ <argument list> ] ) | super . <identifier> ( [ <argument list> ] )
+<primary>                               ::=         <literal> | THIS | PAREN_OPEN <expression> PAREN_CLOSE | <class instance creation expression> | <field access> | <method invocation>
+<class instance creation expression>    ::=            NEW <class type> PAREN_OPEN [ <argument list> ] PAREN_CLOSE
+<argument list>                         ::=      <expression> | <argument list> SEPARATOR(comma) <expression>
+<field access>                          ::=  <primary> ACCESSOR <identifier> | super ACCESSOR <identifier>
+<method invocation>                     ::=   <method name> PAREN_OPEN [ <argument list> ] PAREN_CLOSE | <primary> ACCESSOR <identifier> PAREN_OPEN [ <argument list> ] PAREN_CLOSE | SUPER ACCESOR <identifier> PAREN_OPEN [ <argument list> ] PAREN_CLOSE
 <method name>                           ::=   <identifier>
