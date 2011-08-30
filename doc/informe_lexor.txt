@@ -1,6 +1,7 @@
-= Analizador Lexico
+= Analizador Léxico
+:Author: Garay, Iñaki LU 67387; Touceda, Tomas LU 84024
 
-== Instrucciones de uso
+== Especificación e instrucciones de uso
 
 Existen dos maneras de correr el analizador léxico sobre un archivo de entrada:
 
@@ -22,11 +23,30 @@ explicando el uso por linea de comando.
 
 Mientras procesa el archivo, el analizador léxico mostrará en su salida los tokens reconocidos en una tabla, con el siguiente formato:
 
-EJEMPLO
+----
+$ python2 lexor_main.py ../tests/lexor/003err-ampersand.java 
+1:0     -   <INT_TYPE>      :: int
+1:3     -   <SEPARATOR>     ::  
+1:4     -   <IDENTIFIER>    :: fun
+1:7     -   <PAREN_OPEN>    :: (
+1:8     -   <INT_TYPE>      :: int
+1:11    -   <SEPARATOR>     ::  
+1:12    -   <IDENTIFIER>    :: a
+1:13    -   <PAREN_CLOSE>   :: )
+1:14    -   <SEPARATOR>     ::  
+1:15    -   <BRACE_OPEN>    :: {
+1:16    -   <SEPARATOR>     ::  
+2:4     -   <IDENTIFIER>    :: un
+2:6     -   <SEPARATOR>     ::  
+ERROR: Line: 2, Col: 7 :: Token no reconocido.
+In line 2:7
+    un & amper;
+-------^
+----
 
-== Decisiones de dise&ntilde;o
-
-La principal decisión de diseño que afecto la implementación fue la abstracción de los estados del automata finito reconocedor.
+La primera columna de la tabla indica el numero de linea y la columna en la cual se encontro el token.
+La siguiente columna indica el tipo del token.
+La tercera columna muestra el lexema del token.
 
 === Alfabeto de entrada
 
@@ -50,10 +70,8 @@ La siguiente table muestra los tokens reconocidos por el analizador léxico.
 |IDENTIFIER     |[a-zA-Z_\$][a-zA-Z_\$0-9]*                 |hola
 |SEPARATOR      |[ \t\n\r]                                  |
 |INT_LITERAL    |(0\|[1-9]([0-9])*)                         |42
-////
-|CHAR_LITERAL   |((\'[^('\\)\')|(\'[\\\\|\\'|\\\"|\\n]\'))  |'q'
-|STRING_LITERAL |(\"\"|\"[^(\"\\)|[\\\\|\\'|\\\"|\\n]\")    |"hola"
-////
+|CHAR_LITERAL   |[ver nota _1_]                             |\'q\'
+|STRING_LITERAL |[ver nota _2_]                             |\"hola\"
 |SCOLON         |;                                          |;
 |BRACE_OPEN     |\{                                         |{
 |BRACE_CLOSE    |\}                                         |}
@@ -98,14 +116,21 @@ La siguiente table muestra los tokens reconocidos por el analizador léxico.
 |EOF            |<EOF>                                      |
 |===
 
+_Nota 1_ (&#92;&#39;[&#94;(&#39;&#92;&#92;)]&#92;&#39;)&#124;(&#92;&#39;[&#92;&#92;&#92;&#92;&#124;&#92;&#92;&#39;&#124;&#92;&#92;&#92;&#34;&#124;&#92;&#92;n]&#92;&#39;)
+
+_Nota 2_ (&#92;&#34;&#92;&#34;&#124;&#92;&#34;([&#94;(&#92;&#34;&#92;&#92;)]&#124;[&#92;&#92;&#92;&#92;&#124;&#92;&#92;&#39;&#124;&#92;&#92;&#92;&#34;&#124;&#92;&#92;n])&#42;&#92;&#34;)
+
 === Errores detectados
 
 Entre los errores que se encuentran están:
 
-* Caracter no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.¶
-* Si el archivo de entrada especificado no existe, se producirá un error.¶
+* Caractér no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.
+* Si el archivo de entrada especificado no existe, se producirá un error.
+* Si se encuentra un caracter literal de mas de un caracter, e.g. \'hola\', se producirá un error. En cambio, si es un caracter válido, como ser \'\\n\', se aceptará.
 
 == Implementación
+
+La principal decisión de diseño que afecto la implementación fue la abstracción de los estados del automata finito reconocedor.
 
 El analizador léxico se desarrolló utilizando únicamente la versión 2.7 del lenguaje Python (+www.python.org+).
 El archivo ejecutable para Windows se generó con la herramienta +py2exe+ (+www.py2exe.org+).
@@ -154,13 +179,16 @@ dentro del archivo errors.py.
 
 El módulo principal del analizador léxico esta implementado en este script.
 
-== Manejo de errores
+== Verificación
+
+=== Manejo de errores
 
 El analizador léxico reconoce los siguientes tipos de errores:
+
 1. Comentario del tipo /* */ que no esté propiamente cerrado.
 2. Informa de tokens no reconocidos.
 
-== Casos de prueba
+=== Casos de prueba
 
 Cuando un error es detectado, también se muestra por pantalla la
 ubicación de la porción del texto que presenta el error. Por ejemplo:
