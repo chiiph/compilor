@@ -1,5 +1,5 @@
 = Analizador Léxico
-:Author: Garay, Iñaki LU 67387; Touceda, Tomas LU 84024
+:Author: Garay, Iñaki LU 67387; Touceda, Tomás LU 84024
 
 == Especificación e instrucciones de uso
 
