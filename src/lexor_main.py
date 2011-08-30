@@ -14,7 +14,10 @@ def pretty_print_error_message(input_filepath, exc):
     while (i < line):
         line_str = input_file.readline()
         i += 1
-    print line_str,
+    if len(line_str) > 0 and line_str[-1] == "\n":
+        print line_str,
+    else:
+        print line_str
     i = 0
     while (i < col):
         sys.stdout.write("-")

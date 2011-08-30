@@ -47,6 +47,8 @@ class Lexor(object):
 
         self._remove_comments()
 
+        self._is_string = False
+
     def __del__(self):
         self._file.close()
 
@@ -85,11 +87,22 @@ class Lexor(object):
         self._state = self._state.proc(self._current_char,
                                        self._line,
                                        self._col-len(self._current_token.get_lexeme())-1)
+        self._is_string = False
+        if self._current_char == "\"":
+            self._is_string = True
+
         while self._state != None:
+            if len(self._current_char) == 0:
+                self._current_token._type = EOF
+                return self._current_token
+
             self._current_token.append(self._current_char)
             self._current_token._type = self._state.get_token_type()
 
             self._current_char = self._next_char()
+
+            if self._current_char == "\"" and self._is_string:
+                self._is_string = False
             self._state = self._state.proc(self._current_char,
                                            self._line,
                                            self._col-len(self._current_token.get_lexeme())-1)
@@ -107,6 +120,9 @@ class Lexor(object):
     def _next_char(self):
         ch = self._real_next_char()
         self._col += 1
+
+        if self._is_string:
+            return ch
 
         if ch in self._whitespace and not self._one_sep:
             self._one_sep = True

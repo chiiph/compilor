@@ -25,6 +25,9 @@ class State(object):
         if len(ch) == 0 and not self.accepts:
             raise LexicalError(line,col)
 
+        if len(ch) == 0:
+            return None
+
         nst = self.check(ch)
         # si es aceptador y se termino lo buscado ent retorna todo bien
         if self.accepts and nst == None:
@@ -67,7 +70,7 @@ ST_CHAR_QUOTE               = State([ (ST_CHAR_END,     False, _check_CHAR)
                                     ], False, None)
 
 _check_STRING_QUOTE         = lambda c: c == "\""
-_check_STRING_CHAR          = lambda c: (c in string.printable and c != "\\" and c != "\"")
+_check_STRING_CHAR          = lambda c: (c in string.printable and c != "\\" and c != "\"" and c != "\n")
 ST_STRING_END               = State([], True, STRING_LITERAL)
 ST_STRING_START             = State([], False, None) # Hack
 ST_ESCAPED_CHAR             = State([(ST_STRING_START, False, _check_ESCAPED_CHAR_END)], False, None)
@@ -157,5 +160,5 @@ ST_INITIAL                  = State([ (ST_IDENTIFIER,       False, _check_IDENTI
                                     , (ST_CONDITIONAL_AND,  False, _check_AMP)
                                     , (ST_CONDITIONAL_OR,   False, _check_PIPE)
                                     ],
-                                    False, 
+                                    False,
                                     None)
