@@ -1,6 +1,4 @@
 = Analizador Lexico
-:Author:    Touceda, Tomás ; Garay, Iñaki
-:Date:      30/08/2011
 
 == Instrucciones de uso
 
@@ -8,15 +6,17 @@ Existen dos maneras de correr el analizador léxico sobre un archivo de entrada:
 
 1. Utilizando el archivo ejecutable lexor.exe provisto:
 
-    + C:\> lexor.exe <archivo_entrada> [<archivo_salida>] +
+    C:\> lexor.exe <archivo_entrada> [<archivo_salida>]
 
 2. Utilizando el intérprete de Python para correr el script del módulo principal:
 
-    + C:\> python.exe lexor_main.py <archivo_entrada> [<archivo_salida>] +
+    C:\> python.exe lexor_main.py <archivo_entrada> [<archivo_salida>]
 
 La especificación del archivo de salida es opcional. 
 Si se omite, el analizador léxico mostrará su salida por pantalla.
-Si no se especifica un archivo de entrada, o se pasan más argumentos que el archivo de entrada y el de salida, el analizador léxico mostrará un mensaje explicando el uso por linea de comando.
+Si no se especifica un archivo de entrada, o se pasan más argumentos que el 
+archivo de entrada y el de salida, el analizador léxico mostrará un mensaje 
+explicando el uso por linea de comando.
 
 === Formato de salida
 
@@ -24,7 +24,7 @@ Mientras procesa el archivo, el analizador léxico mostrará en su salida los to
 
 EJEMPLO
 
-== Decisiones de diseño
+== Decisiones de dise&ntilde;o
 
 La principal decisión de diseño que afecto la implementación fue la abstracción de los estados del automata finito reconocedor.
 
@@ -44,14 +44,16 @@ representante, igual a la expresion regular con la cual coincide.
 
 La siguiente table muestra los tokens reconocidos por el analizador léxico.
 
-|===
 [options="header"]
+|===
 |Token          |Expresion regular                          |Ejemplos
 |IDENTIFIER     |[a-zA-Z_\$][a-zA-Z_\$0-9]*                 |hola
 |SEPARATOR      |[ \t\n\r]                                  |
-|INT_LITERAL    |(0|[1-9]([0-9])*)                          |42
+|INT_LITERAL    |(0\|[1-9]([0-9])*)                          |42
+////
 |CHAR_LITERAL   |((\'[^('\\)\')|(\'[\\\\|\\'|\\\"|\\n]\'))  |'q'
 |STRING_LITERAL |(\"\"|\"[^(\"\\)|[\\\\|\\'|\\\"|\\n]\")    |"hola"
+////
 |SCOLON         |;                                          |;
 |BRACE_OPEN     |\{                                         |{
 |BRACE_CLOSE    |\}                                         |}
@@ -83,8 +85,8 @@ La siguiente table muestra los tokens reconocidos por el analizador léxico.
 |NOT_EQUALS     |!=                                         |!=
 |LT             |<                                          |<
 |GT             |>                                          |>
-|LT_EQ          |<=                                         |<=
-|GT_EQ          |>=                                         |>=
+|LT_EQ          |< =                                        |< =
+|GT_EQ          |> =                                        |> =
 |ADD            |+                                          |+
 |SUB            |-                                          |-
 |MUL            |*                                          |*
@@ -97,10 +99,9 @@ La siguiente table muestra los tokens reconocidos por el analizador léxico.
 
 === Errores detectados
 
-El analizador léxico tiene un nivel moderado de detección de errores. Entre los errores que encuentran están:
+Entre los errores que se encuentran están:
 
 * Caracter no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.¶
-* Numeros mal formados: si se intenta ingresar un número como 38a7, se producirá un error.¶
 * Si el archivo de entrada especificado no existe, se producirá un error.¶
 
 == Implementación
@@ -112,7 +113,7 @@ Para implementar el analizador léxico se realizó la especificación de la máq
 de estados basándose en las expresiones regulares definidas en la sección 
 anterior, para luego representarlo en código Python.
 
-=== Archivo y clase+s
+=== Archivo y clases
 
 ==== Clase +State+
 
@@ -163,12 +164,16 @@ El analizador léxico reconoce los siguientes tipos de errores:
 Cuando un error es detectado, también se muestra por pantalla la
 ubicación de la porción del texto que presenta el error. Por ejemplo:
 
+----
  ERROR: Line: 3, Col: 4 :: Comentario no cerrado.
  In line 3:4
      /* comment
  ----^
+----
 
+----
  ERROR: Line: 2, Col: 10 :: Token no reconocido.
  In line 2:10
      a = 1 # 2
  ----------^
+----
