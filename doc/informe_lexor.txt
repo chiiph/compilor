@@ -133,9 +133,6 @@ anterior, para luego representarlo en código Python.
 
 === Archivos y clases
 
-El módulo principal esta implementado en +lexor_main.py+.
-El 
-
 ==== Clase +State+
 
 De esta forma, la clase principal utilizada es la llamada State. Esta
