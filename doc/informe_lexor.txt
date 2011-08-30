@@ -206,3 +206,52 @@ ubicación de la porción del texto que presenta el error. Por ejemplo:
      a = 1 # 2
  ----------^
 ----
+
+* Test 000 Correcto
+
+*Descripción:* Este es el caso de test principal para detección correcta de tokens.
+
+*Resultado esperado:* Todos los tokens son reconocidos con éxito según lo esperado, y los comentarios son obviados sin modificar la posición final de los tokens alrededor de ellos.
+
+* Test 001 Erroneo / Token inválido
+
+*Descripción:* Este caso de test esta destinado a detectar un identificador o palabra clave inválido.
+
+*Resultado esperado:* Detecta que pub\\lic no es un identificador válido.
+
+* Test 002 Erroneo / Operador inválido
+
+*Descripción:* La idea de este caso de test es mostrar que se detectan operadores no válidos.
+
+*Resultado esperado:* Se deberá informar acerca del operador erroneo, asi como mostrar por pantalla la ubicación del mismo.
+
+* Test 003 Erroneo / Operador inválido
+
+*Descripción:* Algunos operadores contienen más de un carácter, la idea este 
+caso de test es mostrar que se detectan situaciones erroneas como la escritura 
+de "&" en lugar de "&&", siendo este último, el único operador con el caracter 
+\'&\' válido.
+
+*Resultado esperado:* Se deberá detectar el token erróneo, y se mostrará por 
+pantalla la posición del mismo en el archivo de código fuente.
+
+* Test 004 Erroneo / Comentario no finalizado
+
+*Descripción:* 
+Uno de los problemas con el tipo de comentarios con secuencia de
+caracteres de apertura y cierre es que puede que no se cierre
+correctamente. La idea de este caso de test es mostrar que dichas
+situaciones se detectan.
+
+*Resultado esperado:* Se detecta el comentario que no ha sido finalizado y se muestra exactamente cual es (en caso de que existan otros).
+
+* Test 005 Correcto / Comentarios bien formados
+
+*Descripción:* La idea de este test es mostrar que aun con comentarios, los números de linea y columna siguen siendo calculados correctamente.
+*Resultado esperado:* Los tokens se detectan con éxito y las lineas y columnas se computan de forma correcta.
+
+* Test 006 Erroneao / Literal de caracter invalido.
+
+*Descripcion:* Los literales de caracteres se especifican con comillas simples. El caracter especificado debe ser un caracter valido, o una secuencia de escape que designe un caracter valido.  El proposito de este test es mostrar que un literal de caracter invalido con una sequencia erronea entre las comillas simples es detectado.  
+
+*Resultado esperado:* Se detecta el token invalido.
