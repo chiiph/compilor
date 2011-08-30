@@ -44,7 +44,7 @@ In line 2:7
 -------^
 ----
 
-La primera columna de la tabla indica el numero de linea y la columna en la cual se encontro el token.
+La primera columna de la tabla indica el número de linea y la columna en la cual se encontró el token.
 La siguiente columna indica el tipo del token.
 La tercera columna muestra el lexema del token.
 
@@ -60,18 +60,18 @@ El alfabeto de entrada son todos los caracteres de la codificación ASCII.
 utilizando la sintaxis válida para JLex.
 
 2. Las entradas que no cuentan con ejemplos tienen un unico
-representante, igual a la expresion regular con la cual coincide.
+representante, igual a la expresión regular con la cual coincide.
 
-La siguiente table muestra los tokens reconocidos por el analizador léxico.
+La siguiente tabla muestra los tokens reconocidos por el analizador léxico.
 
 [options="header"]
 |===
-|Token          |Expresion regular                          |Ejemplos
+|Token          |Expresión regular                          |Ejemplos
 |IDENTIFIER     |[a-zA-Z_\$][a-zA-Z_\$0-9]*                 |hola
 |SEPARATOR      |[ \t\n\r]                                  |
 |INT_LITERAL    |(0\|[1-9]([0-9])*)                         |42
-|CHAR_LITERAL   |[ver nota _1_]                             |\'q\'
-|STRING_LITERAL |[ver nota _2_]                             |\"hola\"
+|CHAR_LITERAL   |[ver nota _1_]                             |&apos;q&apos;
+|STRING_LITERAL |[ver nota _2_]                             |"hola"
 |SCOLON         |;                                          |;
 |BRACE_OPEN     |\{                                         |{
 |BRACE_CLOSE    |\}                                         |}
@@ -120,14 +120,6 @@ _Nota 1_ (&#92;&#39;[&#94;(&#39;&#92;&#92;)]&#92;&#39;)&#124;(&#92;&#39;[&#92;&#
 
 _Nota 2_ (&#92;&#34;&#92;&#34;&#124;&#92;&#34;([&#94;(&#92;&#34;&#92;&#92;)]&#124;[&#92;&#92;&#92;&#92;&#124;&#92;&#92;&#39;&#124;&#92;&#92;&#92;&#34;&#124;&#92;&#92;n])&#42;&#92;&#34;)
 
-=== Errores detectados
-
-Entre los errores que se encuentran están:
-
-* Caractér no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.
-* Si el archivo de entrada especificado no existe, se producirá un error.
-* Si se encuentra un caracter literal de mas de un caracter, e.g. \'hola\', se producirá un error. En cambio, si es un caracter válido, como ser \'\\n\', se aceptará.
-
 == Implementación
 
 La principal decisión de diseño que afecto la implementación fue la abstracción de los estados del automata finito reconocedor.
@@ -139,7 +131,10 @@ Para implementar el analizador léxico se realizó la especificación de la máq
 de estados basándose en las expresiones regulares definidas en la sección 
 anterior, para luego representarlo en código Python.
 
-=== Archivo y clases
+=== Archivos y clases
+
+El módulo principal esta implementado en +lexor_main.py+.
+El 
 
 ==== Clase +State+
 
@@ -181,12 +176,15 @@ El módulo principal del analizador léxico esta implementado en este script.
 
 == Verificación
 
-=== Manejo de errores
+=== Errores detectados
 
 El analizador léxico reconoce los siguientes tipos de errores:
 
-1. Comentario del tipo /* */ que no esté propiamente cerrado.
-2. Informa de tokens no reconocidos.
+* Comentario del tipo /* */ que no esté propiamente cerrado.
+* Informa de tokens no reconocidos.
+* Caracter no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.
+* Si el archivo de entrada especificado no existe, se producirá un error.
+* Si se encuentra un caracter literal de mas de un caracter, e.g. \'hola\', se producirá un error. En cambio, si es un caracter válido, e.g. &apos;\n&apos;, se aceptará.
 
 === Casos de prueba
 
