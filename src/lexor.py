@@ -52,8 +52,11 @@ class Lexor(object):
 
     def _replacer(self, match):
         st = match.group()
-        retcount = st.count("\n")
-        return " "*(len(st)-retcount)+"\n"*retcount
+        spl = st.split("\n")
+        res = []
+        for spl_st in spl:
+            res.append(" "*len(spl_st))
+        return "\n".join(res)
 
     def _remove_comments(self):
         regex = re.compile("(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?",
