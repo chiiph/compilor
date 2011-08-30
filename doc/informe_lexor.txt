@@ -2,32 +2,47 @@
 :Author:    Touceda, Tomás ; Garay, Iñaki
 :Date:      30/08/2011
 
-////
-para cada caso de test debe documentarse si es exitoso o no, su proposito, y el resultado esperado
-ademas incluir documentacion acerca de la forma de uso del proyecto
-
-decisiones de diseño
-clases utilizadas
-
-////
-
 == Instrucciones de uso
+
+Existen dos maneras de correr el analizador léxico sobre un archivo de entrada:
+
+1. Utilizando el archivo ejecutable lexor.exe provisto:
+
+    + C:\> lexor.exe <archivo_entrada> [<archivo_salida>] +
+
+2. Utilizando el intérprete de Python para correr el script del módulo principal:
+
+    + C:\> python.exe lexor_main.py <archivo_entrada> [<archivo_salida>] +
+
+La especificación del archivo de salida es opcional. 
+Si se omite, el analizador léxico mostrará su salida por pantalla.
+Si no se especifica un archivo de entrada, o se pasan más argumentos que el archivo de entrada y el de salida, el analizador léxico mostrará un mensaje explicando el uso por linea de comando.
+
+=== Formato de salida
+
+Mientras procesa el archivo, el analizador léxico mostrará en su salida los tokens reconocidos en una tabla, con el siguiente formato:
+
+EJEMPLO
 
 == Decisiones de diseño
 
-== Alfabeto de entrada
+La principal decisión de diseño que afecto la implementación fue la abstracción de los estados del automata finito reconocedor.
 
-El alfabeto de entrada son todos los caracteres de la tabla ASCII.
+=== Alfabeto de entrada
 
-== Definición de Tokens
+El alfabeto de entrada son todos los caracteres de la codificación ASCII.
+
+=== Definición de Tokens
 
 *Aclaraciones:*
 
 1. Para evitar ambiguedades, las expresiones regulares se expresaron
-utilizando la sintaxis válidad para JLex.
+utilizando la sintaxis válida para JLex.
 
 2. Las entradas que no cuentan con ejemplos tienen un unico
 representante, igual a la expresion regular con la cual coincide.
+
+La siguiente table muestra los tokens reconocidos por el analizador léxico.
 
 |===
 [options="header"]
@@ -37,60 +52,69 @@ representante, igual a la expresion regular con la cual coincide.
 |INT_LITERAL    |(0|[1-9]([0-9])*)                          |42
 |CHAR_LITERAL   |((\'[^('\\)\')|(\'[\\\\|\\'|\\\"|\\n]\'))  |'q'
 |STRING_LITERAL |(\"\"|\"[^(\"\\)|[\\\\|\\'|\\\"|\\n]\")    |"hola"
-|SCOLON         |;                                          |
-|BRACE_OPEN     |\{                                         |
-|BRACE_CLOSE    |\}                                         |
-|PAREN_OPEN     |\)                                         |
-|PAREN_CLOSE    |\(                                         |
-|CLASS          |class                                      |
-|EXTENDS        |extends                                    |
-|PUBLIC         |public                                     |
-|PROTECTED      |protected                                  |
-|STATIC         |static                                     |
-|THIS           |this                                       |
-|SUPER          |super                                      |
-|VOID_TYPE      |void                                       |
-|BOOLEAN_TYPE   |bool                                       |
-|INT_TYPE       |int                                        |
-|CHAR_TYPE      |char                                       |
-|IF             |if                                         |
-|THEN           |then                                       |
-|ELSE           |else                                       |
-|WHILE          |while                                      |
-|RETURN         |return                                     |
-|TRUE           |true                                       |
-|FALSE          |false                                      |
-|NULL           |null                                       |
-|NEW            |new                                        |
-|ASSIGNMENT     |=                                          |
-|CONDITIONAL_AND|&&                                         |
-|EQUALS         |==                                         |
-|NOT_EQUALS     |!=                                         |
-|LT             |<                                          |
-|GT             |>                                          |
-|LT_EQ          |<=                                         |
-|GT_EQ          |>=                                         |
-|ADD            |+                                          |
-|SUB            |-                                          |
-|MUL            |*                                          |
-|DIV            |\/                                         |
-|MOD            |%                                          |
-|NOT            |!                                          |
-|ACCESSOR       |.                                          |
+|SCOLON         |;                                          |;
+|BRACE_OPEN     |\{                                         |{
+|BRACE_CLOSE    |\}                                         |}
+|PAREN_OPEN     |\)                                         |(
+|PAREN_CLOSE    |\(                                         |)
+|CLASS          |class                                      |class
+|EXTENDS        |extends                                    |extends
+|PUBLIC         |public                                     |public
+|PROTECTED      |protected                                  |protected
+|STATIC         |static                                     |static
+|THIS           |this                                       |this
+|SUPER          |super                                      |super
+|VOID_TYPE      |void                                       |void
+|BOOLEAN_TYPE   |bool                                       |bool
+|INT_TYPE       |int                                        |int
+|CHAR_TYPE      |char                                       |char
+|IF             |if                                         |if
+|THEN           |then                                       |then
+|ELSE           |else                                       |else
+|WHILE          |while                                      |while
+|RETURN         |return                                     |return
+|TRUE           |true                                       |true
+|FALSE          |false                                      |false
+|NULL           |null                                       |null
+|NEW            |new                                        |new
+|ASSIGNMENT     |=                                          |=
+|CONDITIONAL_AND|&&                                         |&&
+|EQUALS         |==                                         |==
+|NOT_EQUALS     |!=                                         |!=
+|LT             |<                                          |<
+|GT             |>                                          |>
+|LT_EQ          |<=                                         |<=
+|GT_EQ          |>=                                         |>=
+|ADD            |+                                          |+
+|SUB            |-                                          |-
+|MUL            |*                                          |*
+|DIV            |\/                                         |/
+|MOD            |%                                          |%
+|NOT            |!                                          |!
+|ACCESSOR       |.                                          |.
 |EOF            |<EOF>                                      |
 |===
 
-== Detalles de implementación
+=== Errores detectados
 
-=== Clases
+El analizador léxico tiene un nivel moderado de detección de errores. Entre los errores que encuentran están:
 
-==== Lexor
+* Caracter no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.¶
+* Numeros mal formados: si se intenta ingresar un número como 38a7, se producirá un error.¶
+* Si el archivo de entrada especificado no existe, se producirá un error.¶
 
-==== LexicalError
+== Implementación
+
+El analizador léxico se desarrolló utilizando únicamente la versión 2.7 del lenguaje Python (+www.python.org+).
+El archivo ejecutable para Windows se generó con la herramienta +py2exe+ (+www.py2exe.org+).
 
 Para implementar el analizador léxico se realizó la especificación de la máquina 
 de estados basándose en las expresiones regulares definidas en la sección 
 anterior, para luego representarlo en código Python.
+
+=== Archivo y clase+s
+
+==== Clase +State+
 
 De esta forma, la clase principal utilizada es la llamada State. Esta
 no es más que una abstracción de la idea es estado de un autómata
@@ -102,6 +126,8 @@ léxicos.
 En el archivo states.py se encuentra la definición de esta clase
 mencionada, y la del autómata finito reconocedor utilizado.
 
+==== Clases +Token+ y +TokenType+
+
 Para representar a los tokens se armaron dos clases: TokenType y
 Token.  TokenType, definida en constants.py, es una abstracción sobre
 los distintos tipos de tokens reconocidos y especificados en la
@@ -109,14 +135,22 @@ sección anterior.  Token, definida en lexor.py, abstrae un token
 instanciado según el análisis del archivo de código fuente en
 cuestión.
 
+==== Clase +Lexor+
+
 Por último, Lexor es la clase que representa al analizador léxico
 propiamente.  Este implementa el método get_token() que devuelve
 secuencialmente todos los tokens reconocidos en un dado archivo que
 contiene código en MiniJava. Esta clase se encuentra definida en
 lexor.py.
 
+==== Clase +LexicalError+
+
 Para el manejo de errores, se creó el tipo de excepción LexicalError
 dentro del archivo errors.py.
+
+==== Archivo +lexor_main.py+
+
+El módulo principal del analizador léxico esta implementado en este script.
 
 == Manejo de errores
 
@@ -129,12 +163,12 @@ El analizador léxico reconoce los siguientes tipos de errores:
 Cuando un error es detectado, también se muestra por pantalla la
 ubicación de la porción del texto que presenta el error. Por ejemplo:
 
-ERROR: Line: 3, Col: 4 :: Comentario no cerrado.
-In line 3:4
-    /* comment
-----^
+ ERROR: Line: 3, Col: 4 :: Comentario no cerrado.
+ In line 3:4
+     /* comment
+ ----^
 
-ERROR: Line: 2, Col: 10 :: Token no reconocido.
-In line 2:10
-    a = 1 # 2
-----------^
+ ERROR: Line: 2, Col: 10 :: Token no reconocido.
+ In line 2:10
+     a = 1 # 2
+ ----------^

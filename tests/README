@@ -11,3 +11,4 @@ descriptiva de lo que testea, y extensión ".java".
 Cada test tendrá asociado un archivo de objetivos y resultados
 esperados nombrado de la misma forma que el caso de test, pero con
 extensión ".res".
+
