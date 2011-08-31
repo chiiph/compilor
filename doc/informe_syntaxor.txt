@@ -4,7 +4,7 @@ Programas
 Declaraciones
 <type declarations>               ::=    <type declaration> | <type declarations> <type declaration>
 <type declaration>                ::=    <class declaration>
-<class declaration>               ::=    PUBLIC CLASS <identifier> [ <super> ] <class body>
+<class declaration>               ::=    PUBLIC CLASS IDENTIFIER [ <super> ] <class body>
 <super>                           ::=    ENTENDS <class type>
 <class body>                      ::=    BRACE_OPEN [ <class body declarations> ] BRACE_CLOSE
 <class body declarations>         ::=    <class body declaration> | <class body declarations> <class body declaration>
@@ -13,7 +13,7 @@ Declaraciones
 <constructor declaration>         ::=    <constructor modifier> <constructor declarator> <constructor body>
 <constructor modifier>            ::=    PUBLIC | PROTECTED
 <constructor declarator>          ::=    <simple type name> ( [ <formal parameter list> ] )
-<simple type name>                ::=    <identifier>
+<simple type name>                ::=    IDENTIFIER
 <formal parameter list>           ::=    <formal parameter> | <formal parameter list> , <formal parameter>
 <formal parameter>                ::=    <type> <variable declarator id> 
 <constructor body>                ::=    BRACE_OPEN [ <explicit constructor invocation> ] [ <block statements> ] BRACE_CLOSE
@@ -23,14 +23,14 @@ Declaraciones
 <field modifier>                  ::=    PUBLIC | PROTECTED | STATIC
 <variable declarators>             ::=  <variable declarator> | <variable declarators> SEPARATOR(It's a-me a comma) <variable declarator>
 <variable declarator>              ::=  <variable declarator id> | <variable declarator id> ASSIGNMENT <variable initializer>
-<variable declarator id>           ::=  <identifier>
+<variable declarator id>           ::=  IDENTIFIER
 <variable initializer>             ::=  <expression>
 <method declaration>               ::=  <method header> <method body>
 <method header>                    ::=  <method modifiers> <result type> <method declarator>
 <result type>                      ::=  <type> | VOID_TYPE
 <method modifiers>                 ::=  <method modifier> | <method modifiers> <method modifier>
 <method modifier>                  ::=  PUBLIC | PROTECETD | STATIC
-<method declarator>                ::=  <identifier> PAREN_OPEN [ <formal parameter list> ] PAREN_CLOSE
+<method declarator>                ::=  IDENTIFIER PAREN_OPEN [ <formal parameter list> ] PAREN_CLOSE
 <method body>                      ::=  <block>
 
 Tipos
@@ -40,7 +40,7 @@ Tipos
 <integral type>                    ::=  INT | CHAR
 <reference type>                   ::=  <class type>
 <class type>                       ::=  <type name>
-<type name>                        ::=  <identifier>
+<type name>                        ::=  IDENTIFIER
 
 Bloques y Sentencias
 <block>                                  ::=   BRACE_OPEN [ <block statements> ] BRACE_CLOSE
@@ -66,7 +66,7 @@ Expresiones
 <assignment expression>            ::=   <conditional expression> | <assignment>
 <assignment>                       ::=   <left hand side> <assignment operator> <assignment expression>
 <left hand side>                   ::=   <expression name> | <field access>
-<expression name>                  ::=   <identifier>
+<expression name>                  ::=   IDENTIFIER
 <assignment operator>              ::=   ASSIGNMENT
 <conditional expression>           ::=   <conditional or expression> 
 <conditional or expression>        ::=   <conditional and expression> | <conditional or expression> CONDITIONAL_OR <conditional and expression> 
@@ -81,6 +81,9 @@ Expresiones
 <primary>                               ::=         <literal> | THIS | PAREN_OPEN <expression> PAREN_CLOSE | <class instance creation expression> | <field access> | <method invocation>
 <class instance creation expression>    ::=            NEW <class type> PAREN_OPEN [ <argument list> ] PAREN_CLOSE
 <argument list>                         ::=      <expression> | <argument list> SEPARATOR(comma) <expression>
-<field access>                          ::=  <primary> ACCESSOR <identifier> | super ACCESSOR <identifier>
-<method invocation>                     ::=   <method name> PAREN_OPEN [ <argument list> ] PAREN_CLOSE | <primary> ACCESSOR <identifier> PAREN_OPEN [ <argument list> ] PAREN_CLOSE | SUPER ACCESOR <identifier> PAREN_OPEN [ <argument list> ] PAREN_CLOSE
-<method name>                           ::=   <identifier>
+<field access>                          ::=  <primary> ACCESSOR IDENTIFIER | super ACCESSOR IDENTIFIER
+<method invocation>                     ::=   <method name> PAREN_OPEN [ <argument list> ] PAREN_CLOSE | <primary> ACCESSOR IDENTIFIER PAREN_OPEN [ <argument list> ] PAREN_CLOSE | SUPER ACCESOR IDENTIFIER PAREN_OPEN [ <argument list> ] PAREN_CLOSE
+<method name>                           ::=   IDENTIFIER
+
+<literal>   ::=   INT_LITERAL | <boolean literal> | CHAR_LIT | STRING_LIT | NULL
+<boolean literal ::= TRUE | FALSE
