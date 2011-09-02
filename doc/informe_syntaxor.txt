@@ -12,12 +12,12 @@ Declaraciones
 <class member declaration>        ::=    <field declaration> | <method declaration>
 <constructor declaration>         ::=    <constructor modifier> <constructor declarator> <constructor body>
 <constructor modifier>            ::=    PUBLIC | PROTECTED
-<constructor declarator>          ::=    <simple type name> ( [ <formal parameter list> ] )
+<constructor declarator>          ::=    <simple type name> PAREN_OPEN [ <formal parameter list> ] PAREN_CLOSE
 <simple type name>                ::=    IDENTIFIER
-<formal parameter list>           ::=    <formal parameter> | <formal parameter list> , <formal parameter>
+<formal parameter list>           ::=    <formal parameter> | <formal parameter list> SEPARATOR(COMMA) <formal parameter>
 <formal parameter>                ::=    <type> <variable declarator id> 
 <constructor body>                ::=    BRACE_OPEN [ <explicit constructor invocation> ] [ <block statements> ] BRACE_CLOSE
-<explicit constructor invocation> ::=    THIS([<argumentlist>])SCOLON|SUPER([<argumentlist>])SCOLON 
+<explicit constructor invocation> ::=    THIS PAREN_OPEN [<argumentlist>] PAREN_CLOSE SCOLON | SUPER PAREN_OPEN [<argumentlist>] PAREN_CLOSE SCOLON 
 <field declaration>               ::=    <field modifiers> <type> <variable declarators> SCOLON
 <field modifiers>                 ::=    <field modifier> | <field modifiers> <field modifier>
 <field modifier>                  ::=    PUBLIC | PROTECTED | STATIC
@@ -71,7 +71,7 @@ Expresiones
 <conditional expression>           ::=   <conditional or expression> 
 <conditional or expression>        ::=   <conditional and expression> | <conditional or expression> CONDITIONAL_OR <conditional and expression> 
 <conditional and expression>       ::=   <equality expression> | <conditional and expression> CONDITIONAL_AND <equality expression>
-<equality expression>              ::=   <relational expression> | <equality expression> EQUAL <relational expression> | <equality expression> NOT_EQUAL <relational expression>
+<equality expression>              ::=   <relational expression> | <equality expression> EQUALS <relational expression> | <equality expression> NOT_EQUALS <relational expression>
 <relational expression>            ::=   <additive expression> | <relational expression> LT <additive expression> | <relational expression> GT <additive expression> | <relational expression> LT_EQ <additive expression> | <relational expression> GT_EQ <additive expression>
 <additive expression>                   ::=         <multiplicative expression> | <additive expression> ADD <multiplicative expression> | <additive expression> SUB <multiplicative expression>
 <multiplicative expression>             ::=         <unary expression> | <multiplicative expression> MUL <unary expression> | <multiplicative expression> DIV <unary expression> | <multiplicative expression> MOD <unary expression>
@@ -81,7 +81,7 @@ Expresiones
 <primary>                               ::=         <literal> | THIS | PAREN_OPEN <expression> PAREN_CLOSE | <class instance creation expression> | <field access> | <method invocation>
 <class instance creation expression>    ::=            NEW <class type> PAREN_OPEN [ <argument list> ] PAREN_CLOSE
 <argument list>                         ::=      <expression> | <argument list> SEPARATOR(comma) <expression>
-<field access>                          ::=  <primary> ACCESSOR IDENTIFIER | super ACCESSOR IDENTIFIER
+<field access>                          ::=  <primary> ACCESSOR IDENTIFIER | SUPER ACCESSOR IDENTIFIER
 <method invocation>                     ::=   <method name> PAREN_OPEN [ <argument list> ] PAREN_CLOSE | <primary> ACCESSOR IDENTIFIER PAREN_OPEN [ <argument list> ] PAREN_CLOSE | SUPER ACCESOR IDENTIFIER PAREN_OPEN [ <argument list> ] PAREN_CLOSE
 <method name>                           ::=   IDENTIFIER
 
