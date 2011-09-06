@@ -36,31 +36,30 @@ BOOLEAN_TYPE    = TT(18, "<BOOLEAN_TYPE>")
 INT_TYPE        = TT(19, "<INT_TYPE>")
 CHAR_TYPE       = TT(20, "<CHAR_TYPE>")
 IF              = TT(21, "<IF>")
-THEN            = TT(22, "<THEN>")
-ELSE            = TT(23, "<ELSE>")
-WHILE           = TT(24, "<WHILE>")
-RETURN          = TT(25, "<RETURN>")
-TRUE            = TT(26, "<TRUE>")
-FALSE           = TT(27, "<FALSE>")
-NULL            = TT(28, "<NULL>")
-NEW             = TT(29, "<NEW>")
-ASSIGNMENT      = TT(30, "<ASSIGNMENT>")
-CONDITIONAL_AND = TT(31, "<CONDITIONAL_AND>")
+ELSE            = TT(22, "<ELSE>")
+WHILE           = TT(23, "<WHILE>")
+RETURN          = TT(24, "<RETURN>")
+TRUE            = TT(25, "<TRUE>")
+FALSE           = TT(26, "<FALSE>")
+NULL            = TT(27, "<NULL>")
+NEW             = TT(28, "<NEW>")
+ASSIGNMENT      = TT(29, "<ASSIGNMENT>")
+CONDITIONAL_AND = TT(30, "<CONDITIONAL_AND>")
 CONDITIONAL_OR  = TT(31, "<CONDITIONAL_OR>")
-EQUALS          = TT(32, "<EQUALS>")
-NOT_EQUALS      = TT(33, "<NOT_EQUALS>")
-LT              = TT(34, "<LT>")
-GT              = TT(35, "<GT>")
-LT_EQ           = TT(36, "<LT_EQ>")
-GT_EQ           = TT(37, "<GT_EQ>")
-ADD             = TT(38, "<ADD>")
-SUB             = TT(39, "<SUB>")
-MUL             = TT(40, "<MUL>")
-DIV             = TT(41, "<DIV>")
-MOD             = TT(42, "<MOD>")
-NOT             = TT(43, "<NOT>")
-ACCESSOR        = TT(44, "<ACCESSOR>")
-EOF             = TT(45, "<EOF>")
+EQUALS          = TT(31, "<EQUALS>")
+NOT_EQUALS      = TT(32, "<NOT_EQUALS>")
+LT              = TT(33, "<LT>")
+GT              = TT(34, "<GT>")
+LT_EQ           = TT(35, "<LT_EQ>")
+GT_EQ           = TT(36, "<GT_EQ>")
+ADD             = TT(37, "<ADD>")
+SUB             = TT(38, "<SUB>")
+MUL             = TT(39, "<MUL>")
+DIV             = TT(40, "<DIV>")
+MOD             = TT(41, "<MOD>")
+NOT             = TT(42, "<NOT>")
+ACCESSOR        = TT(43, "<ACCESSOR>")
+EOF             = TT(44, "<EOF>")
 
 reserved_words = { "class"      : CLASS
                  , "extends"    : EXTENDS
@@ -70,11 +69,10 @@ reserved_words = { "class"      : CLASS
                  , "this"       : THIS
                  , "super"      : SUPER
                  , "void"       : VOID_TYPE
-                 , "bool"       : BOOLEAN_TYPE
+                 , "boolean"    : BOOLEAN_TYPE
                  , "int"        : INT_TYPE
                  , "char"       : CHAR_TYPE
                  , "if"         : IF
-                 , "then"       : THEN
                  , "else"       : ELSE
                  , "while"      : WHILE
                  , "return"     : RETURN
