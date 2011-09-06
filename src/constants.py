@@ -15,7 +15,7 @@ class TokenType(object):
 TT = TokenType
 
 IDENTIFIER      = TT( 0, "<IDENTIFIER>")
-SEPARATOR       = TT( 1, "<SEPARATOR>")
+COMMA           = TT( 1, "<COMMA>")
 INT_LITERAL     = TT( 2, "<INT_LITERAL>")
 CHAR_LITERAL    = TT( 0, "<CHAR_LITERAL>")
 STRING_LITERAL  = TT( 4, "<STRING_LITERAL>")

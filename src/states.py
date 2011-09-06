@@ -55,8 +55,8 @@ _check_INT                  = lambda c: c in string.digits[1:]
 _check_rest_INT             = lambda c: c in string.digits
 ST_INT_LITERAL              = State([(None, True, _check_rest_INT)], True, INT_LITERAL)
 
-_check_SEPARATOR            = lambda c: c in [" ",","]
-ST_SEPARATOR                = State([], True, SEPARATOR)
+_check_COMMA                = lambda c: c in [","]
+ST_COMMA                    = State([], True, COMMA)
 
 _check_CHAR_QUOTE           = lambda c: c == "\'"
 _check_CHAR                 = lambda c: (c in string.printable and c != "\\" and c != "\'")
@@ -138,7 +138,7 @@ ST_CONDITIONAL_OR           = State([(ST_CONDITIONAL_OR_END, False, _check_PIPE)
 
 ST_INITIAL                  = State([ (ST_IDENTIFIER,       False, _check_IDENTIFIER)
                                     , (ST_ZERO_LITERAL,     False, _check_ZERO)
-                                    , (ST_SEPARATOR,        False, _check_SEPARATOR)
+                                    , (ST_COMMA,            False, _check_COMMA)
                                     , (ST_INT_LITERAL,      False, _check_INT)
                                     , (ST_ASSIGNMENT,       False, _check_EQUALS)
                                     , (ST_CHAR_QUOTE,       False, _check_CHAR_QUOTE)
