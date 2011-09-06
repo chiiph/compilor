@@ -1,6 +1,6 @@
 class Test {
     private int numero;
-    private bool booleano;
+    private boolean booleano;
 
     public static void main() {
         int /* s */  a,b;
