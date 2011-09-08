@@ -1,0 +1,206 @@
+Reemplazos:
+- <class type> -> IDENTIFIER
+- <type name> vuela por el cmabio anterior
+- vuela <super> por su lado derecho en class declaration
+- Cambio constructor modifier por PUBLIC <rest constructor declaration>
+- vuela <simple type name> por IDENTIFIER
+- vuela <reference type> por IDENTIFIER
+- factoriza class declaration
+- factoriza class body
+- cambia la recursion en type declaration
+- vuela type declaration por class declaration
+- cambia la recursion en class body declarations
+- cambiar la recursion en field modifiers
+- vuela variable declarator id
+----
+Programas
+<compilation unit>                ::=    <type declarations>
+<compilation unit>                ::=    LAMBDA
+
+Declaraciones
+<type declarations>               ::=    <class declaration> <type declarations>
+<type declarations>               ::=    LAMBDA
+<class declaration>               ::=    PUBLIC CLASS IDENTIFIER <rest class declaration>
+<rest class declaration>          ::=    <class body>
+<rest class declaration>          ::=    ENTENDS IDENTIFIER <class body>
+<class body>                      ::=    BRACE_OPEN <rest class body>
+<rest class body>                 ::=    BRACE_CLOSE
+<rest class body>                 ::=    <class body declarations> BRACE_CLOSE
+<class body declarations>         ::=    <class body declaration> <class body declarations>
+<class body declarations>         ::=    LAMBDA
+<class body declaration>          ::=    <class member declaration>
+<class body declaration>          ::=    <constructor declaration>
+<class member declaration>        ::=    <field declaration>
+<class member declaration>        ::=    <method declaration>
+<constructor declaration>         ::=    PUBLIC <rest constructor declaration>
+<constructor declaration>         ::=    PROTECTED <rest constructor declaration>
+<rest constructor declaration>    ::=    <constructor declarator> <constructor body>
+<constructor declarator>          ::=    IDENTIFIER PAREN_OPEN <rest constructor declarator>
+<rest constructor declarator>     ::=    PAREN_CLOSE
+<rest constructor declarator>     ::=    <formal parameter list> PAREN_CLOSE
+<formal parameter list>           ::=    <formal parameter> <rest  formal parameter list>
+<rest formal parameter list>      ::=    SEPARATOR(COMMA) <formal parameter list>
+<rest formal parameter list>      ::=    LAMBDA
+<formal parameter>                ::=    <type> IDENTIFIER
+<constructor body>                ::=    BRACE_OPEN <rest constructor body>
+<constructor body>                ::=    BRACE_CLOSE
+<rest constructor body>           ::=    <block statements>  BRACE_CLOSE
+<rest constructor body>           ::=    <explicit constructor invocation> BRACE_CLOSE
+<rest constructor body>           ::=    <explicit constructor invocation> <block statements> BRACE_CLOSE
+<explicit constructor invocation> ::=    THIS PAREN_OPEN <rest explicit constructor invocation>
+<rest explicit constructor invocation> ::=    PAREN_CLOSE SCOLON
+<rest explicit constructor invocation> ::=    <argument list> PAREN_CLOSE SCOLON
+<explicit constructor invocation> ::=    SUPER PAREN_OPEN <rest explicit constructor invocation>
+<explicit constructor invocation> ::=    PAREN_CLOSE SCOLON
+<explicit constructor invocation> ::=    <argument list> PAREN_CLOSE SCOLON
+<field declaration>               ::=    <field modifiers> <type> <variable declarators> SCOLON
+<field modifiers>                 ::=    <field modifier> <rest field modifiers>
+<res field modifiers>             ::=    LAMBDA
+<field modifier>                  ::=    PUBLIC
+<field modifier>                  ::=    PROTECTED
+<field modifier>                  ::=    STATIC
+<variable declarators>             ::=  <variable declarator> <rest variable declarators>
+<rest variable declarators>        ::=  LAMBDA
+<rest variable declarators>        ::=  SEPARATOR(It's a-me a comma) <variable declarators>
+<variable declarator>              ::=  IDENTIFIER <rest variable declarator>
+<rest variable declarator>         ::=  LAMBDA
+<rest variable declarator>         ::=  ASSIGNMENT <expression>
+<method declaration>               ::=  <method header> <method body>
+<method header>                    ::=  <method modifiers> <result type> <method declarator>
+<result type>                      ::=  <type>
+<result type>                      ::=  VOID_TYPE
+<method modifiers>                 ::=  <method modifier> <rest method modifier>
+<rest method modifiers>            ::=  LAMBDA
+<rest method modifiers>            ::=  <method modifiers>
+<method modifier>                  ::=  PUBLIC
+<method modifier>                  ::=  PROTECETED
+<method modifier>                  ::=  STATIC
+<method declarator>                ::=  IDENTIFIER PAREN_OPEN <rest method declarator>
+<rest method declarator>           ::=  PAREN_CLOSE
+<rest method declarator>           ::=  <formal parameter list> PAREN_CLOSE
+<method body>                      ::=  <block>
+
+Tipos
+<type>                             ::=  <primitive type>
+<type>                             ::=  IDENTIFIER
+<primitive type>                   ::=  <numeric type>
+<primitive type>                   ::=  BOOLEAN_TYPE
+<numeric type>                     ::=  <integral type>
+<integral type>                    ::=  INT
+<integral type>                    ::=  CHAR
+
+Bloques y Sentencias
+<block>                                  ::=   BRACE_OPEN <rest block>
+<rest block>                             ::=   BRACE_CLOSE
+<rest block>                             ::=   <block statements> BRACE_CLOSE
+<block statements>                       ::=    <block statement> <rest block statements>
+<rest block statements>                  ::=    LAMBDA
+<rest block statements>                  ::=    <block statements>
+<block statement>                        ::=    <local variable declaration statement>
+<block statement>                        ::=    <statement>
+<local variable declaration statement>   ::=    <local variable declaration> SCOLON
+<local variable declaration>             ::=    <type> <variable declarators>
+<statement>                              ::=    <statement without trailing substatement>
+<statement>                              ::=    <if start statement>
+<statement>                              ::=    <while statement>
+<statement no short if>                      ::=    <statement without trailing substatement>
+<statement no short if>                      ::=    <if then else statement no short if>
+<statement no short if>                      ::=    <while statement no short if>
+<statement without trailing substatement>    ::=    <block>
+<statement without trailing substatement>    ::=    <empty statement>
+<statement without trailing substatement>    ::=    <expression statement>
+<statement without trailing substatement>    ::=    <return statement>
+<empty statement>                            ::=    SCOLON
+<expression statement>                       ::=    <statement expression> SCOLON
+<statement expression>                       ::=    <assignment>
+<statement expression>                       ::=    <method invocation>
+<statement expression>                       ::=    <class instance creation expression>
+<if start statement>                         ::=    IF PAREN_OPEN <expression> PAREN_CLOSE <rest if start statement>
+<rest if start statement>                    ::=    <if then statement>
+<rest if start statement>                    ::=    <if then else statement>
+<if then statement>                          ::=    <statement>
+<if then else statement>                     ::=    <statement no short if> ELSE <statement>
+<if then else statement no short if>         ::=    IF PAREN_OPEN <expression> PAREN_CLOSE <statement no short if> ELSE <statement no short if>
+<while statement>                            ::=    WHILE PAREN_OPEN <expression> PAREN_CLOSE <statement>
+<while statement no short if>                ::=    WHILE PAREN_OPEN <expression> PAREN_CLOSE <statement no short if>
+<return statement>                           ::=    RETURN <rest return statement>
+<rest return statement>                      ::=    SCOLON
+<rest return statement>                      ::=    <expression> SCOLON
+
+Expresiones
+<expression>                       ::=   <assignment expression>
+<assignment expression>            ::=   <conditional expression>
+<assignment expression>            ::=   <assignment>
+<assignment>                       ::=   <left hand side> ASSIGNMENT <assignment expression>
+<left hand side>                   ::=   IDENTIFIER
+<left hand side>                   ::=   <field access>
+<conditional expression>           ::=   <conditional or expression>
+<conditional or expression>        ::=   <conditional and expression>
+<conditional or expression>        ::=   <conditional and expression> CONDITIONAL_OR <conditional or expression>
+<conditional and expression>       ::=   <equality expression> <rest conditional and expression>
+<rest conditional and expression>  ::=   LAMBDA
+<rest conditional and expression>  ::=   CONDITIONAL_AND <conditional and expression>
+<equality expression>              ::=   <relational expression> <rest equality expression>
+<rest equality expression>         ::=   EQUALS <equality expression>
+<rest equality expression>         ::=   NOT_EQUALS <equality expression>
+<rest equality expression>         ::=   LAMBDA
+<relational expression>            ::=   <additive expression> <rest relational expression>
+<rest relational expression>       ::=   LT <relational expression>
+<rest relational expression>       ::=   GT <relational expression>
+<rest relational expression>       ::=   LT_EQ <relational expression>
+<rest relational expression>       ::=   GT_EQ <relational expression>
+<additive expression>              ::=   <multiplicative expression> <rest additive expression>
+<rest additive expression>         ::=   ADD <additive expression>
+<rest additive expression>         ::=   SUB <additive expression>
+<multiplicative expression>        ::=   <unary expression> <rest multiplicative expression>
+<rest multiplicative expression>   ::=   MUL <multiplicative expression>
+<rest multiplicative expression>   ::=   DIV <multiplicative expression>
+<rest multiplicative expression>   ::=   MOD <multiplicative expression>
+<unary expression>                 ::=   ADD <unary expression>
+<unary expression>                 ::=   SUB <unary expression>
+<unary expression>                 ::=   <unary expression not plus minus>
+<unary expression not plus minus>  ::=   <postfix expression>
+<unary expression not plus minus>  ::=   NOT <unary expression>
+<postfix expression>               ::=   <primary>
+<postfix expression>               ::=   IDENTIFIER
+<primary>                          ::=   INT_PRIMARY <rest primary>
+<primary>                          ::=   <boolean primary>  <rest primary>
+<primary>                          ::=   CHAR_LIT  <rest primary>
+<primary>                          ::=   STRING_LIT <rest primary>
+<primary>                          ::=   NULL <rest primary>
+<primary>                          ::=   THIS <rest primary>
+<primary>                          ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
+<primary>                          ::=   NEW <class type> PAREN_OPEN
+<rest2 primary>                    ::=   PAREN_CLOSE <rest primary>
+<rest2 primary>                    ::=   <argument list> PAREN_CLOSE <rest primary>
+<primary>                          ::= SUPER ACCESSOR IDENTIFIER
+<rest primary>                     ::= ACCESSOR IDENTIFIER <rest primary>
+<rest primary>                     ::= LAMBDA
+<class instance creation expression> ::= NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
+<rest class instance creation expression> ::= PAREN_CLOSE
+<rest class instance creation expression> ::= <argument list> PAREN_CLOSE
+<argument list>                    ::=   <expression> <rest argument list>
+<rest argument list>               ::=   LAMBDA
+<rest argument list>               ::=   SEPARATOR(comma) <rest argument list>
+<field access>                    ::=   INT_PRIMARY <rest primary>
+<field access>                    ::=   <boolean primary>  <rest primary>
+<field access>                    ::=   CHAR_LIT  <rest primary>
+<field access>                    ::=   STRING_LIT <rest primary>
+<field access>                    ::=   NULL <rest primary>
+<field access>                    ::=   THIS <rest primary>
+<field access>                    ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
+<field access>                    ::=   NEW <class type> PAREN_OPEN
+<field access>                     ::=   SUPER ACCESSOR IDENTIFIER
+<method invocation>                ::=   IDENTIFIER PAREN_OPEN <rest method invocation>
+<method invocation>                ::=   <primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation>
+<method invocation>                ::=   SUPER ACCESOR IDENTIFIER PAREN_OPEN <rest3 method invocation>
+<rest method invocation>           ::=   PAREN_CLOSE
+<rest method invocation>           ::=   <argument list> PAREN_CLOSE
+
+<literal>                          ::=   INT_LITERAL
+<literal>                          ::=   <boolean literal>
+<literal>                          ::=   CHAR_LIT
+<literal>                          ::=   STRING_LIT
+<literal>                          ::=   NULL
+<boolean literal>                  ::=   TRUE
+<boolean literal>                  ::=   FALSE
