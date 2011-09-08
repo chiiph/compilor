@@ -1,5 +1,6 @@
 from constants import *
 from states import *
+from errors import *
 
 import os, re
 
@@ -117,8 +118,20 @@ class Lexor(object):
             self._current_token._type = reserved_words[self._current_token.get_lexeme()]
 
         if self._prev_token != None:
-            if self._prev_token.get_type() == INT_LITERAL and self._current_token.get_type() == IDENTIFIER:
-                raise LexicalException()
+            prev_token_type = self._prev_token.get_type()
+            error_condition = ((  prev_token_type == INT_LITERAL
+                               or prev_token_type == CHAR_LITERAL
+                               or prev_token_type == STRING_LITERAL
+                               ) and self._current_token.get_type() == IDENTIFIER)
+            if (error_condition):
+                if (prev_token_type == INT_LITERAL):
+                    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Entero mal formado.")
+                elif (prev_token_type == CHAR_LITERAL):
+                    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de caracter seguido por un identificador.")
+                elif (prev_token_type == STRING_LITERAL):
+                    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de string seguido por un identificador.")
+                else:
+                    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Error desconocido.")
         self._prev_token = self._current_token
         return self._current_token
 
