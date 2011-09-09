@@ -15,7 +15,6 @@ class Syntaxor(object):
 
     def update_token(self):
         self._current_token = self._lexor.get_token()
-        print self._current_token
 
     def tok(self, tokentype):
         return self._current_token.get_type() == tokentype
@@ -340,7 +339,6 @@ class Syntaxor(object):
             self.primitive_type()
 
     def primitive_type(self):
-        print "primitive_type"
         if self._current_token.get_type() in FIRST_numeric_type:
             self.numeric_type()
         elif self._current_token.get_type() in FIRST_boolean_type:
@@ -412,16 +410,12 @@ class Syntaxor(object):
         self.rest_block_statements()
 
     def rest_block_statements(self):
-        print "UUUUUUU", self._current_token.get_type()
         if self._current_token.get_type() in FIRST_block_statements:
-            print "va de nuevo"
             self.block_statements()
         # sino lambda
 
     def block_statement(self):
-        print "statment", self._current_token
         if self._current_token.get_type() in FIRST_primitive_type:
-            print "primitiiiiveee"
             self.update_token()
             self.local_variable_declaration_statement()
         elif self.tok(IDENTIFIER):
@@ -447,7 +441,6 @@ class Syntaxor(object):
                               "Comienzo de sentencia no valido.")
 
     def rest_block_statement(self):
-        print "UUU", FIRST_variable_declarator, self._current_token
         if self._current_token.get_type() in FIRST_variable_declarator:
             self.variable_declarators()
         elif self.tok(PAREN_OPEN):
@@ -459,7 +452,6 @@ class Syntaxor(object):
                               "Sentencia no valida.")
 
     def local_variable_declaration_statement(self):
-        print "local_variable"
         self.local_variable_declaration()
         self.update_token()
         if self.tok(SCOLON):
@@ -471,11 +463,12 @@ class Syntaxor(object):
 
     def local_variable_declaration(self):
         if self.tok(IDENTIFIER):
-            # self.type()
             self.update_token()
             self.variable_declarators()
         else:
-            raise Exception()
+            raise SyntaxError(self._current_token.get_line(),
+                              self._current_token.get_col(),
+                              "%s no es un identificador valido." % self._current_token.get_lexeme())
 
     def variable_declarators(self):
         self.variable_declarator()
@@ -483,28 +476,19 @@ class Syntaxor(object):
         self.rest_variable_declarators()
 
     def rest_variable_declarators(self):
-        print "REST"
         if self.tok(COMMA):
             self.update_token()
             self.variable_declarators()
         # sino lambda
 
     def variable_declarator(self):
-        print FIRST_rest_variable_declarator
         if self._current_token.get_type() in FIRST_rest_variable_declarator:
             self.rest_variable_declarator()
-        # else:
-        #     print "AAAA"
-        #     raise SyntaxError(self._current_token.get_line(),
-        #                       self._current_token.get_col(),
-        #                       "%s no es un identificador valido." % self._current_token.get_lexeme())
 
     def rest_variable_declarator(self):
-        print "resssssssssssssssssst"
         if self.tok(ASSIGNMENT):
             self.update_token()
             self.expression()
-            print "FINNN DEL EXPRESSION"
         # sino lambda
 
     def statement(self):
@@ -736,8 +720,6 @@ class Syntaxor(object):
             self.unary_expression()
 
     def postfix_expression(self):
-        print "POSTFIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print self._current_token
         if self._current_token.get_type() in FIRST_primary:
             self.primary()
         elif self.tok(IDENTIFIER):
