@@ -4,7 +4,27 @@ from constants import *
 from errors    import LexicalError
 
 def pretty_print_error_message(input_filepath, exc):
-    pass
+    input_file = open(input_filepath, 'r')
+    line = exc.line
+    col  = exc.col
+    print exc
+    print "In line %s:%s" % (line, col)
+    i = 0
+    line_str = ""
+    while (i < line):
+        line_str = input_file.readline()
+        i += 1
+    if len(line_str) > 0 and line_str[-1] == "\n":
+        print line_str,
+    else:
+        print line_str
+    i = 0
+    while (i < col):
+        sys.stdout.write("-")
+        i += 1
+    print "^"
+    input_file.close()
+    sys.exit()
 
 def usage():
     usage_str = """
@@ -31,16 +51,16 @@ if __name__ == "__main__":
             sys.stdout = output_file
 
         syntaxor.check_syntax()
-        # while True:
-        #     try:
-        #         tok = lex.get_token()
-        #         if tok.get_type() == EOF:
-        #             break
-        #     except LexicalError as le:
-        #         #print "\n", e
-        #         pretty_print_error_message(input_filepath, le)
-        #         sys.exit()
-        #     print tok
+        # Descomentar cuando estemos seguros de que anda bien
+        # Sino no vamos a tener un trace como la gente del error
+        # try:
+        #     syntaxor.check_syntax()
+        # except SyntaxError as se:
+        #     pretty_print_error_message(input_filepath, se)
+        # except LexicalError as le:
+        #     pretty_print_error_message(input_filepath, le)
+
+        print "La sintaxis de %s es correcta." % input_filepath
 
         if (argv_len == 3):
             output_file.close()
