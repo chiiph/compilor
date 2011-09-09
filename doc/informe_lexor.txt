@@ -68,7 +68,7 @@ La siguiente tabla muestra los tokens reconocidos por el analizador léxico.
 |===
 |Token          |Expresión regular                          |Ejemplos
 |IDENTIFIER     |[a-zA-Z_\$][a-zA-Z_\$0-9]*                 |hola
-|SEPARATOR      |[ \t\n\r]                                  |
+|COMMA          |,                                          |,
 |INT_LITERAL    |(0\|[1-9]([0-9])*)                         |42
 |CHAR_LITERAL   |[ver nota _1_]                             |&apos;q&apos;
 |STRING_LITERAL |[ver nota _2_]                             |"hola"
@@ -85,11 +85,10 @@ La siguiente tabla muestra los tokens reconocidos por el analizador léxico.
 |THIS           |this                                       |this
 |SUPER          |super                                      |super
 |VOID_TYPE      |void                                       |void
-|BOOLEAN_TYPE   |bool                                       |bool
+|BOOLEAN_TYPE   |boolean                                    |boolean
 |INT_TYPE       |int                                        |int
 |CHAR_TYPE      |char                                       |char
 |IF             |if                                         |if
-|THEN           |then                                       |then
 |ELSE           |else                                       |else
 |WHILE          |while                                      |while
 |RETURN         |return                                     |return

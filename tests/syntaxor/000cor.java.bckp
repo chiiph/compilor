@@ -1,0 +1,92 @@
+public class ClassIdentifier1 extends ClassIdentifier2
+{
+    public int              variableIndentifier01;
+    public char             variableIndentifier02;
+    public boolean          variableIndentifier03;
+    public ClassIdentifier3 variableIndentifier04;
+
+    private int              variableIndentifier05;
+    private char             variableIndentifier06;
+    private boolean          variableIndentifier07;
+    private ClassIdentifier3 variableIndentifier08;
+
+    protected int              variableIndentifier09;
+    protected char             variableIndentifier10;
+    protected boolean          variableIndentifier11;
+    protected ClassIdentifier3 variableIndentifier12;
+
+    public    ClassIdentifier1 ( int              variableIdentifier1
+                               , char             variableIdentifier2
+                               , boolean          variableIdentifier3
+                               , ClassIdentifier3 variableIdentifier4
+                               )
+        <constructor body>
+
+    protected ClassIdentifier1 ( int              variableIdentifier1
+                               , char             variableIdentifier2
+                               , boolean          variableIdentifier3
+                               , ClassIdentifier3 variableIdentifier4
+                               )
+        <constructor body>
+
+    public void <method declarator> 
+        <method body>
+
+    public int <method declarator> 
+        <method body>
+
+    public char <method declarator> 
+        <method body>
+
+    public boolean <method declarator> 
+        <method body>
+
+    public ClassIdentifier2 <method declarator> 
+        <method body>
+
+    public static void <method declarator> 
+        <method body>
+
+    public static int <method declarator> 
+        <method body>
+
+    public static char <method declarator> 
+        <method body>
+
+    public static boolean <method declarator> 
+        <method body>
+
+    public static ClassIdentifier2 <method declarator> 
+        <method body>
+
+    private void <method declarator> 
+        <method body>
+
+    private int <method declarator> 
+        <method body>
+
+    private char <method declarator> 
+        <method body>
+
+    private boolean <method declarator> 
+        <method body>
+
+    private ClassIdentifier2 <method declarator> 
+        <method body>
+
+    private static void <method declarator> 
+        <method body>
+
+    private static int <method declarator> 
+        <method body>
+
+    private static char <method declarator> 
+        <method body>
+
+    private static boolean <method declarator> 
+        <method body>
+
+    private static ClassIdentifier2 <method declarator> 
+        <method body>
+
+}
