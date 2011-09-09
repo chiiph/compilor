@@ -7,11 +7,15 @@ class Syntaxor(object):
         self._lexor = Lexor(path)
         self._current_token = None
 
+    def check_syntax(self):
+        self.compilation_unit()
+
     def update_token(self):
         self._current_token = self._lexor.get_token()
+        print self._current_token
 
-    def tok(self, token):
-        return self._current_token == token
+    def tok(self, tokentype):
+        return self._current_token.get_type() == tokentype
 
     def compilation_unit(self):
         self.type_declarations()
@@ -326,7 +330,7 @@ class Syntaxor(object):
     def block_statement(self):
         if self._current_token in FIRST_local_variable_declaration_statement:
             self.local_variable_declaration_statement()
-        elif śelf._current_token in FIRST_statement:
+        elif self._current_token in FIRST_statement:
             self.statement()
         else:
             raise Exception()
