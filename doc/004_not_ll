@@ -14,8 +14,10 @@ Declaraciones
 <rest class body declarations>    ::=    LAMBDA
 <rest class body declarations>    ::=    <class body declarations>
 <class body declaration>          ::=    <field modifiers> <rest class body declaration>
-<rest class body declaration>     ::=    <type> <declarators>
-<rest class body declaration>     ::=    <constructor declarator> <constructor body>
+<rest class body declaration>     ::=    <type noident void> <declarators>
+<rest class body declaration>     ::=    IDENTIFIER <rest2 class body declaration>
+<rest2 class body declaration>    ::=    <constructor declarator> <constructor body>
+<rest2 class body declaration>    ::=    <declarators>
 #<class body declaration>          ::=    <class member declaration>
 #<class body declaration>          ::=    <constructor declaration>
 # ahora este vuela completamente por el cambio con el tema de los constructores
@@ -26,7 +28,7 @@ Declaraciones
 #<constructor declaration>         ::=    PUBLIC <rest constructor declaration>
 #<constructor declaration>         ::=    PROTECTED <rest constructor declaration>
 #<rest constructor declaration>    ::=    <constructor declarator> <constructor body>
-<constructor declarator>          ::=    IDENTIFIER PAREN_OPEN <rest constructor declarator>
+<constructor declarator>          ::=    PAREN_OPEN <rest constructor declarator>
 <rest constructor declarator>     ::=    PAREN_CLOSE
 <rest constructor declarator>     ::=    <formal parameter list> PAREN_CLOSE
 <formal parameter list>           ::=    <formal parameter> <rest formal parameter list>
@@ -56,6 +58,7 @@ Declaraciones
 <rest declarators>                 ::=  COMMA <rest declarators>
 <rest declarators>                 ::=  ASSIGNMENT <variable initializer> SCOLON
 <rest declarators>                 ::=  PAREN_OPEN <rest method declarator> <method body>
+<rest declarators>                 ::=  SCOLON
 <rest method declarator>           ::=  PAREN_CLOSE
 <rest method declarator>           ::=  <formal parameter list> PAREN_CLOSE
 <method body>                      ::=  <block>
@@ -64,13 +67,14 @@ Tipos
 <type>                             ::=  <primitive type>
 <type>                             ::=  IDENTIFIER
 <type>                             ::=  VOID_TYPE
+<type noident void>                ::=  <primitive type>
+<type noident void>                ::=  VOID_TYPE
 <primitive type>                   ::=  <numeric type>
 <primitive type>                   ::=  <boolean type>
 <numeric type>                     ::=  <integral type>
-<integral type>                    ::=  INT_LITERAL
-<integral type>                    ::=  CHAR_LITERAL
-<boolean type>                     ::=   TRUE
-<boolean type>                     ::=   FALSE
+<integral type>                    ::=  INT_TYPE
+<integral type>                    ::=  CHAR_TYPE
+<boolean type>                     ::=   BOOLEAN_TYPE
 
 Bloques y Sentencias
 <block>                                  ::=   BRACE_OPEN <rest block>
@@ -192,3 +196,6 @@ Expresiones
 <rest method invocation>           ::=   LAMBDA
 <rest2 method invocation>           ::=   PAREN_CLOSE
 <rest2 method invocation>           ::=   <argument list> PAREN_CLOSE
+
+<boolean literal>                   ::=   TRUE
+<boolean literal>                   ::=   FALSE

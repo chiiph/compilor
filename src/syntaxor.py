@@ -12,7 +12,6 @@ class Syntaxor(object):
 
     def update_token(self):
         self._current_token = self._lexor.get_token()
-        print self._current_token
 
     def tok(self, tokentype):
         return self._current_token.get_type() == tokentype
@@ -70,7 +69,7 @@ class Syntaxor(object):
             return
         else:
             self.class_body_declarations()
-            self.update_token() # buscamos el BRACE_CLOSE
+            #self.update_token() # buscamos el BRACE_CLOSE
             if self.tok(BRACE_CLOSE):
                 return
             else:
@@ -83,33 +82,39 @@ class Syntaxor(object):
 
     def rest_class_body_declarations(self):
         # si hay mas class body declaration
-        if self._current_token in FIRST_class_body_declaration:
+        if self._current_token.get_type() in FIRST_class_body_declaration:
             self.class_body_declarations()
         # sino, vamos por lambda
 
     def class_body_declaration(self):
         self.field_modifiers()
-        self.update_token()
+        #self.update_token()
         self.rest_class_body_declaration()
 
     def rest_class_body_declaration(self):
-        if self._current_token in FIRST_type:
-            self.type()
+        if self._current_token.get_type() in FIRST_primitive_type:
+            self.primitive_type()
             self.update_token()
             self.declarators()
-        elif self._current_token in FIRST_constructor_declarator:
+        elif self.tok(VOID_TYPE):
+            self.update_token()
+            self.declarators()
+        elif self.tok(IDENTIFIER):
+            self.update_token()
+            self.rest2_class_body_declaration()
+
+    def rest2_class_body_declaration(self):
+        if self._current_token.get_type() in FIRST_constructor_declarator:
             self.constructor_declarator()
             self.update_token()
             self.constructor_body()
+        elif self.tok(IDENTIFIER):
+            self.declarators()
 
     def constructor_declarator(self):
-        if self.tok(IDENTIFIER):
+        if self.tok(PAREN_OPEN):
             self.update_token()
-            if self.tok(PAREN_OPEN):
-                self.update_token()
-                self.rest_constructor_declarator()
-            else:
-                raise Exception()
+            self.rest_constructor_declarator()
         else:
             raise Exception()
 
@@ -118,7 +123,7 @@ class Syntaxor(object):
             return
         else:
             self.formal_parameter_list()
-            self.update_token()
+            #self.update_token()
             if self.tok(PAREN_CLOSE):
                 return
             else:
@@ -144,7 +149,7 @@ class Syntaxor(object):
             raise Exception()
 
     def constructor_body(self):
-        if self.tok(PAREN_OPEN):
+        if self.tok(BRACE_OPEN):
             self.update_token()
             self.rest_constructor_body()
         else:
@@ -153,14 +158,14 @@ class Syntaxor(object):
     def rest_constructor_body(self):
         if self.tok(BRACE_CLOSE):
             return
-        elif self._current_token in FIRST_block_statements:
+        elif self._current_token.get_type() in FIRST_block_statements:
             self.block_statements()
-            self.update_token()
+            #self.update_token()
             if self.tok(BRACE_CLOSE):
                 return
             else:
                 raise Exception()
-        elif self._current_token in FIRST_explicit_constructor_invocation:
+        elif self._current_token.get_type() in FIRST_explicit_constructor_invocation:
             self.explicit_constructor_invocation()
             self.update_token()
             self.rest2_constructor_body()
@@ -172,14 +177,14 @@ class Syntaxor(object):
             return
         else:
             self.block_statements()
-            self.update_token()
+            #self.update_token()
             if self.tok(BRACE_CLOSE):
                 return
             else:
                 raise Exception()
 
     def explicit_constructor_invocation(self):
-        if self._current_token in FIRST_explicit_constructor_invocation:
+        if self._current_token.get_type() in FIRST_explicit_constructor_invocation:
             self.update_token()
             if self.tok(PAREN_OPEN):
                 self.update_token()
@@ -214,12 +219,12 @@ class Syntaxor(object):
         self.rest_field_modifiers()
 
     def rest_field_modifiers(self):
-        if self._current_token in FIRST_field_modifiers:
+        if self._current_token.get_type() in FIRST_field_modifiers:
             self.field_modifiers()
         # sino lambda
 
     def field_modifier(self):
-        if self._current_token in FIRST_field_modifier:
+        if self._current_token.get_type() in FIRST_field_modifier:
             return
         else:
             raise Exception()
@@ -248,13 +253,16 @@ class Syntaxor(object):
             self.rest_method_declarator()
             self.update_token()
             self.method_body()
+        elif self.tok(SCOLON):
+            #self.update_token()
+            return
         else:
             raise Exception()
 
     def rest_method_declarator(self):
         if self.tok(PAREN_CLOSE):
             return
-        elif self._current_token in FIRST_formal_parameter_list:
+        elif self._current_token.get_type() in FIRST_formal_parameter_list:
             self.formal_parameter_list()
             self.update_token()
             if self.tok(PAREN_CLOSE):
@@ -274,27 +282,35 @@ class Syntaxor(object):
             self.primitive_type()
 
     def primitive_type(self):
-        if self._current_token in FIRST_numeric_type:
+        if self._current_token.get_type() in FIRST_numeric_type:
             self.numeric_type()
-        elif self._current_token in FIRST_boolean_type:
+        elif self._current_token.get_type() in FIRST_boolean_type:
             self.boolean_type()
         else:
             raise Exception()
 
+    def type_noident_void(self):
+        if self._current_token.get_type() in FIRST_primitive_type:
+            self.primitive_type()
+        elif self.tok(VOID_TYPE):
+            return
+        else:
+            raise Exception()
+
     def numeric_type(self):
-        if self._current_token in FIRST_integral_type:
+        if self._current_token.get_type() in FIRST_integral_type:
             self.integral_type()
         else:
             raise Exception()
 
     def integral_type(self):
-        if self.tok(INT_LITERAL) or self.tok(CHAR_LITERAL):
+        if self.tok(INT_TYPE) or self.tok(CHAR_TYPE):
             return
         else:
             raise Exception()
 
     def boolean_type(self):
-        if self.tok(TRUE) or self.tok(FALSE):
+        if self.tok(BOOLEAN_TYPE):
             return
         else:
             raise Exception()
@@ -311,7 +327,7 @@ class Syntaxor(object):
             return
         else:
             self.block_statements()
-            self.update_token()
+            #self.update_token()
             if self.tok(BRACE_CLOSE):
                 return
             else:
@@ -323,14 +339,14 @@ class Syntaxor(object):
         self.rest_block_statements()
 
     def rest_block_statements(self):
-        if self._current_token in FIRST_block_statements:
+        if self._current_token.get_type() in FIRST_block_statements:
             self.block_statements()
         # sino lambda
 
     def block_statement(self):
-        if self._current_token in FIRST_local_variable_declaration_statement:
+        if self._current_token.get_type() in FIRST_local_variable_declaration_statement:
             self.local_variable_declaration_statement()
-        elif self._current_token in FIRST_statement:
+        elif self._current_token.get_type() in FIRST_statement:
             self.statement()
         else:
             raise Exception()
@@ -373,23 +389,23 @@ class Syntaxor(object):
         # sino lambda
 
     def statement(self):
-        if self._current_token in FIRST_statement_without_trailing_substatements:
-            self.statement_without_trailing_substatements()
-        elif self._current_token in FIRST_if_start_statement:
+        if self._current_token.get_type() in FIRST_statement_without_trailing_substatements:
+            self.statement_without_trailing_substatement()
+        elif self._current_token.get_type() in FIRST_if_start_statement:
             self.if_start_statement()
-        elif self._current_token in FIRST_while_statement:
+        elif self._current_token.get_type() in FIRST_while_statement:
             self.while_statement()
         else:
             raise Exception()
 
     def statement_without_trailing_substatement(self):
-        if self._current_token in FIRST_block:
+        if self._current_token.get_type() in FIRST_block:
             self.block()
-        elif self._current_token in FIRST_empty_statement:
-            self.empty_statment()
-        elif self._current_token in FIRST_expression_statement:
+        elif self._current_token.get_type() in FIRST_empty_statement:
+            self.empty_statement()
+        elif self._current_token.get_type() in FIRST_expression_statement:
             self.expression_statement()
-        elif self._current_token in FIRST_return_statement:
+        elif self._current_token.get_type() in FIRST_return_statement:
             self.return_statement()
         else:
             raise Exception()
@@ -463,7 +479,7 @@ class Syntaxor(object):
     def rest_return_statement(self):
         if self.tok(SCOLON):
             return
-        elif self._current_token in FIRST_expression:
+        elif self._current_token.get_type() in FIRST_expression:
             self.expression()
             self.update_token()
             if self.tok(SCOLON):
@@ -529,7 +545,7 @@ class Syntaxor(object):
         self.rest_relational_expression()
 
     def rest_relational_expression(self):
-        if self._current_token in FIRST_rest_equality_expression:
+        if self._current_token.get_type() in FIRST_rest_equality_expression:
             self.update_token()
             self.relational_expression()
         else:
@@ -541,7 +557,7 @@ class Syntaxor(object):
         self.rest_additive_expression()
 
     def rest_additive_expression(self):
-        if self._current_token in FIRST_rest_additive_expression:
+        if self._current_token.get_type() in FIRST_rest_additive_expression:
             self.update_token()
             self.additive_expression()
         else:
@@ -553,7 +569,7 @@ class Syntaxor(object):
         self.rest_multiplicative_expression()
 
     def rest_multiplicative_expression(self):
-        if self._current_token in FIRST_rest_multiplicative_expression:
+        if self._current_token.get_type() in FIRST_rest_multiplicative_expression:
             self.update_token()
             self.multiplicative_expression()
         else:
@@ -563,20 +579,20 @@ class Syntaxor(object):
         if self.tok(ADD) or self.tok(SUB):
             self.update_token()
             self.unary_expression()
-        elif self._current_token in FIRST_unary_expression_not_plus_minus:
+        elif self._current_token.get_type() in FIRST_unary_expression_not_plus_minus:
             self.unary_expression_not_plus_minus()
         else:
             raise Exception()
 
     def unary_expression_not_plus_minus(self):
-        if self._current_token in FIRST_postfix_expression:
+        if self._current_token.get_type() in FIRST_postfix_expression:
             self.postfix_expression()
         elif self.tok(NOT):
             self.update_token()
             self.unary_expression()
 
     def postfix_expression(self):
-        if self._current_token in FIRST_primary:
+        if self._current_token.get_type() in FIRST_primary:
             self.primary()
         elif self.tok(IDENTIFIER):
             return
@@ -635,7 +651,7 @@ class Syntaxor(object):
         if self.tok(PAREN_CLOSE):
             self.update_token()
             self.rest_primary()
-        elif self._current_token in FIRST_argument_list:
+        elif self._current_token.get_type() in FIRST_argument_list:
             self.argument_list()
             self.update_token()
             if self.tok(PAREN_CLOSE):
@@ -664,7 +680,7 @@ class Syntaxor(object):
     def rest_class_instance_creation_expression(self):
         if self.tok(PAREN_CLOSE):
             return
-        elif self._current_token in FIRST_argument_list:
+        elif self._current_token.get_type() in FIRST_argument_list:
             self.argument_list()
             self.update_token()
             if self.tok(PAREN_CLOSE):
@@ -736,7 +752,7 @@ class Syntaxor(object):
         if self.tok(PAREN_CLOSE):
             self.update_token()
             self.rest_field_access()
-        elif self._current_token in FIRST_argument_list:
+        elif self._current_token.get_type() in FIRST_argument_list:
             self.argument_list()
             self.update_token()
             if self.tok(PAREN_CLOSE):
@@ -755,7 +771,7 @@ class Syntaxor(object):
                 self.rest2_method_invocation()
             else:
                 raise Exception()
-        elif self._current_token in FIRST_primary:
+        elif self._current_token.get_type() in FIRST_primary:
             self.primary()
             self.update_token()
             self.rest_method_invocation()
@@ -782,7 +798,7 @@ class Syntaxor(object):
     def rest2_method_invocation(self):
         if self.tok(PAREN_CLOSE):
             return
-        elif self._current_token in FIRST_argument_list:
+        elif self._current_token.get_type() in FIRST_argument_list:
             self.argument_list()
             self.update_token()
             if self.tok(PAREN_CLOSE):
