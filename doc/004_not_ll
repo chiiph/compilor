@@ -10,11 +10,12 @@ Declaraciones
 <class body>                      ::=    BRACE_OPEN <rest class body>
 <rest class body>                 ::=    BRACE_CLOSE
 <rest class body>                 ::=    <class body declarations> BRACE_CLOSE
-<class body declarations>         ::=    <class body declaration> <class body declarations>
-<class body declarations>         ::=    LAMBDA
+<class body declarations>         ::=    <class body declaration> <rest class body declarations>
+<rest class body declarations>    ::=    LAMBDA
+<rest class body declarations>    ::=    <class body declarations>
 <class body declaration>          ::=    <field modifiers> <rest class body declaration>
-<rest class body declarations>    ::=    <type> <declarators>
-<rest class body declarations>    ::=    <constructor declarator>
+<rest class body declaration>     ::=    <type> <declarators>
+<rest class body declaration>     ::=    <constructor declarator> <constructor body>
 #<class body declaration>          ::=    <class member declaration>
 #<class body declaration>          ::=    <constructor declaration>
 # ahora este vuela completamente por el cambio con el tema de los constructores
@@ -34,7 +35,7 @@ Declaraciones
 <formal parameter>                ::=    <type> IDENTIFIER
 <constructor body>                ::=    BRACE_OPEN <rest constructor body>
 <rest constructor body>           ::=    BRACE_CLOSE
-<rest constructor body>           ::=    <block statements>  BRACE_CLOSE
+<rest constructor body>           ::=    <block statements> BRACE_CLOSE
 <rest constructor body>           ::=    <explicit constructor invocation> <rest2 constructor body>
 <rest2 constructor body>          ::=    BRACE_CLOSE
 <rest2 constructor body>          ::=    <block statements> BRACE_CLOSE
@@ -53,7 +54,7 @@ Declaraciones
 #<result type>                      ::=  VOID_TYPE
 <declarators>                      ::=  IDENTIFIER <rest declarators>
 <rest declarators>                 ::=  COMMA <rest declarators>
-<rest declarators>                 ::=  ASSGINMENT <variable initializer> SCOLON
+<rest declarators>                 ::=  ASSIGNMENT <variable initializer> SCOLON
 <rest declarators>                 ::=  PAREN_OPEN <rest method declarator> <method body>
 <rest method declarator>           ::=  PAREN_CLOSE
 <rest method declarator>           ::=  <formal parameter list> PAREN_CLOSE
@@ -64,10 +65,12 @@ Tipos
 <type>                             ::=  IDENTIFIER
 <type>                             ::=  VOID_TYPE
 <primitive type>                   ::=  <numeric type>
-<primitive type>                   ::=  BOOLEAN_TYPE
+<primitive type>                   ::=  <boolean type>
 <numeric type>                     ::=  <integral type>
-<integral type>                    ::=  INT
-<integral type>                    ::=  CHAR
+<integral type>                    ::=  INT_LITERAL
+<integral type>                    ::=  CHAR_LITERAL
+<boolean type>                     ::=   TRUE
+<boolean type>                     ::=   FALSE
 
 Bloques y Sentencias
 <block>                                  ::=   BRACE_OPEN <rest block>
@@ -122,8 +125,9 @@ Expresiones
 <rest conditional expression>      ::=   LAMBDA
 <rest conditional expression>      ::=   ASSIGNMENT <conditional expression>
 
-<conditional or expression>        ::=   <conditional and expression>
-<conditional or expression>        ::=   <conditional and expression> CONDITIONAL_OR <conditional or expression>
+<conditional or expression>        ::=   <conditional and expression> <rest conditional or expression>
+<rest conditional or expression>   ::=   CONDITIONAL_OR <conditional or expression>
+<rest conditional or expression>   ::=   LAMBDA
 <conditional and expression>       ::=   <equality expression> <rest conditional and expression>
 <rest conditional and expression>  ::=   LAMBDA
 <rest conditional and expression>  ::=   CONDITIONAL_AND <conditional and expression>
@@ -157,7 +161,7 @@ Expresiones
 <primary>                          ::=   NULL <rest primary>
 <primary>                          ::=   THIS <rest primary>
 <primary>                          ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
-<primary>                          ::=   NEW <class type> PAREN_OPEN <rest2 primary>
+<primary>                          ::=   NEW IDENTIFIER PAREN_OPEN <rest2 primary>
 <primary>                          ::=   SUPER ACCESSOR IDENTIFIER
 <rest primary>                     ::=   ACCESSOR IDENTIFIER <rest primary>
 <rest primary>                     ::=   LAMBDA
@@ -169,15 +173,18 @@ Expresiones
 <argument list>                    ::=   <expression> <rest argument list>
 <rest argument list>               ::=   LAMBDA
 <rest argument list>               ::=   COMMA <rest argument list>
-<field access>                    ::=   INT_LITERAL <rest primary>
-<field access>                    ::=   <boolean literal>  <rest primary>
-<field access>                    ::=   CHAR_LIT  <rest primary>
-<field access>                    ::=   STRING_LIT <rest primary>
-<field access>                    ::=   NULL <rest primary>
-<field access>                    ::=   THIS <rest primary>
-<field access>                    ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
-<field access>                    ::=   NEW <class type> PAREN_OPEN
+<field access>                    ::=   INT_LITERAL <rest field access>
+<field access>                    ::=   <boolean literal>  <rest field access>
+<field access>                    ::=   CHAR_LITERAL <rest field access>
+<field access>                    ::=   STRING_LITERAL <rest field access>
+<field access>                    ::=   NULL <rest field access>
+<field access>                    ::=   THIS <rest field access>
+<field access>                    ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest field access>
+<field access>                    ::=   NEW IDENTIFIER PAREN_OPEN <rest2 field access>
 <field access>                     ::=   SUPER ACCESSOR IDENTIFIER
+<rest field access>                ::=   ACCESSOR IDENTIFIER
+<rest2 field access>               ::=   PAREN_CLOSE <rest field access>
+<rest2 field access>               ::=   <argument list> PAREN_CLOSE <rest field access>
 <method invocation>                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation>
 <method invocation>                ::=   <primary> <rest method invocation>
 <rest method invocation>           ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation>
@@ -185,11 +192,3 @@ Expresiones
 <rest method invocation>           ::=   LAMBDA
 <rest2 method invocation>           ::=   PAREN_CLOSE
 <rest2 method invocation>           ::=   <argument list> PAREN_CLOSE
-
-<literal>                          ::=   INT_LITERAL
-<literal>                          ::=   <boolean literal>
-<literal>                          ::=   CHAR_LIT
-<literal>                          ::=   STRING_LIT
-<literal>                          ::=   NULL
-<boolean literal>                  ::=   TRUE
-<boolean literal>                  ::=   FALSE
