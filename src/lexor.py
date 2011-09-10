@@ -126,11 +126,17 @@ class Lexor(object):
             if (error_condition):
                 if (prev_token_type == INT_LITERAL):
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Entero mal formado.")
-                elif (prev_token_type == CHAR_LITERAL):
-                    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de caracter seguido por un identificador.")
+                #elif (prev_token_type == CHAR_LITERAL):
+                #    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de caracter seguido por un identificador.")
                 elif (prev_token_type == STRING_LITERAL):
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de string seguido por un identificador.")
                 else:
+                    print "prev",self._prev_token.get_type()
+                    print "curr",self._current_token.get_type()
+                    print prev_token_type == INT_LITERAL
+                    print prev_token_type == CHAR_LITERAL
+                    print prev_token_type == STRING_LITERAL
+                    print self._current_token.get_type() == IDENTIFIER
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Error desconocido.")
         self._prev_token = self._current_token
         return self._current_token
