@@ -1,6 +1,6 @@
 public class Identifier {
 
-    Identifier (int 6 { 
+    public Identifier (int 6 { 
     }
 
 }

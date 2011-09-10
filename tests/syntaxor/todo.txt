@@ -9,7 +9,7 @@
 008err [x] constructor_declarator           "Luego del nombre del constructor se deben especificar los parametros. Se esperaba leer un (."
 009err [x] rest_constructor_declarator      "Se esperaba un ) como cierre de los parametros del constructor."
 010err [x] formal_parameter                 "Se esperaba encontrar un nombre para el parametro, %s no es valido."
-011err [ ] "Debe existir un cuerpo del constructor encerrado entre llaves. Se esperaba una {."
+011err [ ] constructor_body                 "Debe existir un cuerpo del constructor encerrado entre llaves. Se esperaba una {."
 012err [ ] "Debe cerrar el cuerpo del constructor. Se esperaba una }."
 013err [ ] "Se esperaba el cierre del cuerpo del constructor, o una sucesion de sentencias."
 014err [ ] "Debe cerrar del cuerpo del construcor. Se esperaba {"
