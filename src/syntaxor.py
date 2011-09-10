@@ -52,7 +52,7 @@ class Syntaxor(object):
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
-                              "El keyword class debe ser especificado luego de public.")
+                              "La palabra clave class debe ser especificada luego de public.")
 
     def rest_class_declaration(self):
         if self.tok(BRACE_OPEN):
@@ -69,7 +69,7 @@ class Syntaxor(object):
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
-                              "Se esperaba una { o el keyword extends.")
+                              "Se esperaba una { o la palabra clave extends.")
 
     def class_body(self):
         if self.tok(BRACE_OPEN):
@@ -582,7 +582,7 @@ class Syntaxor(object):
                 else:
                     raise SyntaxError(self._current_token.get_line(),
                                       self._current_token.get_col(),
-                                      "Debe cerra la expresion con un ).")
+                                      "Debe cerrar la expresion con un ).")
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
