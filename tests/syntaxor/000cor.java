@@ -5,15 +5,10 @@ public class ClassIdentifier1 extends ClassIdentifier2
     public boolean          variableIndentifier03;
     public ClassIdentifier3 variableIndentifier04;
 
-    private int              variableIndentifier05;
-    private char             variableIndentifier06;
-    private boolean          variableIndentifier07;
-    private ClassIdentifier3 variableIndentifier08;
-
-    protected int              variableIndentifier09;
-    protected char             variableIndentifier10;
-    protected boolean          variableIndentifier11;
-    protected ClassIdentifier3 variableIndentifier12;
+    protected int              variableIndentifier05;
+    protected char             variableIndentifier06;
+    protected boolean          variableIndentifier07;
+    protected ClassIdentifier3 variableIndentifier08;
 
     public    ClassIdentifier1 ( int              variableIdentifier1
                                , char             variableIdentifier2
@@ -44,6 +39,7 @@ public class ClassIdentifier1 extends ClassIdentifier2
     public ClassIdentifier2 methodIdentifier() 
     {}
 
+
     public static void methodIdentifier() 
     {}
 
@@ -59,34 +55,36 @@ public class ClassIdentifier1 extends ClassIdentifier2
     public static ClassIdentifier2 methodIdentifier() 
     {}
 
-    private void methodIdentifier() 
+
+    protected void methodIdentifier() 
     {}
 
-    private int methodIdentifier() 
+    protected int methodIdentifier() 
     {}
 
-    private char methodIdentifier() 
+    protected char methodIdentifier() 
     {}
 
-    private boolean methodIdentifier() 
+    protected boolean methodIdentifier() 
     {}
 
-    private ClassIdentifier2 methodIdentifier() 
+    protected ClassIdentifier2 methodIdentifier() 
     {}
 
-    private static void methodIdentifier() 
+    protected static void methodIdentifier() 
     {}
 
-    private static int methodIdentifier() 
+    protected static int methodIdentifier() 
     {}
 
-    private static char methodIdentifier() 
+    protected static char methodIdentifier() 
     {}
 
-    private static boolean methodIdentifier() 
+    protected static boolean methodIdentifier() 
     {}
 
-    private static ClassIdentifier2 methodIdentifier() 
+    protected static ClassIdentifier2 methodIdentifier() 
     {}
 
 }
+

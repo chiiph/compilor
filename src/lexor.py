@@ -89,6 +89,12 @@ class Lexor(object):
 
         if self._current_char == " ":
             self._current_char = self._next_char()
+            if len(self._current_char) == 0:
+                # TODO: cambiar por un set_type()
+                self._current_token._type = EOF
+                self._prev_token = self._current_token
+                return self._current_token
+            self._prev_token = None
 
         self._state = self._state.proc(self._current_char,
                                        self._line,
@@ -98,18 +104,20 @@ class Lexor(object):
             self._is_string = True
 
         while self._state != None:
-            if len(self._current_char) == 0:
-                self._current_token._type = EOF
-                self._prev_token = self._current_token
-                return self._current_token
 
             self._current_token.append(self._current_char)
             self._current_token._type = self._state.get_token_type()
 
             self._current_char = self._next_char()
 
+            if len(self._current_char) == 0:
+                self._current_token._type = EOF
+                self._prev_token = self._current_token
+                return self._current_token
+
             if self._current_char == "\"" and self._is_string:
                 self._is_string = False
+
             self._state = self._state.proc(self._current_char,
                                            self._line,
                                            self._col-len(self._current_token.get_lexeme())-1)
@@ -131,6 +139,12 @@ class Lexor(object):
                 elif (prev_token_type == STRING_LITERAL):
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de string seguido por un identificador.")
                 else:
+                    print "prev",self._prev_token.get_type()
+                    print "curr",self._current_token.get_type()
+                    print prev_token_type == INT_LITERAL
+                    print prev_token_type == CHAR_LITERAL
+                    print prev_token_type == STRING_LITERAL
+                    print self._current_token.get_type() == IDENTIFIER
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Error desconocido.")
         self._prev_token = self._current_token
         return self._current_token
@@ -143,7 +157,12 @@ class Lexor(object):
 
     def _next_char(self):
         ch = self._real_next_char()
+        if len(ch) == 0:
+            return ""
         self._col += 1
+
+        if self._is_string:
+            return ch
 
         if ch in self._whitespace and not self._one_sep:
             self._one_sep = True
@@ -152,15 +171,13 @@ class Lexor(object):
                 self._col = 0
             return " "
 
-        if self._is_string:
-            return ch
-
-
         while ch in self._whitespace:
             if ch == "\n":
                 self._line += 1
                 self._col = 0
             ch = self._real_next_char()
+            if len(ch) == 0:
+                return ""
             self._col += 1
 
         if ch == "/":
