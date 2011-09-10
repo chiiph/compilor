@@ -87,3 +87,4 @@ public class ClassIdentifier1 extends ClassIdentifier2
     {}
 
 }
+

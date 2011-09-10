@@ -89,6 +89,7 @@ class Lexor(object):
 
         if self._current_char == " ":
             self._current_char = self._next_char()
+            self._prev_token = None
 
         self._state = self._state.proc(self._current_char,
                                        self._line,
@@ -126,8 +127,8 @@ class Lexor(object):
             if (error_condition):
                 if (prev_token_type == INT_LITERAL):
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Entero mal formado.")
-                #elif (prev_token_type == CHAR_LITERAL):
-                #    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de caracter seguido por un identificador.")
+                elif (prev_token_type == CHAR_LITERAL):
+                    raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de caracter seguido por un identificador.")
                 elif (prev_token_type == STRING_LITERAL):
                     raise LexicalError(self._current_token.get_line(), self._current_token.get_col(), "Literal de string seguido por un identificador.")
                 else:
@@ -160,7 +161,6 @@ class Lexor(object):
 
         if self._is_string:
             return ch
-
 
         while ch in self._whitespace:
             if ch == "\n":
