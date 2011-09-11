@@ -207,6 +207,7 @@ Expresiones
 <method invocation>                         ::=   <primary> <rest method invocation>
 <rest method invocation>                    ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation>
 <rest method invocation>                    ::=   ASSIGNMENT <expression>
+<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>
 <rest method invocation>                    ::=   LAMBDA
 <rest2 method invocation>                   ::=   PAREN_CLOSE
 <rest2 method invocation>                   ::=   <argument list> PAREN_CLOSE
