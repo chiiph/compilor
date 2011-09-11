@@ -95,7 +95,7 @@ class Syntaxor(object):
 
     def class_body_declarations(self):
         self.class_body_declaration()
-        self.update_token()
+        #self.update_token()
         self.rest_class_body_declarations()
 
     def rest_class_body_declarations(self):
@@ -457,7 +457,7 @@ class Syntaxor(object):
 
     def local_variable_declaration_statement(self):
         self.local_variable_declaration()
-        self.update_token()
+        #self.update_token()
         if self.tok(SCOLON):
             return
         else:
@@ -548,7 +548,7 @@ class Syntaxor(object):
             if self.tok(PAREN_OPEN):
                 self.update_token()
                 self.expression()
-                self.update_token()
+                #self.update_token()
                 if self.tok(PAREN_CLOSE):
                     self.update_token()
                     self.statement()
@@ -727,6 +727,7 @@ class Syntaxor(object):
         if self._current_token.get_type() in FIRST_primary:
             self.primary()
         elif self.tok(IDENTIFIER):
+            self.update_token()
             return
         else:
             raise SyntaxError(self._current_token.get_line(),
@@ -947,13 +948,7 @@ class Syntaxor(object):
     def method_invocation(self):
         if self.tok(IDENTIFIER):
             self.update_token()
-            if self.tok(PAREN_CLOSE):
-                self.update_token()
-                self.rest2_method_invocation()
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Se esperaba un ).")
+            self.rest_method_invocation()
         elif self._current_token.get_type() in FIRST_primary:
             self.primary()
             self.update_token()

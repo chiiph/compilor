@@ -203,7 +203,7 @@ Expresiones
 <rest field access>                         ::=   ACCESSOR IDENTIFIER
 <rest2 field access>                        ::=   PAREN_CLOSE <rest field access>
 <rest2 field access>                        ::=   <argument list> PAREN_CLOSE <rest field access>
-<method invocation>                         ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation>
+<method invocation>                         ::=   IDENTIFIER <rest method invocation>
 <method invocation>                         ::=   <primary> <rest method invocation>
 <rest method invocation>                    ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation>
 <rest method invocation>                    ::=   ASSIGNMENT <expression>

@@ -105,15 +105,15 @@ class Lexor(object):
 
         while self._state != None:
 
-            self._current_token.append(self._current_char)
-            self._current_token._type = self._state.get_token_type()
-
-            self._current_char = self._next_char()
-
             if len(self._current_char) == 0:
                 self._current_token._type = EOF
                 self._prev_token = self._current_token
                 return self._current_token
+
+            self._current_token.append(self._current_char)
+            self._current_token._type = self._state.get_token_type()
+
+            self._current_char = self._next_char()
 
             if self._current_char == "\"" and self._is_string:
                 self._is_string = False
