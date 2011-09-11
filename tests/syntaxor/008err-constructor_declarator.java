@@ -1,5 +1,5 @@
 public class Identifier {
 
-    public Identifier { }
+    public Identifier2 { }
 
 }

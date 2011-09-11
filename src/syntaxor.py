@@ -128,6 +128,10 @@ class Syntaxor(object):
             self.constructor_body()
         elif self.tok(IDENTIFIER):
             self.declarators()
+        else:
+            raise SyntaxError(self._current_token.get_line(),
+                              self._current_token.get_col(),
+                              "Se esperaba un identificador o un (.")
 
     def constructor_declarator(self):
         if self.tok(PAREN_OPEN):
