@@ -48,7 +48,7 @@
 047err [ ] return_statement                         "Se esperaba un return."
 048err [ ] rest_return_statement                    "Se esperaba un ;."
 049err [ ] rest_return_statement                    "Sentencia de return no valida."
-050err [ ] unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
+050err [x] unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
 051err [ ] postfix_expression                       "%s no es un identificador valido."
 052err [ ] primary                                  "Se esperaba un )."
 053err [ ] primary                                  "Se esperaba un (."
