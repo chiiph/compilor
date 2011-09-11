@@ -526,7 +526,6 @@ class Syntaxor(object):
             if self.tok(PAREN_OPEN):
                 self.update_token()
                 self.expression()
-                print "OOOO", self._current_token
                 if self.tok(PAREN_CLOSE):
                     self.update_token()
                     self.statement()
@@ -765,7 +764,7 @@ class Syntaxor(object):
                 else:
                     raise SyntaxError(self._current_token.get_line(),
                                       self._current_token.get_col(),
-                                      "Se esperaba un ).")
+                                      "Se esperaba un (.")
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -805,15 +804,12 @@ class Syntaxor(object):
 
     def method_invocation(self):
         if self.tok(IDENTIFIER):
-            print "UUUUU", self._current_token
             self.update_token()
             self.rest_primary()
             if self.tok(PAREN_OPEN):
                 self.update_token()
                 self.rest2_method_invocation()
                 self.rest_method_invocation()
-            else:
-                raise Exception()
         elif (self._current_token.type() in FIRST_literal) or self.tok(THIS):
             self.update_token()
             self.rest_primary()

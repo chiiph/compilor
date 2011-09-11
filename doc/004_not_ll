@@ -187,7 +187,10 @@ Expresiones
 #<rest field access>                         ::=   ACCESSOR IDENTIFIER <rest field access>
 #<rest field access>                         ::=   LAMBDA
 
-<method invocation>                         ::=   IDENTIFIER <rest primary> PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   IDENTIFIER <rest primary> <rest3 method invocation>
+<rest3 method invocation>                   ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest3 method invocation>                   ::=   LAMBDA
+
 <method invocation>                         ::=   <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
