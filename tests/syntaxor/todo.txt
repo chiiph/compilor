@@ -51,7 +51,7 @@
 050err [x] unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
 051err [x] postfix_expression                       "%s no es un identificador valido."
 052err [x] primary                                  "Se esperaba un )."
-053err [ ] primary                                  "Se esperaba un (."
+053err [x] primary                                  "Se esperaba un (."
 054err [ ] primary                                  "%s no es un identificador valido."
 055err [ ] primary                                  "%s no es un identificador valido."
 056err [ ] primary                                  "Se esperaba un . ."
