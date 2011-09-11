@@ -706,7 +706,6 @@ class Syntaxor(object):
         # sino lambda
 
     def unary_expression(self):
-        print "UNARY", self._current_token, FIRST_unary_expression_not_plus_minus
         if self.tok(ADD) or self.tok(SUB):
             self.update_token()
             self.unary_expression()
@@ -725,7 +724,6 @@ class Syntaxor(object):
             self.unary_expression()
 
     def postfix_expression(self):
-        print "POSTFIX", self._current_token
         if self._current_token.get_type() in FIRST_primary:
             self.primary()
         elif self.tok(IDENTIFIER):
