@@ -4,8 +4,7 @@ public class Identifier {
         int i;
     
         {
-            // empty block
         }
+
         // no closing brace on constructor block
 
-}

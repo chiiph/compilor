@@ -219,7 +219,7 @@ class Syntaxor(object):
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
-                                  "Debe cerrar del cuerpo del construcor. Se esperaba {")
+                                  "Debe cerrar del cuerpo del construcor. Se esperaba }")
 
     def explicit_constructor_invocation(self):
         if self._current_token.get_type() in FIRST_explicit_constructor_invocation:
