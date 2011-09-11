@@ -19,17 +19,6 @@ Declaraciones
 <rest2 class body declaration>              ::=   <constructor declarator> <constructor body>
 <rest2 class body declaration>              ::=   <declarators>
 
-#<class body declaration>                   ::=   <class member declaration>
-#<class body declaration>                   ::=   <constructor declaration>
-# ahora este vuela completamente por el cambio con el tema de los constructores
-#<class member declaration>                 ::=  <field modifiers> <type> <declarators>
-#<class member declaration>                 ::=  <field declaration>
-#<class member declaration>                 ::=  <method declaration>
-# vuela, ahora se maneja en class body declaration
-#<constructor declaration>                  ::=   PUBLIC <rest constructor declaration>
-#<constructor declaration>                  ::=   PROTECTED <rest constructor declaration>
-#<rest constructor declaration>             ::=   <constructor declarator> <constructor body>
-
 <constructor declarator>                    ::=   PAREN_OPEN <rest constructor declarator>
 <rest constructor declarator>               ::=   PAREN_CLOSE
 <rest constructor declarator>               ::=   <formal parameter list> PAREN_CLOSE
@@ -53,9 +42,7 @@ Declaraciones
 <field modifier>                            ::=   PUBLIC
 <field modifier>                            ::=   PROTECTED
 <field modifier>                            ::=   STATIC
-# vuela, void ahora esta en type
-#<result type>                              ::=   <type>
-#<result type>                              ::=   VOID_TYPE
+
 <declarators>                               ::=   IDENTIFIER <rest declarators>
 <rest declarators>                          ::=   COMMA <rest declarators>
 <rest declarators>                          ::=   ASSIGNMENT <variable initializer> SCOLON
@@ -85,19 +72,22 @@ Bloques y Sentencias
 <block statements>                          ::=   <block statement> <rest block statements>
 <rest block statements>                     ::=   LAMBDA
 <rest block statements>                     ::=   <block statements>
+
 <block statement>                           ::=   <primitive type> <local variable declaration statement>
-<block statement>                           ::=   IDENTIFIER <rest block statement>
 <block statement>                           ::=   <if start statement>
 <block statement>                           ::=   <while statement>
 <block statement>                           ::=   <block>
 <block statement>                           ::=   <empty statement>
 <block statement>                           ::=   <return statement>
 <block statement>                           ::=   <primary> <rest method invocation>
-<rest block statement>                      ::=   <variable declarators>
-<rest block statement>                      ::=   PAREN_OPEN <rest2 method invocation>
-#<block statement>                          ::=   <statement>
+#<block statement>                           ::=   IDENTIFIER <rest block statement>
+
+#<rest block statement>                      ::=   <variable declarators>
+#<rest block statement>                      ::=   PAREN_OPEN <rest2 method invocation>
+
 <local variable declaration statement>      ::=   <local variable declaration> SCOLON
 <local variable declaration>                ::=   IDENTIFIER <variable declarators>
+
 <variable declarators>                      ::=   <variable declarator> <rest variable declarators>
 <rest variable declarators>                 ::=   LAMBDA
 <rest variable declarators>                 ::=   COMMA <variable declarators>
@@ -113,10 +103,10 @@ Bloques y Sentencias
 <statement without trailing substatement>   ::=   <return statement>
 <empty statement>                           ::=   SCOLON
 <expression statement>                      ::=   <statement expression> SCOLON
-# se va el assignment
+# se va el assignment, ahora todo se maneja en method invocation
 #<statement expression>                     ::=   <assignment>
 <statement expression>                      ::=   <method invocation>
-# se va este, se delega para desp
+# se va este, se delega para desp, hay conflicto con primary
 #<statement expression>                     ::=   <class instance creation expression>
 <if start statement>                        ::=   IF PAREN_OPEN <expression> PAREN_CLOSE <statement> <rest if start statement>
 <rest if start statement>                   ::=   LAMBDA
@@ -171,44 +161,48 @@ Expresiones
 <unary expression not plus minus>           ::=   <postfix expression>
 <unary expression not plus minus>           ::=   NOT <unary expression>
 <postfix expression>                        ::=   <primary>
-<postfix expression>                        ::=   IDENTIFIER
-<primary>                                   ::=   INT_LITERAL <rest primary>
-<primary>                                   ::=   <boolean literal>  <rest primary>
-<primary>                                   ::=   CHAR_LITERAL <rest primary>
-<primary>                                   ::=   STRING_LITERAL <rest primary>
-<primary>                                   ::=   NULL <rest primary>
+
+<primary>                                   ::=   <literal> <rest primary>
 <primary>                                   ::=   THIS <rest primary>
 <primary>                                   ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
-<primary>                                   ::=   NEW IDENTIFIER PAREN_OPEN <rest2 primary>
-<primary>                                   ::=   SUPER ACCESSOR IDENTIFIER
+<primary>                                   ::=   <class instance creation expression> <rest primary>
+<primary>                                   ::=   SUPER ACCESSOR IDENTIFIER <rest primary>
+<primary>                                   ::=   <method invocation> <rest primary>
 <rest primary>                              ::=   ACCESSOR IDENTIFIER <rest primary>
 <rest primary>                              ::=   LAMBDA
-<rest2 primary>                             ::=   PAREN_CLOSE <rest primary>
-<rest2 primary>                             ::=   <argument list> PAREN_CLOSE <rest primary>
+
 <class instance creation expression>        ::=   NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
 <rest class instance creation expression>   ::=   PAREN_CLOSE
 <rest class instance creation expression>   ::=   <argument list> PAREN_CLOSE
 <argument list>                             ::=   <expression> <rest argument list>
 <rest argument list>                        ::=   LAMBDA
 <rest argument list>                        ::=   COMMA <rest argument list>
-<field access>                              ::=   INT_LITERAL <rest field access>
-<field access>                              ::=   <boolean literal>  <rest field access>
-<field access>                              ::=   CHAR_LITERAL <rest field access>
-<field access>                              ::=   STRING_LITERAL <rest field access>
-<field access>                              ::=   NULL <rest field access>
-<field access>                              ::=   THIS <rest field access>
-<field access>                              ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest field access>
-<field access>                              ::=   NEW IDENTIFIER PAREN_OPEN <rest2 field access>
-<field access>                              ::=   SUPER ACCESSOR IDENTIFIER
-<rest field access>                         ::=   ACCESSOR IDENTIFIER
-<rest2 field access>                        ::=   PAREN_CLOSE <rest field access>
-<rest2 field access>                        ::=   <argument list> PAREN_CLOSE <rest field access>
-<method invocation>                         ::=   IDENTIFIER <rest method invocation>
-<method invocation>                         ::=   <primary> <rest method invocation>
-<rest method invocation>                    ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation>
-<rest method invocation>                    ::=   ASSIGNMENT <expression>
+# se va, solo se usa en <left hand side>
+#<field access>                              ::=   <literal> ACCESSOR IDENTIFIER <rest field access>
+#<field access>                              ::=   THIS ACCESSOR IDENTIFIER <rest field access>
+#<field access>                              ::=   PAREN_OPEN <expression> PAREN_CLOSE ACCESSOR IDENTIFIER <rest field access>
+#<field access>                              ::=   <class instance creation expression> ACCESSOR IDENTIFIER <rest field access>
+#<field access>                              ::=   SUPER ACCESSOR IDENTIFIER <rest field access>
+#<field access>                              ::=   <method invocation> ACCESSOR IDENTIFIER <rest field access>
+#<rest field access>                         ::=   ACCESSOR IDENTIFIER <rest field access>
+#<rest field access>                         ::=   LAMBDA
+
+<method invocation>                         ::=   IDENTIFIER <rest primary> PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   <class instance creation expression> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   SUPER ACCESSOR IDENTIFIER <rest primary> <rest super>
+<rest super>                                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest super>                                ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
+
+<rest method invocation>                    ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+
+# esto viene por block statements
+<rest method invocation>                    ::=   <variable declarators> SCOLON
 <rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>
 <rest method invocation>                    ::=   LAMBDA
+
 <rest2 method invocation>                   ::=   PAREN_CLOSE
 <rest2 method invocation>                   ::=   <argument list> PAREN_CLOSE
 <boolean literal>                           ::=   TRUE
