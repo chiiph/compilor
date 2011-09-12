@@ -463,7 +463,9 @@ class Syntaxor(object):
                 self.update_token()
                 self.variable_declarators()
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un identificador valido.")
         # sino lambda
 
     def variable_declarator(self):
@@ -737,14 +739,17 @@ class Syntaxor(object):
             self.update_token()
             if self.tok(IDENTIFIER):
                 self.update_token()
-                self.rest_primary()
+                self.rest2_primary()
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "%s no es un identificador valido." % self._current_token.get_lexeme())
-        elif self.tok(PAREN_OPEN):
-            self.rest_method_invocation()
         # sino lambda
+
+    def rest2_primary(self):
+        if self.tok(PAREN_OPEN):
+            self.rest_method_invocation()
+        self.rest_primary()
 
     def class_instance_creation_expression(self):
         if self.tok(NEW):
@@ -814,11 +819,17 @@ class Syntaxor(object):
                         self.rest2_method_invocation()
                         self.rest_method_invocation()
                     else:
-                        raise Exception()
+                        raise SyntaxError(self._current_token.get_line(),
+                                          self._current_token.get_col(),
+                                          "Se esperaba un (.")
                 else:
-                    raise Exception()
+                    raise SyntaxError(self._current_token.get_line(),
+                                      self._current_token.get_col(),
+                                      "Se esperaba un identificador valido.")
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un . .")
         elif self.tok(PAREN_OPEN):
             self.update_token()
             self.expression()
@@ -833,13 +844,21 @@ class Syntaxor(object):
                             self.rest2_method_invocation()
                             self.rest_method_invocation()
                         else:
-                            raise Exception()
+                            raise SyntaxError(self._current_token.get_line(),
+                                              self._current_token.get_col(),
+                                              "Se esperaba un (.")
                     else:
-                        raise Exception()
+                        raise SyntaxError(self._current_token.get_line(),
+                                          self._current_token.get_col(),
+                                          "Se esperaba un identificador valido.")
                 else:
-                    raise Exception()
+                    raise SyntaxError(self._current_token.get_line(),
+                                      self._current_token.get_col(),
+                                      "Se esperaba un . .")
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un ).")
         elif self.tok(NEW):
             self.class_instance_creation_expression()
             self.rest_primary()
@@ -851,11 +870,17 @@ class Syntaxor(object):
                         self.rest2_method_invocation()
                         self.rest_method_invocation()
                     else:
-                        raise Exception()
+                        raise SyntaxError(self._current_token.get_line(),
+                                          self._current_token.get_col(),
+                                          "Se esperaba un (.")
                 else:
-                    raise Exception()
+                    raise SyntaxError(self._current_token.get_line(),
+                                      self._current_token.get_col(),
+                                      "Se esperaba un identificador valido.")
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un . .")
         elif self.tok(SUPER):
             self.update_token()
             self.rest_primary()
@@ -870,9 +895,13 @@ class Syntaxor(object):
                     self.rest2_method_invocation()
                     self.rest_method_invocation()
                 else:
-                    raise Exception()
+                    raise SyntaxError(self._current_token.get_line(),
+                                      self._current_token.get_col(),
+                                      "Se esperaba un (.")
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un identificador valido.")
         elif self.tok(COMMA):
             self.rest_variable_declarators()
         elif self.tok(ASSIGNMENT):
@@ -881,7 +910,9 @@ class Syntaxor(object):
                 self.update_token()
                 return
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un ;.")
         elif self.tok(PAREN_OPEN):
             self.update_token()
             self.rest2_method_invocation()
@@ -896,9 +927,13 @@ class Syntaxor(object):
                 self.rest2_method_invocation()
                 self.rest_method_invocation()
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un (.")
         else:
-            raise Exception()
+            raise SyntaxError(self._current_token.get_line(),
+                              self._current_token.get_col(),
+                              "Se esperaba un identificador valido o un (.")
 
     def rest2_method_invocation(self):
         if self.tok(PAREN_CLOSE):
