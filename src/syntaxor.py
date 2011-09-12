@@ -725,7 +725,20 @@ class Syntaxor(object):
             self.rest_primary()
         elif self.tok(SUPER):
             self.update_token()
-            self.rest_primary()
+            if self.tok(ACCESSOR):
+                self.update_token()
+                if self.tok(IDENTIFIER):
+                    self.update_token()
+                    self.rest_primary()
+                else:
+                    raise SyntaxError(self._current_token.get_line(),
+                                      self._current_token.get_col(),
+                                      "%s no es un identificador valido." % self._current_token.get_lexeme())
+
+            else:
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un . .")
         elif self.tok(IDENTIFIER):
             self.method_invocation()
             self.rest_primary()

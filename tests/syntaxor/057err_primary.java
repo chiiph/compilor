@@ -1,6 +1,6 @@
 public class AVerrrr {
     public AVerrrrrrrr() {
-        if(a + *int)
+        if(a + int)
             algo();
     }
 }
