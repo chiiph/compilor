@@ -90,7 +90,7 @@ Bloques y Sentencias
 
 <variable declarators>                      ::=   <variable declarator> <rest variable declarators>
 <rest variable declarators>                 ::=   LAMBDA
-<rest variable declarators>                 ::=   COMMA <variable declarators>
+<rest variable declarators>                 ::=   COMMA IDENTIFIER <variable declarators>
 <variable declarator>                       ::=   <rest variable declarator>
 <rest variable declarator>                  ::=   LAMBDA
 <rest variable declarator>                  ::=   ASSIGNMENT <expression>
@@ -169,6 +169,7 @@ Expresiones
 <primary>                                   ::=   SUPER ACCESSOR IDENTIFIER <rest primary>
 <primary>                                   ::=   <method invocation> <rest primary>
 <rest primary>                              ::=   ACCESSOR IDENTIFIER <rest primary>
+<rest primary>                              ::=   <rest method invocation>
 <rest primary>                              ::=   LAMBDA
 
 <class instance creation expression>        ::=   NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
@@ -195,7 +196,7 @@ Expresiones
 <method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   <class instance creation expression> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
-<method invocation>                         ::=   SUPER ACCESSOR IDENTIFIER <rest primary> <rest super>
+<method invocation>                         ::=   SUPER <rest primary> <rest super>
 <rest super>                                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <rest super>                                ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
 
@@ -203,6 +204,7 @@ Expresiones
 
 # esto viene por block statements
 <rest method invocation>                    ::=   <variable declarators> SCOLON
+<rest method invocation>                    ::=   <rest variable declarators>
 <rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>
 <rest method invocation>                    ::=   LAMBDA
 

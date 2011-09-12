@@ -459,7 +459,11 @@ class Syntaxor(object):
     def rest_variable_declarators(self):
         if self.tok(COMMA):
             self.update_token()
-            self.variable_declarators()
+            if self.tok(IDENTIFIER):
+                self.update_token()
+                self.variable_declarators()
+            else:
+                raise Exception()
         # sino lambda
 
     def variable_declarator(self):
@@ -719,20 +723,7 @@ class Syntaxor(object):
             self.rest_primary()
         elif self.tok(SUPER):
             self.update_token()
-            if self.tok(ACCESSOR):
-                self.update_token()
-                if self.tok(IDENTIFIER):
-                    self.update_token()
-                    self.rest_primary()
-                    return
-                else:
-                    raise SyntaxError(self._current_token.get_line(),
-                              self._current_token.get_col(),
-                              "%s no es un identificador valido." % self._current_token.get_lexeme())
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Se esperaba un . .")
+            self.rest_primary()
         elif self.tok(IDENTIFIER):
             self.method_invocation()
             self.rest_primary()
@@ -751,6 +742,8 @@ class Syntaxor(object):
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "%s no es un identificador valido." % self._current_token.get_lexeme())
+        elif self.tok(PAREN_OPEN):
+            self.rest_method_invocation()
         # sino lambda
 
     def class_instance_creation_expression(self):
@@ -866,15 +859,7 @@ class Syntaxor(object):
         elif self.tok(SUPER):
             self.update_token()
             self.rest_primary()
-            if self.tok(ACCESSOR):
-                self.update_token()
-                if self.tok(IDENTIFIER):
-                    self.update_token()
-                    self.rest_super()
-                else:
-                    raise Exception()
-            else:
-                raise Exception()
+            self.rest_super()
 
     def rest_method_invocation(self):
         if self.tok(ACCESSOR):
@@ -889,6 +874,8 @@ class Syntaxor(object):
             else:
                 raise Exception()
         elif self.tok(COMMA):
+            self.rest_variable_declarators()
+        elif self.tok(ASSIGNMENT):
             self.variable_declarators()
             if self.tok(SCOLON):
                 self.update_token()
