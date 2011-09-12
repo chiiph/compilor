@@ -295,7 +295,7 @@ class Syntaxor(object):
             self.rest_declarators()
         elif self.tok(ASSIGNMENT):
             self.update_token()
-            self.variable_initializer()
+            self.expression()
             if self.tok(SCOLON):
                 self.update_token()
                 return

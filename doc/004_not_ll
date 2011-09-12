@@ -45,7 +45,7 @@ Declaraciones
 
 <declarators>                               ::=   IDENTIFIER <rest declarators>
 <rest declarators>                          ::=   COMMA <rest declarators>
-<rest declarators>                          ::=   ASSIGNMENT <variable initializer> SCOLON
+<rest declarators>                          ::=   ASSIGNMENT <expression> SCOLON
 <rest declarators>                          ::=   PAREN_OPEN <rest method declarator> <method body>
 <rest declarators>                          ::=   SCOLON
 <rest method declarator>                    ::=   PAREN_CLOSE
