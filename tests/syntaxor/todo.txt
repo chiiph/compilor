@@ -21,7 +21,7 @@
 019err 262 [X] rest_explicit_constructor_invocation     "Debe cerrar la lista de parametros con un )."
 020err 280 [y] field_modifier                           "Solo los siguientes keywords son validos: public, protected, static."
 021err 290 [y] declarators                              "Se esperaba un nombre de un identificador, %s no es valido."
-022err 305 [X] rest_declarators                         "Se esperaba un ; al final de la declaracion."
+022err 305 [y] rest_declarators                         "Se esperaba un ; al final de la declaracion."
 023err 316 [y] rest_declarators                         "Se esperaba un ; al final de la declaracion."
 024err 330 [y] rest_method_declarator                   "Se esperaba un ) que cierre la lista de parametros."
 025err 334 [y] rest_method_declarator                   "%s no es un parametro valido."
@@ -49,7 +49,7 @@
 048err 601 [y] rest_return_statement                    "Se esperaba un ;."
 049err 605 [y] rest_return_statement                    "Sentencia de return no valida."
 050err 692 [y] unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
-051err 707 [?] postfix_expression                       "%s no es un identificador valido."
+051err 707 [X] postfix_expression                       "%s no es un identificador valido."
 052err 722 [?] primary                                  "Se esperaba un )."
 053err 736 [?] primary                                  "Se esperaba un (."
 054err 741 [?] primary                                  "%s no es un identificador valido."
@@ -82,3 +82,18 @@
 080err 963 [-] rest2_method_invocation                  "Se esperaba un )."
 081err 967 [-] rest2_method_invocation                  "Se esperaba un ) o un argumento valido."
 082err 976 [-] literal                                  "Se esperaba un literal valido."
+
+- Terminar el caso correcto.
+- Algunos .res
+- Armar la doc (aca hago un draftsito de las secciones que tengo en mente)
+- Consideraciones previas sobre cambios en el analizador lexico, aca habria que comentar los errores que se encontraron en la primera entrega y que cambios se hicieron para que no sucedieran.
+- Un tipo de intro, que cuente el objetivo, y como correr lo que entregamos.
+- La gramatica original sin extensiones, comentar que esta basada en la de la catedra (blabla)
+- Parsing, aca comentar el tipo de parsing que se implemento, y como era necesario que fuera la gramaica para que pudieramos hacerlo.
+- Consideraciones sobre el procesado de la gramatica (lo que esta en el archivo cambios_gramatica, mas/menos alguna que otra correccion/agregado)
+- La gramatica final (no se si es mejor poner esto antes del punto de consideraciones... aun que me da igual)
+- Una seccion sobre los casos de test, comentando como se muestran los errores y un par de ejemplos.
+- Cambiar syntaxor_main para que tire los prints lindos en vez del stack trace (es simplemente descomentar un pedazo del codigo)
+
+Creo qeu eso seria todo. Decime que preferis encarar vos, y yo agarro el complemento de eso.
+Vi que cambiaste los nomnbres de los tests, por que lo hiciste? Asi como estan va a ser complicadisimo abrir un test rapido o saber que testea cada archivo. O pensabas pasar el todo.txt a algo entregable?
