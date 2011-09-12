@@ -50,15 +50,12 @@ if __name__ == "__main__":
             output_file = open(output_filepath, 'w')
             sys.stdout = output_file
 
-        syntaxor.check_syntax()
-        # Descomentar cuando estemos seguros de que anda bien
-        # Sino no vamos a tener un trace como la gente del error
-        # try:
-        #     syntaxor.check_syntax()
-        # except SyntaxError as se:
-        #     pretty_print_error_message(input_filepath, se)
-        # except LexicalError as le:
-        #     pretty_print_error_message(input_filepath, le)
+        try:
+            syntaxor.check_syntax()
+        except SyntaxError as se:
+            pretty_print_error_message(input_filepath, se)
+        except LexicalError as le:
+            pretty_print_error_message(input_filepath, le)
 
         print "La sintaxis de %s es correcta." % input_filepath
 

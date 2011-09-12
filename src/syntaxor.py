@@ -3,8 +3,6 @@ from constants import *
 from firsts import *
 from errors import SyntaxError
 
-from traceback import *
-
 class Syntaxor(object):
     def __init__(self, path):
         self._lexor = Lexor(path)
@@ -198,9 +196,9 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Debe cerrar el cuerpo del constructor. Se esperaba una }.")
 
-        elif self._current_token.get_type() in FIRST_explicit_constructor_invocation:
-            self.explicit_constructor_invocation()
-            self.rest2_constructor_body()
+        # elif self._current_token.get_type() in FIRST_explicit_constructor_invocation:
+        #     self.explicit_constructor_invocation()
+        #     self.rest2_constructor_body()
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -220,46 +218,46 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Debe cerrar del cuerpo del constructor. Se esperaba }")
 
-    def explicit_constructor_invocation(self):
-        if self._current_token.get_type() in FIRST_explicit_constructor_invocation:
-            self.update_token()
-            if self.tok(PAREN_OPEN):
-                self.update_token()
-                self.rest_explicit_constructor_invocation()
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Se esperaba un ( que comenzara la definicion de parametros usados para la llamada.")
-        else:
-            raise SyntaxError(self._current_token.get_line(),
-                              self._current_token.get_col(),
-                              "Se esperaba this o super.")
+    # def explicit_constructor_invocation(self):
+    #     if self._current_token.get_type() in FIRST_explicit_constructor_invocation:
+    #         self.update_token()
+    #         if self.tok(PAREN_OPEN):
+    #             self.update_token()
+    #             self.rest_explicit_constructor_invocation()
+    #         else:
+    #             raise SyntaxError(self._current_token.get_line(),
+    #                               self._current_token.get_col(),
+    #                               "Se esperaba un ( que comenzara la definicion de parametros usados para la llamada.")
+    #     else:
+    #         raise SyntaxError(self._current_token.get_line(),
+    #                           self._current_token.get_col(),
+    #                           "Se esperaba this o super.")
 
-    def rest_explicit_constructor_invocation(self):
-        if self.tok(PAREN_CLOSE):
-            self.update_token()
-            if self.tok(SCOLON):
-                self.update_token()
-                return
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Debe cerrar la lista de parametros con un ).")
-        else:
-            self.argument_list()
-            if self.tok(PAREN_CLOSE):
-                self.update_token()
-                if self.tok(SCOLON):
-                    self.update_token()
-                    return
-                else:
-                    raise SyntaxError(self._current_token.get_line(),
-                                      self._current_token.get_col(),
-                                      "Se esperaba un ;.")
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Debe cerrar la lista de parametros con un ).")
+    # def rest_explicit_constructor_invocation(self):
+    #     if self.tok(PAREN_CLOSE):
+    #         self.update_token()
+    #         if self.tok(SCOLON):
+    #             self.update_token()
+    #             return
+    #         else:
+    #             raise SyntaxError(self._current_token.get_line(),
+    #                               self._current_token.get_col(),
+    #                               "Debe cerrar la lista de parametros con un ).")
+    #     else:
+    #         self.argument_list()
+    #         if self.tok(PAREN_CLOSE):
+    #             self.update_token()
+    #             if self.tok(SCOLON):
+    #                 self.update_token()
+    #                 return
+    #             else:
+    #                 raise SyntaxError(self._current_token.get_line(),
+    #                                   self._current_token.get_col(),
+    #                                   "Se esperaba un ;.")
+    #         else:
+    #             raise SyntaxError(self._current_token.get_line(),
+    #                               self._current_token.get_col(),
+    #                               "Debe cerrar la lista de parametros con un ).")
 
     def field_modifiers(self):
         self.field_modifier()
@@ -459,7 +457,7 @@ class Syntaxor(object):
     def rest_variable_declarators(self):
         if self.tok(COMMA):
             self.update_token()
-            if self.tok(IDENTIFIER):
+            if self.tok(IDENTIFIER) or self._current_token.get_type() in [THIS, SUPER]:
                 self.update_token()
                 self.variable_declarators()
             else:
@@ -725,20 +723,7 @@ class Syntaxor(object):
             self.rest_primary()
         elif self.tok(SUPER):
             self.update_token()
-            if self.tok(ACCESSOR):
-                self.update_token()
-                if self.tok(IDENTIFIER):
-                    self.update_token()
-                    self.rest_primary()
-                else:
-                    raise SyntaxError(self._current_token.get_line(),
-                                      self._current_token.get_col(),
-                                      "%s no es un identificador valido." % self._current_token.get_lexeme())
-
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Se esperaba un . .")
+            self.rest_primary()
         elif self.tok(IDENTIFIER):
             self.method_invocation()
             self.rest_primary()
@@ -761,7 +746,8 @@ class Syntaxor(object):
 
     def rest2_primary(self):
         if self.tok(PAREN_OPEN):
-            self.rest_method_invocation()
+            self.update_token()
+            self.rest2_method_invocation()
         self.rest_primary()
 
     def class_instance_creation_expression(self):
@@ -810,7 +796,7 @@ class Syntaxor(object):
     def rest_argument_list(self):
         if self.tok(COMMA):
             self.update_token()
-            self.rest_argument_list()
+            self.argument_list()
         # sino lambda
 
     def method_invocation(self):
@@ -820,7 +806,7 @@ class Syntaxor(object):
             if self.tok(PAREN_OPEN):
                 self.update_token()
                 self.rest2_method_invocation()
-                self.rest_method_invocation()
+            self.rest_method_invocation()
         elif (self._current_token.type() in FIRST_literal) or self.tok(THIS):
             self.update_token()
             self.rest_primary()
@@ -919,13 +905,6 @@ class Syntaxor(object):
             self.rest_variable_declarators()
         elif self.tok(ASSIGNMENT):
             self.variable_declarators()
-            if self.tok(SCOLON):
-                self.update_token()
-                return
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Se esperaba un ;.")
         elif self.tok(PAREN_OPEN):
             self.update_token()
             self.rest2_method_invocation()

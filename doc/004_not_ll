@@ -29,13 +29,14 @@ Declaraciones
 <constructor body>                          ::=   BRACE_OPEN <rest constructor body>
 <rest constructor body>                     ::=   BRACE_CLOSE
 <rest constructor body>                     ::=   <block statements> BRACE_CLOSE
-<rest constructor body>                     ::=   <explicit constructor invocation> <rest2 constructor body>
+# ambiguo con block statements, se checkea despues
+#<rest constructor body>                     ::=   <explicit constructor invocation> <rest2 constructor body>
 <rest2 constructor body>                    ::=   BRACE_CLOSE
 <rest2 constructor body>                    ::=   <block statements> BRACE_CLOSE
-<explicit constructor invocation>           ::=   THIS PAREN_OPEN <rest explicit constructor invocation>
-<explicit constructor invocation>           ::=   SUPER PAREN_OPEN <rest explicit constructor invocation>
-<rest explicit constructor invocation>      ::=   PAREN_CLOSE SCOLON
-<rest explicit constructor invocation>      ::=   <argument list> PAREN_CLOSE SCOLON
+#<explicit constructor invocation>           ::=   THIS PAREN_OPEN <rest explicit constructor invocation>
+#<explicit constructor invocation>           ::=   SUPER PAREN_OPEN <rest explicit constructor invocation>
+#<rest explicit constructor invocation>      ::=   PAREN_CLOSE SCOLON
+#<rest explicit constructor invocation>      ::=   <argument list> PAREN_CLOSE SCOLON
 <field modifiers>                           ::=   <field modifier> <rest field modifiers>
 <rest field modifiers>                      ::=   LAMBDA
 <rest field modifiers>                      ::=   <field modifiers>
@@ -91,6 +92,8 @@ Bloques y Sentencias
 <variable declarators>                      ::=   <variable declarator> <rest variable declarators>
 <rest variable declarators>                 ::=   LAMBDA
 <rest variable declarators>                 ::=   COMMA IDENTIFIER <variable declarators>
+<rest variable declarators>                 ::=   COMMA THIS <variable declarators>
+<rest variable declarators>                 ::=   COMMA SUPER <variable declarators>
 <variable declarator>                       ::=   <rest variable declarator>
 <rest variable declarator>                  ::=   LAMBDA
 <rest variable declarator>                  ::=   ASSIGNMENT <expression>
@@ -171,14 +174,15 @@ Expresiones
 <rest primary>                              ::=   ACCESSOR IDENTIFIER <rest2 primary>
 <rest primary>                              ::=   LAMBDA
 
-<rest2 primary>                             ::=   <rest method invocation> <rest primary>
+<rest2 primary>                             ::=   PAREN_OPEN <rest2 method invocation> <rest primary>
+<rest2 primary>                             ::=   LAMBDA
 
 <class instance creation expression>        ::=   NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
 <rest class instance creation expression>   ::=   PAREN_CLOSE
 <rest class instance creation expression>   ::=   <argument list> PAREN_CLOSE
 <argument list>                             ::=   <expression> <rest argument list>
 <rest argument list>                        ::=   LAMBDA
-<rest argument list>                        ::=   COMMA <rest argument list>
+<rest argument list>                        ::=   COMMA <argument list>
 # se va, solo se usa en <left hand side>
 #<field access>                              ::=   <literal> ACCESSOR IDENTIFIER <rest field access>
 #<field access>                              ::=   THIS ACCESSOR IDENTIFIER <rest field access>
@@ -189,9 +193,7 @@ Expresiones
 #<rest field access>                         ::=   ACCESSOR IDENTIFIER <rest field access>
 #<rest field access>                         ::=   LAMBDA
 
-<method invocation>                         ::=   IDENTIFIER <rest primary> <rest3 method invocation>
-<rest3 method invocation>                   ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
-<rest3 method invocation>                   ::=   LAMBDA
+<method invocation>                         ::=   IDENTIFIER <rest primary> <rest method invocation>
 
 <method invocation>                         ::=   <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
@@ -204,9 +206,9 @@ Expresiones
 <rest method invocation>                    ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 
 # esto viene por block statements
-<rest method invocation>                    ::=   <variable declarators> SCOLON
+<rest method invocation>                    ::=   <variable declarators>
 <rest method invocation>                    ::=   <rest variable declarators>
-<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>
+<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <rest method invocation>                    ::=   LAMBDA
 
 <rest2 method invocation>                   ::=   PAREN_CLOSE

@@ -1,4 +1,4 @@
-úblic class ClassIdentifer { }
+public class ClassIdentifer { }
 
 public class ClassIdentifier1 extends ClassIdentifier2
 {
@@ -34,7 +34,11 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                , ClassIdentifier3 variableIdentifier4
                                )
     {
-        <block statements>
+        int a, b;
+        if(hola) {
+            hagoAlgo();
+            otraClase.llamoAOtroMetodo();
+        }
     }
 
     public    ClassIdentifier1 ( int              variableIdentifier1
@@ -43,12 +47,13 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                , ClassIdentifier3 variableIdentifier4
                                )
     {
-        this( int              variableIdentifier1
-            , char             variableIdentifier2
-            , boolean          variableIdentifier3
-            , ClassIdentifier3 variableIdentifier4
-            )
-        <block statements>
+        this.quecyo(constructor, algo);
+        int algomas;
+
+        talvez.llamo.a.algo.mas(32, "hola");
+        while(pase_el_checkeo.sintactico()) {
+            no.se_rompe("nada");
+        }
     }
 
     public    ClassIdentifier1 ( int              variableIdentifier1
@@ -57,12 +62,7 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                , ClassIdentifier3 variableIdentifier4
                                )
     {
-        super( int              variableIdentifier1
-             , char             variableIdentifier2
-             , boolean          variableIdentifier3
-             , ClassIdentifier3 variableIdentifier4
-             )
-        <block statements>
+        super(otro, constructor, explicito);
     }
 
     protected ClassIdentifier1( int              variableIdentifier1
@@ -71,8 +71,21 @@ public class ClassIdentifier1 extends ClassIdentifier2
                               , ClassIdentifier3 variableIdentifier4
                               )
     {
-        <explicit constructor invocation>
-        <block statements>
+        int una = 2, variable = 'a', y_otra = clase.metodo(), y_esta_sin_init;
+        boolean se_rompe = false; // obviamente :P
+        if((una > 'a' && !se_rompe) || a != 2)
+            print("Opa!");
+        else
+            y_el_else_anda();
+
+        while(this.llamo.a.un.metodo(con, estos, parametros))
+            a = a + 1;
+        y_otra = elmetodo_que_me_devuelve.unstring(1, chau, super.algo.otro());
+        {
+            string un_bloque_arbitrario = "y este es un string que termina en punto.";
+            while(true || (algo() && !j || (a+b)>=8))
+                ;;
+        }
     }
 
 //----------------------------------------------------------------------------//
@@ -84,43 +97,49 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                  , ClassIdentifier3 variableIdentifier4
                                  )
     {
-        <block statements>
+        //<block statements>
     }
 
     public int methodIdentifier( int              variableIdentifier1
                                 , char             variableIdentifier2
                                 , boolean          variableIdentifier3
                                 , ClassIdentifier3 variableIdentifier4
-                                ) 
+                                )
     {
-        <block statements>
+        return (123/0 + (-4));
     }
 
     public char methodIdentifier( int              variableIdentifier1
                                  , char             variableIdentifier2
                                  , boolean          variableIdentifier3
                                  , ClassIdentifier3 variableIdentifier4
-                                 ) 
+                                 )
     {
-        <block statements>
+        int ocho = 9 * 4 % 123;
+        if(ocho >= true) {
+            llamoaunmetodo(ocho);
+            y_despues.aotro(123);
+            super.padre();
+        } else
+            una_sola_sentencia = 2;
     }
 
     public boolean methodIdentifier( int              variableIdentifier1
                                     , char             variableIdentifier2
                                     , boolean          variableIdentifier3
                                     , ClassIdentifier3 variableIdentifier4
-                                    ) 
+                                    )
     {
-        <block statements>
+        //<block statements>
     }
 
     public ClassIdentifier2 methodIdentifier( int              variableIdentifier1
                                              , char             variableIdentifier2
                                              , boolean          variableIdentifier3
                                              , ClassIdentifier3 variableIdentifier4
-                                             ) 
+                                             )
     {
-        <block statements>
+        //<block statements>
     }
 
 //----------------------------------------------------------------------------//
@@ -129,18 +148,18 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                         , char             variableIdentifier2
                                         , boolean          variableIdentifier3
                                         , ClassIdentifier3 variableIdentifier4
-                                        ) 
+                                        )
     {
-        <block statements>
+        //<block statements>
     }
 
     public static int methodIdentifier( int              variableIdentifier1
                                        , char             variableIdentifier2
                                        , boolean          variableIdentifier3
                                        , ClassIdentifier3 variableIdentifier4
-                                       ) 
+                                       )
     {
-        <block statements>
+        //<block statements>
     }
 
     public static char methodIdentifier( int              variableIdentifier1
@@ -149,7 +168,7 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                         , ClassIdentifier3 variableIdentifier4
                                         )
     {
-        <block statements>
+        //<block statements>
     }
 
     public static boolean methodIdentifier( int              variableIdentifier1
@@ -158,7 +177,7 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                            , ClassIdentifier3 variableIdentifier4
                                            )
     {
-        <block statements>
+        //<block statements>
     }
 
     public static ClassIdentifier2 methodIdentifier( int              variableIdentifier1
@@ -167,12 +186,12 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                                     , ClassIdentifier3 variableIdentifier4
                                                     )
     {
-        <block statements>
+        //<block statements>
     }
 
 //----------------------------------------------------------------------------//
 // Methods with protected modifier.
-
+/*
     protected void methodIdentifier( int              variableIdentifier1
                                     , char             variableIdentifier2
                                     , boolean          variableIdentifier3
@@ -265,5 +284,5 @@ public class ClassIdentifier1 extends ClassIdentifier2
     {
         <block statements>
     }
-
+*/
 }
