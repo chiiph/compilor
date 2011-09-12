@@ -168,9 +168,10 @@ Expresiones
 <primary>                                   ::=   <class instance creation expression> <rest primary>
 <primary>                                   ::=   SUPER ACCESSOR IDENTIFIER <rest primary>
 <primary>                                   ::=   <method invocation> <rest primary>
-<rest primary>                              ::=   ACCESSOR IDENTIFIER <rest primary>
-<rest primary>                              ::=   <rest method invocation>
+<rest primary>                              ::=   ACCESSOR IDENTIFIER <rest2 primary>
 <rest primary>                              ::=   LAMBDA
+
+<rest2 primary>                             ::=   <rest method invocation> <rest primary>
 
 <class instance creation expression>        ::=   NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
 <rest class instance creation expression>   ::=   PAREN_CLOSE
