@@ -4,12 +4,10 @@
 003err  56 [y] class_declaration                        "La palabra clave class debe ser especificada luego de public."
 004err  69 [y] rest_class_declaration                   "Debe especificar un identificador de la clase de la cual se hereda."
 005err  73 [y] rest_class_declaration                   "Se esperaba una { o la palabra clave extends."
-006err  82 [-] class_body                               "Se esperaba una {."
-007err  96 [y] rest_class_body                          "Se esperaba una } como cierre de la clase."
-008err 132 [y] rest2_class_body_declaration             "Se esperaba un identificador o un (."
-       141 [-] constructor_declarator                   "Luego del nombre del constructor se deben especificar los parametros. Se esperaba leer un (."
-009err 155 [y] rest_constructor_declarator              "Se esperaba un ) como cierre de los parametros del constructor."
-010err 176 [y] formal_parameter                         "Se esperaba encontrar un nombre para el parametro, %s no es valido."
+006err  96 [y] rest_class_body                          "Se esperaba una } como cierre de la clase."
+007err 132 [y] rest2_class_body_declaration             "Se esperaba un identificador o un (."
+008err 155 [y] rest_constructor_declarator              "Se esperaba un ) como cierre de los parametros del constructor."
+009err 176 [y] formal_parameter                         "Se esperaba encontrar un nombre para el parametro, %s no es valido."
 011err 185 [y] constructor_body                         "Debe existir un cuerpo del constructor encerrado entre llaves. Se esperaba una {."
 012err 199 [y] rest_constructor_body                    "Debe cerrar el cuerpo del constructor. Se esperaba una }."
 013err 207 [y] rest_constructor_body                    "Se esperaba el cierre del cuerpo del constructor, o una sucesion de sentencias."
@@ -51,37 +49,35 @@
 050err 692 [y] unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
 051err 707 [X] postfix_expression                       "%s no es un identificador valido."
 052err 722 [?] primary                                  "Se esperaba un )."
-053err 736 [?] primary                                  "Se esperaba un (."
-054err 741 [?] primary                                  "%s no es un identificador valido."
-055err 748 [?] primary                                  "%s no es un identificador valido."
-056err     [?] primary                                  "Se esperaba un . ."
-057err     [?] primary                                  "%S no es un primary valido."
-058err 759 [?] rest_primary                             "%s no es un identificador valido."
-059err     [-] rest2_primary                            "Se esperaba un )."
-060err     [-] rest2_primary                            "Se esperaba un ( o un tipo valido."
-061err 778 [?] class_instance_creation_expression       "Se esperaba un )."
-062err 782 [?] class_instance_creation_expression       "%s no es un identificador valido."
-063err 786 [-] class_instance_creation_expression       "Se esperaba el operador new."
-064err 800 [?] rest_class_instance_creation_expression  "Se esperaba un )."
-065err 804 [?] rest_class_instance_creation_expression  "Se esperaba un ) o un argumento valido."
-076err 837 [?] method_invocation                        "Se esperaba un (."
-077err 841 [?] method_invocation                        "Se esperaba un identificador valido."
-       845 [?] method_invocation                        "Se esperaba un . ."
-       862 [?] method_invocation                        "Se esperaba un (."
-       866 [?] method_invocation                        "Se esperaba un identificador valido."
-       870 [?] method_invocation                        "Se esperaba un . ."
-       874 [?] method_invocation                        "Se esperaba un )."
-       888 [?] method_invocation                        "Se esperaba un (."
-       892 [?] method_invocation                        "Se esperaba un identificador valido."
-       896 [?] method_invocation                        "Se esperaba un . ."
-078err 913 [?] rest_method_invocation                   "Se esperaba un (."
-       917 [?] rest_method_invocation                   "Se esperaba un identificador valido."
-       928 [?] rest_method_invocation                   "Se esperaba un ;."
-       945 [?] rest_super                               "Se esperaba un (."
-       949 [?] rest_super                               "Se esperaba un identificador valido o un (."
-080err 963 [-] rest2_method_invocation                  "Se esperaba un )."
-081err 967 [-] rest2_method_invocation                  "Se esperaba un ) o un argumento valido."
-082err 976 [-] literal                                  "Se esperaba un literal valido."
+053err 736 [?] primary                                  
+054err 741 [?] primary                                  
+       748 [?] primary                                  
+       759 [?] rest_primary                             
+           [-] rest2_primary                            
+           [-] rest2_primary                            
+       778 [?] class_instance_creation_expression       
+       782 [?] class_instance_creation_expression       
+       786 [-] class_instance_creation_expression       
+       800 [?] rest_class_instance_creation_expression  
+       804 [?] rest_class_instance_creation_expression  
+       837 [?] method_invocation                        
+       841 [?] method_invocation                        
+       845 [?] method_invocation                        
+       862 [?] method_invocation                        
+       866 [?] method_invocation                        
+       870 [?] method_invocation                        
+       874 [?] method_invocation                        
+       888 [?] method_invocation                        
+       892 [?] method_invocation                        
+       896 [?] method_invocation                        
+       913 [?] rest_method_invocation                   
+       917 [?] rest_method_invocation                   
+       928 [?] rest_method_invocation                   
+       945 [?] rest_super                               
+       949 [?] rest_super                               
+       963 [-] rest2_method_invocation                  
+       967 [-] rest2_method_invocation                  
+       976 [-] literal                                  
 
 - Terminar el caso correcto.
 - Algunos .res

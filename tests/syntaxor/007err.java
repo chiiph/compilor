@@ -1,3 +1,4 @@
-public class identifier {
-    public int i;
+public class Identifier {
+
+    public Identifier
 
