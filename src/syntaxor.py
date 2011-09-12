@@ -16,7 +16,7 @@ class Syntaxor(object):
 
     def update_token(self):
         self._current_token = self._lexor.get_token()
-        print self._current_token
+        #print self._current_token
 
     def tok(self, tokentype):
         return self._current_token.get_type() == tokentype
@@ -218,7 +218,7 @@ class Syntaxor(object):
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
-                                  "Debe cerrar del cuerpo del construcor. Se esperaba }")
+                                  "Debe cerrar del cuerpo del constructor. Se esperaba }")
 
     def explicit_constructor_invocation(self):
         if self._current_token.get_type() in FIRST_explicit_constructor_invocation:
@@ -459,7 +459,11 @@ class Syntaxor(object):
     def rest_variable_declarators(self):
         if self.tok(COMMA):
             self.update_token()
-            self.variable_declarators()
+            if self.tok(IDENTIFIER):
+                self.update_token()
+                self.variable_declarators()
+            else:
+                raise Exception()
         # sino lambda
 
     def variable_declarator(self):
@@ -526,7 +530,6 @@ class Syntaxor(object):
             if self.tok(PAREN_OPEN):
                 self.update_token()
                 self.expression()
-                print "OOOO", self._current_token
                 if self.tok(PAREN_CLOSE):
                     self.update_token()
                     self.statement()
@@ -720,20 +723,7 @@ class Syntaxor(object):
             self.rest_primary()
         elif self.tok(SUPER):
             self.update_token()
-            if self.tok(ACCESSOR):
-                self.update_token()
-                if self.tok(IDENTIFIER):
-                    self.update_token()
-                    self.rest_primary()
-                    return
-                else:
-                    raise SyntaxError(self._current_token.get_line(),
-                              self._current_token.get_col(),
-                              "%s no es un identificador valido." % self._current_token.get_lexeme())
-            else:
-                raise SyntaxError(self._current_token.get_line(),
-                                  self._current_token.get_col(),
-                                  "Se esperaba un . .")
+            self.rest_primary()
         elif self.tok(IDENTIFIER):
             self.method_invocation()
             self.rest_primary()
@@ -752,6 +742,8 @@ class Syntaxor(object):
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "%s no es un identificador valido." % self._current_token.get_lexeme())
+        elif self.tok(PAREN_OPEN):
+            self.rest_method_invocation()
         # sino lambda
 
     def class_instance_creation_expression(self):
@@ -765,7 +757,7 @@ class Syntaxor(object):
                 else:
                     raise SyntaxError(self._current_token.get_line(),
                                       self._current_token.get_col(),
-                                      "Se esperaba un ).")
+                                      "Se esperaba un (.")
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -805,15 +797,12 @@ class Syntaxor(object):
 
     def method_invocation(self):
         if self.tok(IDENTIFIER):
-            print "UUUUU", self._current_token
             self.update_token()
             self.rest_primary()
             if self.tok(PAREN_OPEN):
                 self.update_token()
                 self.rest2_method_invocation()
                 self.rest_method_invocation()
-            else:
-                raise Exception()
         elif (self._current_token.type() in FIRST_literal) or self.tok(THIS):
             self.update_token()
             self.rest_primary()
@@ -870,15 +859,7 @@ class Syntaxor(object):
         elif self.tok(SUPER):
             self.update_token()
             self.rest_primary()
-            if self.tok(ACCESSOR):
-                self.update_token()
-                if self.tok(IDENTIFIER):
-                    self.update_token()
-                    self.rest_super()
-                else:
-                    raise Exception()
-            else:
-                raise Exception()
+            self.rest_super()
 
     def rest_method_invocation(self):
         if self.tok(ACCESSOR):
@@ -893,6 +874,8 @@ class Syntaxor(object):
             else:
                 raise Exception()
         elif self.tok(COMMA):
+            self.rest_variable_declarators()
+        elif self.tok(ASSIGNMENT):
             self.variable_declarators()
             if self.tok(SCOLON):
                 self.update_token()
