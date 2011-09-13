@@ -1,6 +1,6 @@
 public class Identifier {
 
-    public int indentifier() {
+    public int identifier() {
 
-        int 6j
+        while (true
 

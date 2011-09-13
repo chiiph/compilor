@@ -1,5 +1,3 @@
-
 public class Identifier {
 
-    public int i
-}
+   public int 666

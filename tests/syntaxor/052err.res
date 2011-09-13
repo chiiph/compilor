@@ -1,5 +1,5 @@
 Descripcion:
-  Ver si se detecta la falta del cierre con ) de la expression.
+  Ver si se detecta la falta de ) en la llamada a un metodo.
 
 Resultado esperado:
-  Se detecta la falta de al menos un ) finalizando la postfix expression !(a
+  Se detecta que falta ).

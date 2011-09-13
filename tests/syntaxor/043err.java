@@ -1,6 +1,6 @@
 public class AVerrrr {
     protected AVerrrrrrrr() {
-        if(a + super())
+        if(a + new int())
             algo();
     }
 }

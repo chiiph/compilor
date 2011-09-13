@@ -1,6 +1,5 @@
 public class AVerrrr {
-    protected AVerrrrrrrr() {
-        if(a + !boolean)
-            algo();
+    public AVerrrrrrrr() {
+        Hola a = new hola(;
     }
 }

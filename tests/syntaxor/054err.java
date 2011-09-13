@@ -1,6 +1,5 @@
 public class AVerrrr {
-    protected AVerrrrrrrr() {
-        if(a + new int())
-            algo();
+    public AVerrrrrrrr() {
+        this.a);
     }
 }

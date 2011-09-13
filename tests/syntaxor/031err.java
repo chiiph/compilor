@@ -1,6 +1,6 @@
 public class Identifier {
 
-    public int identifier () 
+    public int identifier() {
 
-}
+        if (true) 
 

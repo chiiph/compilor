@@ -1,6 +1,5 @@
-public class Sarasa {
-    protected Sarasa() {
-        if(a + *!a2)
-            unaClase.algo();
+public class AVerrrr {
+    public AVerrrrrrrr() {
+        Hola a = new hola(a;
     }
 }

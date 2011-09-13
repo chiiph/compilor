@@ -1,5 +1,6 @@
 Descripcion:
-  Ver si detecta un identificador invalido dentro de una postfix expression.
+  Ver si se detecta que falta un ) en la creacion de un objeto sin
+  parametros.
 
 Resultado esperado:
-  boolean es reconocido en este caso como un identificador no valido.
+  Se detecta que falta un ).

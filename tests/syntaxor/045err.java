@@ -1,5 +1,6 @@
-public class Identifier {
-
-    public int identifier() {
-
-        while true
+public class AVerrrr {
+    protected AVerrrrrrrr() {
+        if(a + super())
+            algo();
+    }
+}

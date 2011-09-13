@@ -37,8 +37,8 @@ generará una excepción e imprimirá un mensaje de error descriptivo.
 
 === Tests automatizados
 
-Para establecer la correctitud del analizador sintáctico, se escribieron 64
-casos de test.
+Para establecer la correctitud del analizador sintáctico, se escribiero una serie 
+de casos de test.
 Dado que correr los tests cada vez que se realizaba un cambio resultaba
 engorroso, se desarrollo una manera de correrlos todos automáticamente,
 indicando si cada test tuvo el resultado esperado o no.

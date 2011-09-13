@@ -1,4 +1,4 @@
 public class Identifier {
 
-    public int i = 0
+    public int identifier(int i
 }

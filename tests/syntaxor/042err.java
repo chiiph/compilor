@@ -1,5 +1,6 @@
-public class Identifier {
-
-    public int identifier() {
-
-        if true
+public class AVerrrr {
+    protected AVerrrrrrrr() {
+        if(a + new a))
+            algo();
+    }
+}

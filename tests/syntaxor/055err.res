@@ -1,6 +1,6 @@
 Descripcion:
-  Ver si detecta el identificador no valido cuando la llamada tiene un
-  "super." antes.
+  Ver si se detecta un identificador no valido en la llamada a un
+  metodo de una clase arbitraria.
 
 Resultado esperado:
-  int es detectado como identificador no valido.
+  Se detecta que int no es un identificador valido.

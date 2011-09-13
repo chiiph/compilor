@@ -1,5 +1,5 @@
-public class Identifier {
-    
-    public int identifier() {
-
-        return 666
+public class AVerrrr {
+    public AVerrrrrrrr() {
+        Hola a = new hola);
+    }
+}

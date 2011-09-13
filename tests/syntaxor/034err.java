@@ -1,6 +1,5 @@
 public class Identifier {
 
-    public int indentifier() {
+    public int identifier() {
 
-        int i, j
-
+        if true

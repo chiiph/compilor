@@ -1,5 +1,5 @@
 Descripcion:
-  Ver si se puede detectar una unary expression mal formada.
+  Ver si se detecta la falta de ) en la creacion de un nuevo objeto.
 
 Resultado esperado:
-  Detecta que *!a2 es una unary expression erronea.
+  Se detecta que falta un ).

@@ -1,6 +1,6 @@
-public class Identifier {
-
-    public int indentifier() {
-
-        i = 6
+public class AVerrrr {
+    protected AVerrrrrrrr() {
+        if(a + !boolean)
+            algo();
     }
+}

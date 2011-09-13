@@ -1,6 +1,6 @@
 Descripcion:
-  Ver si se detecta la falta de un ( que comience la llamada a la
-  creacion de un objeto de clase a.
+  Ver si se detecta un identificador no valido con una llamada a
+  metodo con "this.".
 
 Resultado esperado:
-  Se detecta el ( que falta en la creacion del objeto.
+  Se detecta que int no es un identificador valido.
