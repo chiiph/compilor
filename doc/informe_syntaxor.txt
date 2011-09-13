@@ -19,7 +19,9 @@ La actual entrega del proyecto consta de los siguiente directorios:
 * +./tests/syntaxor/+: contiene los tests de la entrega actual para la verificacion del analizador sintáctico.
 * +./src/+: contiene el codigo fuente tanto del analizador léxico como del sintáctico.
 
-Para correr el módulo principal del analizador sintáctico, +syntaxor_main.py+, se debe primero cambiar el directorio actual a +./src/+, el cual contiene a los archivo +*.py+, y ejecutar el comando 
+Para correr el módulo principal del analizador sintáctico, +syntaxor_main.py+,
+se debe primero cambiar el directorio actual a +./src/+, el cual contiene a los
+archivo +*.py+, y ejecutar el comando 
 
  C:\> python syntaxor_main.py <ARCHIVO DE ENTRADA>
 
@@ -27,36 +29,55 @@ A modo de ejemplo, para correr el primero de los tests:
 
  C:\> python syntaxor_main.py ../tests/001err.java
 
-Si el archivo de código fuente suministrado como entrada no contiene ningún error, se imprimirá un mensaje "La sintaxis de X es correcta."", donde X es el nombre del archivo ingresado.
-Si por el contrario contiene algún error detectable, el analizador sintáctico generará una excepción e imprimirá un mensaje de error descriptivo. 
+Si el archivo de código fuente suministrado como entrada no contiene ningún
+error, se imprimirá un mensaje "La sintaxis de X es correcta."", donde X es el
+nombre del archivo ingresado.
+Si por el contrario contiene algún error detectable, el analizador sintáctico
+generará una excepción e imprimirá un mensaje de error descriptivo. 
 
 === Tests automatizados
 
-Para establecer la correctitud del analizador sintáctico, se escribieron 64 casos de test.
-Dado que correr los tests cada vez que se realizaba un cambio resultaba engorroso, se desarrollo una manera de correrlos todos automáticamente, indicando si cada test tuvo el resultado esperado o no.
+Para establecer la correctitud del analizador sintáctico, se escribieron 64
+casos de test.
+Dado que correr los tests cada vez que se realizaba un cambio resultaba
+engorroso, se desarrollo una manera de correrlos todos automáticamente,
+indicando si cada test tuvo el resultado esperado o no.
 
-Para correr el test automatizado, cambiar el directorio actual a +./src/+ y ejecutar:
+Para correr el test automatizado, cambiar el directorio actual a +./src/+
+y ejecutar:
 
  C:\> python test.py
 
-La salida incluirá un mensaje por cada test, indicando si tuvo exito o no, y el mensaje de error emitido por el analizador sintáctico al correr el test.
+La salida incluirá un mensaje por cada test, indicando si tuvo exito o no, y el
+mensaje de error emitido por el analizador sintáctico al correr el test.
 
 == Proceso
 
 La gramática fue procesada de manera tal que fuera LL(1). Para lograr
 esto primero se eliminó la recursividad a izquierda y luego se
 factorizó.
+
+El proceso completo consistió en:
+. Eliminacion de extensiones de la EBNF suministrada por la catedra. 
+  La gramatica resultante puede verse en los apendices.
+. Eliminacion de los aspectos regulares de la gramatica original, los cuales
+  eran resueltos por el analizador léxico. 
+  Entre estos estan las reglas para la generacion de identificadores válidos,
+  digitos válidos, operadores, y demas tokens predefinidos y reconocidos.
+. Eliminacion de reglas recursivas a izquierda, para lograr que la gramatica
+  fuese parseable por un parser descendiente recursivo.
+. Factorizacion a izquierda para minimizar la cantidad de producciones
+  y simplificar la implementación del parser.
+. Impementación del parser, implementando una funcion por cada regla de la
+  gramatica.
+  En cada función donde se detectaba una situación anómala, se levanta una
+  excepción con el mensaje correspondiente. 
+. A partir de cada punto de fallo posible, se generó un test diseñado para
+  levantar esa excepción particlar.
+
 Dado que la gramática original no está diseñada para que sea procesada
 como una LL(1), hubo que realizar algunas excepciones que se trataran
 en las etapas siguientes:
-
-=== Eliminacion de extensionesa BNF
-
-=== Eliminación de aspectos regulares
-
-=== Eliminación de recursion a izq
-
-=== Factorizar a izquierda
 
 1. En la gramática original se diferencia entre declaración de
 constructor y declaración de métodos. Esto sucede porque los
@@ -98,15 +119,11 @@ cercano.
 Esta consideración recién se verá en la etapa de generación de
 código.
 
+////
 ChIIph: bueno, sera otro checkeo que haremos
 ChIIph: si hay un metodo que se llama super(algo); solo sera valido si esta en el constructor
 ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
-
-=== Implementación
-
-=== Generacion de tests
-
-=== Automatizacion de tests
+////
 
 == Implementación
 
@@ -119,6 +136,15 @@ analizador léxico y de la clase Syntaxor para analizar el código MiniJava
 y establecer su correctitud sintáctica.
 
 ==== Clase Syntaxor
+
+.Metodos:
+
+* +check_syntax(self)+: punto de entrada al analizador sintáctico, comienza el proceso de parseo.
+* +update_token(self)+: actualiza el token actual que se analiza, solicitandolo al analizador léxico.
+* +tok(self, tokentype)+: retorna verdadero si el token actual es del tipo pasado por parametro.
+
+El resto de los metodos de esta clase corresponden cada uno a una de las
+producciones de la gramatica LL(1).
 
 ==== Clase SyntaxError
 
