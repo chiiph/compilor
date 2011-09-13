@@ -1,95 +1,80 @@
-000cor     [ ] Correct and complete test.
-001err  36 [y] type_declarations                        "Las declaraciones de clases deben comenzar con el keyword public."
-002err  52 [y] class_declaration                        "Debe especificar un nombre para la clase, %s no es valido."
-003err  56 [y] class_declaration                        "La palabra clave class debe ser especificada luego de public."
-004err  69 [y] rest_class_declaration                   "Debe especificar un identificador de la clase de la cual se hereda."
-005err  73 [y] rest_class_declaration                   "Se esperaba una { o la palabra clave extends."
-006err  96 [y] rest_class_body                          "Se esperaba una } como cierre de la clase."
-007err 132 [y] rest2_class_body_declaration             "Se esperaba un identificador o un (."
-008err 155 [y] rest_constructor_declarator              "Se esperaba un ) como cierre de los parametros del constructor."
-009err 176 [y] formal_parameter                         "Se esperaba encontrar un nombre para el parametro, %s no es valido."
-011err 185 [y] constructor_body                         "Debe existir un cuerpo del constructor encerrado entre llaves. Se esperaba una {."
-012err 199 [y] rest_constructor_body                    "Debe cerrar el cuerpo del constructor. Se esperaba una }."
-013err 207 [y] rest_constructor_body                    "Se esperaba el cierre del cuerpo del constructor, o una sucesion de sentencias."
-014err 221 [X] rest2_constructor_body                   "Debe cerrar del cuerpo del construcor. Se esperaba }"
-015err 232 [X] explicit_constructor_invocation          "Se esperaba un ( que comenzara la definicion de parametros usados para la llamada."
-016err 236 [-] explicit_constructor_invocation          "Se esperaba this o super."
-017err 247 [X] rest_explicit_constructor_invocation     "Debe cerrar la lista de parametros con un )."
-018err 258 [X] rest_explicit_constructor_invocation     "Se esperaba un ;."
-019err 262 [X] rest_explicit_constructor_invocation     "Debe cerrar la lista de parametros con un )."
-020err 280 [y] field_modifier                           "Solo los siguientes keywords son validos: public, protected, static."
-021err 290 [y] declarators                              "Se esperaba un nombre de un identificador, %s no es valido."
-022err 305 [y] rest_declarators                         "Se esperaba un ; al final de la declaracion."
-023err 316 [y] rest_declarators                         "Se esperaba un ; al final de la declaracion."
-024err 330 [y] rest_method_declarator                   "Se esperaba un ) que cierre la lista de parametros."
-025err 334 [y] rest_method_declarator                   "%s no es un parametro valido."
-026err 354 [X] primitive_type                           "%s no es un tipo valido."
-028err 362 [-] numeric_type                             "%s no es un tipo valido."
-029err 371 [-] integral_type                            "%s no es un tipo valido."
-030err 380 [-] boolean_type                             "%s no es un tipo valido."
-031err 389 [y] block                                    "Se esperaba un bloque de codigo encerrado entre llaves."
-032err 403 [y] rest_block                               "Se esperaba una } para cerrar el bloque de codigo."
-033err 434 [y] block_statement                          "Comienzo de sentencia no valido."
-034err 444 [y] local_variable_declaration_statement     "Se esperaba un ;."
-035err 453 [y] local_variable_declaration               "%s no es un identificador valido."
-036err 468 [y] rest_variable_declarators                "Se esperaba un identificador valido."
-037err 491 [y] statement                                "Comienzo de sentencia no valido."
-038err 505 [-] statement_without_trailing_substatement  "Comienzo de sentencia no valido."
-039err 514 [-] empty_statement                          "Se esperaba un ;."
-040err 524 [X] expression_statement                     "Se esperaba un ;."
-041err 542 [y] if_start_statement                       "Debe cerrar la expresion con un )."
-042err 546 [y] if_start_statement                       "Debe comenzar la expresion luego del if con un (."
-043err 550 [-] if_start_statement                       "Se esperaba el comienzo de un if."
-044err 570 [y] while_statement                          "Debe cerrar la expresion con un )."
-045err 574 [y] while_statement                          "Debe comenzar la expresion del while con un (."
-046err 578 [-] while_statement                          "Se esperaba un while."
-047err 587 [-] return_statement                         "Se esperaba un return."
-048err 601 [y] rest_return_statement                    "Se esperaba un ;."
-049err 605 [y] rest_return_statement                    "Sentencia de return no valida."
-050err 692 [y] unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
-051err 707 [X] postfix_expression                       "%s no es un identificador valido."
-052err 722 [?] primary                                  "Se esperaba un )."
-053err 736 [?] primary                                  
-054err 741 [?] primary                                  
-       748 [?] primary                                  
-       759 [?] rest_primary                             
-           [-] rest2_primary                            
-           [-] rest2_primary                            
-       778 [?] class_instance_creation_expression       
-       782 [?] class_instance_creation_expression       
-       786 [-] class_instance_creation_expression       
-       800 [?] rest_class_instance_creation_expression  
-       804 [?] rest_class_instance_creation_expression  
-       837 [?] method_invocation                        
-       841 [?] method_invocation                        
-       845 [?] method_invocation                        
-       862 [?] method_invocation                        
-       866 [?] method_invocation                        
-       870 [?] method_invocation                        
-       874 [?] method_invocation                        
-       888 [?] method_invocation                        
-       892 [?] method_invocation                        
-       896 [?] method_invocation                        
-       913 [?] rest_method_invocation                   
-       917 [?] rest_method_invocation                   
-       928 [?] rest_method_invocation                   
-       945 [?] rest_super                               
-       949 [?] rest_super                               
-       963 [-] rest2_method_invocation                  
-       967 [-] rest2_method_invocation                  
-       976 [-] literal                                  
+    [ ]  000cor-Correct and complete test.
+ 36 [y]  001err-type_declarations                        "Las declaraciones de clases deben comenzar con el keyword public."
+ 52 [y]  002err-class_declaration                        "Debe especificar un nombre para la clase, %s no es valido."
+ 56 [y]  003err-class_declaration                        "La palabra clave class debe ser especificada luego de public."
+ 69 [y]  004err-rest_class_declaration                   "Debe especificar un identificador de la clase de la cual se hereda."
+ 73 [y]  005err-rest_class_declaration                   "Se esperaba una { o la palabra clave extends."
+ 96 [y]  006err-rest_class_body                          "Se esperaba una } como cierre de la clase."
+132 [y]  007err-rest2_class_body_declaration             "Se esperaba un identificador o un (."
+155 [y]  008err-rest_constructor_declarator              "Se esperaba un ) como cierre de los parametros del constructor."
+176 [y]  009err-formal_parameter                         "Se esperaba encontrar un nombre para el parametro, %s no es valido."
+185 [y]  010err-constructor_body                         "Debe existir un cuerpo del constructor encerrado entre llaves. Se esperaba una {."
+199 [y]  011err-rest_constructor_body                    "Debe cerrar el cuerpo del constructor. Se esperaba una }."
+207 [y]  012err-rest_constructor_body                    "Se esperaba el cierre del cuerpo del constructor, o una sucesion de sentencias."
+221 [X]  013err-rest2_constructor_body                   "Debe cerrar del cuerpo del construcor. Se esperaba }"
+232 [X]  014err-explicit_constructor_invocation          "Se esperaba un ( que comenzara la definicion de parametros usados para la llamada."
+247 [X]  015err-rest_explicit_constructor_invocation     "Debe cerrar la lista de parametros con un )."
+258 [X]  016err-rest_explicit_constructor_invocation     "Se esperaba un ;."
+262 [X]  017err-rest_explicit_constructor_invocation     "Debe cerrar la lista de parametros con un )."
+280 [ ]  018err-field_modifier                           "Solo los siguientes keywords son validos: public, protected, static."
+290 [ ]  019err-declarators                              "Se esperaba un nombre de un identificador, %s no es valido."
+305 [ ]  020err-rest_declarators                         "Se esperaba un ; al final de la declaracion."
+316 [ ]  021err-rest_declarators                         "Se esperaba un ; al final de la declaracion."
+330 [ ]  022err-rest_method_declarator                   "Se esperaba un ) que cierre la lista de parametros."
+334 [ ]  023err-rest_method_declarator                   "%s no es un parametro valido."
+354 [ ]  024err-primitive_type                           "%s no es un tipo valido."
+389 [ ]  025err-block                                    "Se esperaba un bloque de codigo encerrado entre llaves."
+403 [ ]  026err-rest_block                               "Se esperaba una } para cerrar el bloque de codigo."
+434 [ ]  027err-block_statement                          "Comienzo de sentencia no valido."
+444 [ ]  028err-local_variable_declaration_statement     "Se esperaba un ;."
+453 [ ]  029err-local_variable_declaration               "%s no es un identificador valido."
+468 [ ]  030err-rest_variable_declarators                "Se esperaba un identificador valido."
+491 [ ]  031err-statement                                "Comienzo de sentencia no valido."
+524 [ ]  032err-expression_statement                     "Se esperaba un ;."
+542 [ ]  033err-if_start_statement                       "Debe cerrar la expresion con un )."
+546 [ ]  034err-if_start_statement                       "Debe comenzar la expresion luego del if con un (."
+570 [ ]  035err-while_statement                          "Debe cerrar la expresion con un )."
+574 [ ]  036err-while_statement                          "Debe comenzar la expresion del while con un (."
+601 [ ]  037err-rest_return_statement                    "Se esperaba un ;."
+605 [ ]  038err-rest_return_statement                    "Sentencia de return no valida."
+692 [ ]  039err-unary_expression                         "Se esperaba uno de los siguiente operadores: + o -, o una expresion unaria valida."
+707 [ ]  040err-postfix_expression                       "%s no es un identificador valido."
+722 [ ]  041err-primary                                  "Se esperaba un )."
+736 [ ]  042err-primary                                  
+741 [ ]  043err-primary                                  
+748 [ ]  044err-primary                                  
+759 [ ]  045err-rest_primary                             
+778 [ ]  046err-class_instance_creation_expression       
+782 [ ]  047err-class_instance_creation_expression       
+800 [ ]  048err-rest_class_instance_creation_expression  
+804 [ ]  049err-rest_class_instance_creation_expression  
+837 [ ]  050err-method_invocation                        
+841 [ ]  051err-method_invocation                        
+845 [ ]  052err-method_invocation                        
+862 [ ]  053err-method_invocation                        
+866 [ ]  054err-method_invocation                        
+870 [ ]  055err-method_invocation                        
+874 [ ]  056err-method_invocation                        
+888 [ ]  057err-method_invocation                        
+892 [ ]  058err-method_invocation                        
+896 [ ]  059err-method_invocation                        
+913 [ ]  060err-rest_method_invocation                   
+917 [ ]  061err-rest_method_invocation                   
+928 [ ]  062err-rest_method_invocation                   
+945 [ ]  063err-rest_super                               
+949 [ ]  064err-rest_super                               
 
-- Terminar el caso correcto.
-- Algunos .res
-- Armar la doc (aca hago un draftsito de las secciones que tengo en mente)
-- Consideraciones previas sobre cambios en el analizador lexico, aca habria que comentar los errores que se encontraron en la primera entrega y que cambios se hicieron para que no sucedieran.
-- Un tipo de intro, que cuente el objetivo, y como correr lo que entregamos.
-- La gramatica original sin extensiones, comentar que esta basada en la de la catedra (blabla)
-- Parsing, aca comentar el tipo de parsing que se implemento, y como era necesario que fuera la gramaica para que pudieramos hacerlo.
-- Consideraciones sobre el procesado de la gramatica (lo que esta en el archivo cambios_gramatica, mas/menos alguna que otra correccion/agregado)
-- La gramatica final (no se si es mejor poner esto antes del punto de consideraciones... aun que me da igual)
-- Una seccion sobre los casos de test, comentando como se muestran los errores y un par de ejemplos.
-- Cambiar syntaxor_main para que tire los prints lindos en vez del stack trace (es simplemente descomentar un pedazo del codigo)
-
-Creo qeu eso seria todo. Decime que preferis encarar vos, y yo agarro el complemento de eso.
-Vi que cambiaste los nomnbres de los tests, por que lo hiciste? Asi como estan va a ser complicadisimo abrir un test rapido o saber que testea cada archivo. O pensabas pasar el todo.txt a algo entregable?
+ - Terminar el caso correcto.
+ - Algunos .res
+ - Armar la doc (aca hago un draftsito de las secciones que tengo en mente)
+ - Consideraciones previas sobre cambios en el analizador lexico, aca habria que comentar los errores que se encontraron en la primera entrega y que cambios se hicieron para que no sucedieran.
+ - Un tipo de intro, que cuente el objetivo, y como correr lo que entregamos.
+ - La gramatica original sin extensiones, comentar que esta basada en la de la catedra (blabla)
+ - Parsing, aca comentar el tipo de parsing que se implemento, y como era necesario que fuera la gramaica para que pudieramos hacerlo.
+ - Consideraciones sobre el procesado de la gramatica (lo que esta en el archivo cambios_gramatica, mas/menos alguna que otra correccion/agregado)
+ - La gramatica final (no se si es mejor poner esto antes del punto de consideraciones... aun que me da igual)
+ - Una seccion sobre los casos de test, comentando como se muestran los errores y un par de ejemplos.
+ - Cambiar syntaxor_main para que tire los prints lindos en vez del stack trace (es simplemente descomentar un pedazo del codigo)
+ 
+ Creo qeu eso seria todo. Decime que preferis encarar vos, y yo agarro el complemento de eso.
+ Vi que cambiaste los nomnbres de los tests, por que lo hiciste? Asi como estan va a ser complicadisimo abrir un test rapido o saber que testea cada archivo. O pensabas pasar el todo.txt a algo entregable?

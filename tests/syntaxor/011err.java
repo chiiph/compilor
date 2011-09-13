@@ -1,3 +1,6 @@
 public class Identifier {
 
-    public Identifier (int i) 
+    public Identifier () { 
+        i = 6;
+        // no closing brace on constructor block
+

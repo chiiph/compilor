@@ -3,6 +3,8 @@ from constants import *
 from firsts import *
 from errors import SyntaxError
 
+
+
 class Syntaxor(object):
     def __init__(self, path):
         self._lexor = Lexor(path)

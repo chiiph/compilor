@@ -1,6 +1,5 @@
 public class Identifier {
 
-    public Identifier() {
+    private int i;
 
-        super()
-    }
+}
