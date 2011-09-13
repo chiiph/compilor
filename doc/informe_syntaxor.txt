@@ -41,9 +41,10 @@ en las etapas siguientes:
 1. En la gramática original se diferencia entre declaración de
 constructor y declaración de métodos. Esto sucede porque los
 constructores no deben llevar un tipo de retorno. Pero dado que el
-tipo de retorno puede ser un token reconocido como IDENTIFIER, se
-resolvió tratar a todos los métodos por igual, y dejar el checkeo de
-tipo de retorno según el tipo de método para la etapa del análisis
+tipo de retorno puede ser un token reconocido como IDENTIFIER, el cual
+coincide con el tipo de token de nombre del constructor, se resolvió
+tratar a todos los métodos por igual, y dejar el checkeo de tipo de
+retorno según el tipo de método para la etapa del análisis
 semántico.
 
 2. De forma similar a 1., los tipos de los atributos de clase tienen
@@ -286,7 +287,7 @@ ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
 <boolean literal                     ::= FALSE
 ----
 
-== Gramática factorizada con recursión a izquiera eliminada
+== Gramática LL(1) resultante
 
 .Programas
 ----
