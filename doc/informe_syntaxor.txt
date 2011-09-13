@@ -21,6 +21,9 @@ A modo de ejemplo, para correr el primero de los tests:
 
  C:\> python syntaxor_main.py ../tests/001err.java
 
+=== Tests automatizados
+
+
 == Proceso
 
 La gramática fue procesada de manera tal que fuera LL(1). Para lograr
@@ -77,13 +80,11 @@ cercano.
 Esta consideración recién se verá en la etapa de generación de
 código.
 
-=== Implementacion
-
-=== Errores conocidos
-
 ChIIph: bueno, sera otro checkeo que haremos
 ChIIph: si hay un metodo que se llama super(algo); solo sera valido si esta en el constructor
 ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
+
+=== Implementacion
 
 === Generacion de tests
 
