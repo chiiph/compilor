@@ -2,15 +2,21 @@
 = Analizador Sintáctico
 :Author: Garay, Iñaki LU 67387; Touceda, Tomás LU 84024
 
+- Consideraciones previas sobre cambios en el analizador lexico, aca habria que comentar los errores que se encontraron en la primera entrega y que cambios se hicieron para que no sucedieran.
+- Parsing, aca comentar el tipo de parsing que se implemento, y como era necesario que fuera la gramaica para que pudieramos hacerlo.
+- Consideraciones sobre el procesado de la gramatica (lo que esta en el archivo cambios_gramatica, mas/menos alguna que otra correccion/agregado)
+- La gramatica final (no se si es mejor poner esto antes del punto de consideraciones... aun que me da igual)
+- Una seccion sobre los casos de test, comentando como se muestran los errores y un par de ejemplos.
+
 == Especificación e instrucciones de uso
 
 El analizador sintáctico esta implementado con Python 2.7.2, por lo cual éste debe estar instalado.
 
 La actual entrega del proyecto consta de los siguiente directorios:
 
-* +./doc+: contiene la documentacion asociada
-* +./tests/lexor+: contiene los tests de la entrega anterior para la verificación del analizador léxico.
-* +./tests/syntaxor+: contiene los tests de la entrega actual para la verificacion del analizador sintáctico.
+* +./doc/+: contiene la documentacion asociada
+* +./tests/lexor/+: contiene los tests de la entrega anterior para la verificación del analizador léxico.
+* +./tests/syntaxor/+: contiene los tests de la entrega actual para la verificacion del analizador sintáctico.
 * +./src/+: contiene el codigo fuente tanto del analizador léxico como del sintáctico.
 
 Para correr el módulo principal del analizador sintáctico, +syntaxor_main.py+, se debe primero cambiar el directorio actual a +./src/+, el cual contiene a los archivo +*.py+, y ejecutar el comando 
@@ -21,8 +27,19 @@ A modo de ejemplo, para correr el primero de los tests:
 
  C:\> python syntaxor_main.py ../tests/001err.java
 
+Si el archivo de código fuente suministrado como entrada no contiene ningún error, se imprimirá un mensaje "La sintaxis de X es correcta."", donde X es el nombre del archivo ingresado.
+Si por el contrario contiene algún error detectable, el analizador sintáctico generará una excepción e imprimirá un mensaje de error descriptivo. 
+
 === Tests automatizados
 
+Para establecer la correctitud del analizador sintáctico, se escribieron 64 casos de test.
+Dado que correr los tests cada vez que se realizaba un cambio resultaba engorroso, se desarrollo una manera de correrlos todos automáticamente, indicando si cada test tuvo el resultado esperado o no.
+
+Para correr el test automatizado, cambiar el directorio actual a +./src/+ y ejecutar:
+
+ C:\> python test.py
+
+La salida incluirá un mensaje por cada test, indicando si tuvo exito o no, y el mensaje de error emitido por el analizador sintáctico al correr el test.
 
 == Proceso
 
@@ -85,29 +102,30 @@ ChIIph: bueno, sera otro checkeo que haremos
 ChIIph: si hay un metodo que se llama super(algo); solo sera valido si esta en el constructor
 ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
 
-=== Implementacion
+=== Implementación
 
 === Generacion de tests
 
 === Automatizacion de tests
 
-- Consideraciones previas sobre cambios en el analizador lexico, aca habria que comentar los errores que se encontraron en la primera entrega y que cambios se hicieron para que no sucedieran.
-- Un tipo de intro, que cuente el objetivo, y como correr lo que entregamos.
-- La gramatica original sin extensiones, comentar que esta basada en la de la catedra (blabla)
-- Parsing, aca comentar el tipo de parsing que se implemento, y como era necesario que fuera la gramaica para que pudieramos hacerlo.
-- Consideraciones sobre el procesado de la gramatica (lo que esta en el archivo cambios_gramatica, mas/menos alguna que otra correccion/agregado)
-- La gramatica final (no se si es mejor poner esto antes del punto de consideraciones... aun que me da igual)
-- Una seccion sobre los casos de test, comentando como se muestran los errores y un par de ejemplos.
-
-- Cambiar syntaxor_main para que tire los prints lindos en vez del stack trace (es simplemente descomentar un pedazo del codigo)
-
 == Implementación
 
 === Archivos y clases
- 
-= Apéndices
 
-== Gramática BNF sin extensiones
+==== Archivo +syntaxor_main.py+
+
+Este es el módulo principal del analizador sintáctico, que hace uso del
+analizador léxico y de la clase Syntaxor para analizar el código MiniJava
+y establecer su correctitud sintáctica.
+
+==== Clase Syntaxor
+
+==== Clase SyntaxError
+
+La clase +SyntaxError+, definida en el archivo +errors.py+, encapsula el estado asociado a un error. 
+En particular, mantiene la linea y columna donde se detecto el error, y el mensaje de error que se deberá mostrar.
+
+== Gramatica BNF sin extensiones
 
 .Programas
 ----
@@ -288,7 +306,7 @@ ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
 <boolean literal                     ::= FALSE
 ----
 
-== Gramática LL(1) resultante
+== Gramatica LL(1) resultante
 
 .Programas
 ----
@@ -340,9 +358,9 @@ ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
 <rest method declarator>       ::= <formal parameter list> PAREN_CLOSE
 <method body>                  ::= <block>
 ----
-                                             
-.Tipos                                       
-----                                         
+
+.Tipos
+----
 <type>              ::=                       <primitive type>
 <type>              ::=                       IDENTIFIER
 <type>              ::=                       VOID_TYPE
@@ -472,3 +490,4 @@ ChIIph: o sea que tambien volamos los explicit_constructor_invocation jeje
 <boolean literal>                         ::= TRUE
 <boolean literal>                         ::= FALSE
 ----
+
