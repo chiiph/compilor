@@ -901,7 +901,9 @@ class Syntaxor(object):
             if self.tok(SCOLON):
                 return
             else:
-                raise Exception()
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "Se esperaba un ;.")
         elif self.tok(PAREN_OPEN):
             self.update_token()
             self.rest2_method_invocation()
