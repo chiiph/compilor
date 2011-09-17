@@ -14,6 +14,7 @@ def pretty_print_error_message(input_filepath, exc):
     while (i < line):
         line_str = input_file.readline()
         i += 1
+
     if len(line_str) > 0 and line_str[-1] == "\n":
         print line_str,
     else:

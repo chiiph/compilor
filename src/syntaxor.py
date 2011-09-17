@@ -3,8 +3,6 @@ from constants import *
 from firsts import *
 from errors import SyntaxError
 
-
-
 class Syntaxor(object):
     def __init__(self, path):
         self._lexor = Lexor(path)
@@ -459,7 +457,7 @@ class Syntaxor(object):
     def rest_variable_declarators(self):
         if self.tok(COMMA):
             self.update_token()
-            if self.tok(IDENTIFIER) or self._current_token.get_type() in [THIS, SUPER]:
+            if self.tok(IDENTIFIER):
                 self.update_token()
                 self.variable_declarators()
             else:
@@ -892,24 +890,22 @@ class Syntaxor(object):
             self.update_token()
             if self.tok(IDENTIFIER):
                 self.update_token()
-                if self.tok(PAREN_OPEN):
-                    self.rest2_method_invocation()
-                    self.rest_method_invocation()
-                else:
-                    raise SyntaxError(self._current_token.get_line(),
-                                      self._current_token.get_col(),
-                                      "Se esperaba un (.")
+                self.rest_primary()
+                self.rest_method_invocation()
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "Se esperaba un identificador valido.")
-        elif self.tok(COMMA):
-            self.rest_variable_declarators()
         elif self.tok(ASSIGNMENT):
             self.variable_declarators()
+            if self.tok(SCOLON):
+                return
+            else:
+                raise Exception()
         elif self.tok(PAREN_OPEN):
             self.update_token()
             self.rest2_method_invocation()
+            self.rest_method_invocation()
 
     def rest_super(self):
         if self.tok(PAREN_OPEN):

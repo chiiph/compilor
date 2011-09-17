@@ -92,8 +92,6 @@ Bloques y Sentencias
 <variable declarators>                      ::=   <variable declarator> <rest variable declarators>
 <rest variable declarators>                 ::=   LAMBDA
 <rest variable declarators>                 ::=   COMMA IDENTIFIER <variable declarators>
-<rest variable declarators>                 ::=   COMMA THIS <variable declarators>
-<rest variable declarators>                 ::=   COMMA SUPER <variable declarators>
 <variable declarator>                       ::=   <rest variable declarator>
 <rest variable declarator>                  ::=   LAMBDA
 <rest variable declarator>                  ::=   ASSIGNMENT <expression>
@@ -203,11 +201,10 @@ Expresiones
 <rest super>                                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <rest super>                                ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
 
-<rest method invocation>                    ::=   ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest method invocation>                    ::=   ACCESSOR IDENTIFIER <rest primary> <rest method invocation>
 
 # esto viene por block statements
-<rest method invocation>                    ::=   <variable declarators>
-<rest method invocation>                    ::=   <rest variable declarators>
+<rest method invocation>                    ::=   <variable declarators> SCOLON
 <rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <rest method invocation>                    ::=   LAMBDA
 
