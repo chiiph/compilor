@@ -1,0 +1,106 @@
+package proyecto2
+
+import java_cup.runtime.*;
+import java.io.*;
+
+parser code
+{:
+	public static void main(String args[])
+	{
+		try
+		{
+			new parser(new Yylex(System.in)).parse();
+		}
+		catch (Exception e)
+		{
+			System.err.println(e.getMessage());
+		}
+	}
+:}
+
+terminal EXIT, SCOLON, ID, ASSIGNMENT, COMMA, CLEAR, SETCOLOR, IF, PAREN_OPEN, PAREN_CLOSE;
+terminal ELSE, REPEAT, TIMES, DRAW, MOVE;
+terminal CONDITIONAL_OR, CONDITIONAL_AND, EQUALS, NOT_EQUALS, LT, GT, LT_EQ, GT_EQ, ADD, SUB;
+terminal MUL, DIV, MOD, NOT, DEF, ANGLE;
+terminal Integer INT_LITERAL;
+
+non terminal Integer expression;
+non terminal lista_sentencias, sentencia;
+non terminal sentencia_dib;
+non terminal conditional_or_expression, conditional_and_expression;
+non terminal equality_expression;
+non terminal relational_expression;
+non terminal additive_expression;
+non terminal multiplicative_expression;
+non terminal unary_expression, unary_expression_not_plus_minus;
+non terminal postfix_expression;
+non terminal lista_sentencias_dib;
+
+precedence left ADD;
+precedence left SUB;
+precedence left MUL;
+precedence left DIV;
+precedence left MOD;
+
+programa              ::= lista_sentencias EXIT
+                        ;
+lista_sentencias      ::= sentencia
+                        | lista_sentencias SCOLON sentencia
+                        ;
+sentencia             ::= ID ASSIGNMENT expression
+                        | sentencia_dib
+                        | CLEAR
+                        | SETCOLOR expression COMMA expression COMMA expression
+                        | IF PAREN_OPEN expression PAREN_CLOSE sentencia_dib
+                        | IF PAREN_OPEN expression PAREN_CLOSE sentencia_dib ELSE sentencia_dib
+                        | REPEAT PAREN_OPEN expression PAREN_CLOSE TIMES sentencia_dib
+                        ;
+sentencia_dib         ::= DRAW expression
+                        | MOVE expression:e
+                        ;
+
+expression                         ::= conditional_expression
+                                     ;
+conditional_expression             ::= conditional_or_expression
+                                     ;
+conditional_or_expression          ::= conditional_and_expression
+                                     | conditional_or_expression CONDITIONAL_OR conditional_and_expression
+                                     ;
+conditional_and_expression         ::= equality_expression
+                                     | conditional_and_expression CONDITIONAL_AND equality_expression
+                                     ;
+equality_expression                ::= relational_expression
+                                     | equality_expression EQUALS relational_expression
+                                     | equality_expression NOT_EQUALS relational_expression
+                                     ;
+relational_expression              ::= additive_expression
+                                     | relational_expression LT additive_expression
+                                     | relational_expression GT additive_expression
+                                     | relational_expression LT_EQ additive_expression
+                                     | relational_expression GT_EQ additive_expression
+                                     ;
+additive_expression                ::= multiplicative_expression
+                                     | additive_expression ADD multiplicative_expression
+                                     | additive_expression SUB multiplicative_expression
+                                     ;
+multiplicative_expression          ::= unary_expression
+                                     | multiplicative_expression MUL unary_expression
+                                     | multiplicative_expression DIV unary_expression
+                                     | multiplicative_expression MOD unary_expression
+                                     ;
+unary_expression                   ::= ADD unary_expression
+                                     | SUB unary_expression
+                                     | unary expression not plus minus
+                                     ;
+unary expression not plus minus    ::= postfix_expression
+                                     | NOT unary_expression
+                                     ;
+postfix_expression                 ::= ID
+                                     | INT_LITERAL ANGLE
+                                     | INT_LITERAL
+                                     | DEF PAREN_OPEN lista_sentencias_dib PAREN_CLOSE
+                                     ;
+
+lista_sentencias_dib               ::= sentencia_dib
+                                     | lista_sentencias_dib SCOLON sentencia_dib
+                                     ;
