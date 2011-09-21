@@ -51,18 +51,18 @@ if (__name__ == '__main__'):
     run_test_fail("../tests/syntaxor/010err.java", "010", 185)
     run_test_fail("../tests/syntaxor/011err.java", "011", 199)
     run_test_fail("../tests/syntaxor/012err.java", "012", 207)
-#   run_test_fail("../tests/syntaxor/013err.java", "013", 221)
-#   run_test_fail("../tests/syntaxor/014err.java", "014", 232)
-#   run_test_fail("../tests/syntaxor/015err.java", "015", 247)
-#   run_test_fail("../tests/syntaxor/016err.java", "016", 258)
-#   run_test_fail("../tests/syntaxor/017err.java", "017", 272)
+    run_test_fail("../tests/syntaxor/013err.java", "013", 221)
+    run_test_fail("../tests/syntaxor/014err.java", "014", 232)
+    run_test_fail("../tests/syntaxor/015err.java", "015", 247)
+    run_test_fail("../tests/syntaxor/016err.java", "016", 258)
+    run_test_fail("../tests/syntaxor/017err.java", "017", 272)
     run_test_fail("../tests/syntaxor/018err.java", "018", 280)
     run_test_fail("../tests/syntaxor/019err.java", "019", 290)
     run_test_fail("../tests/syntaxor/020err.java", "020", 305)
     run_test_fail("../tests/syntaxor/021err.java", "021", 316)
     run_test_fail("../tests/syntaxor/022err.java", "022", 330)
     run_test_fail("../tests/syntaxor/023err.java", "023", 334)
-    run_test_fail("../tests/syntaxor/024err.java", "024", 334) #354
+    run_test_fail("../tests/syntaxor/024err.java", "024", 354) #334
     run_test_fail("../tests/syntaxor/025err.java", "025", 389)
     run_test_fail("../tests/syntaxor/026err.java", "026", 403)
     run_test_fail("../tests/syntaxor/027err.java", "027", 434)
@@ -70,7 +70,7 @@ if (__name__ == '__main__'):
     run_test_fail("../tests/syntaxor/029err.java", "029", 453)
     run_test_fail("../tests/syntaxor/030err.java", "030", 468)
     run_test_fail("../tests/syntaxor/031err.java", "031", 491)
-    run_test_fail("../tests/syntaxor/032err.java", "032", 96) #524
+    run_test_fail("../tests/syntaxor/032err.java", "032", 524) #96
     run_test_fail("../tests/syntaxor/033err.java", "033", 542)
     run_test_fail("../tests/syntaxor/034err.java", "034", 546)
     run_test_fail("../tests/syntaxor/035err.java", "035", 570)
@@ -78,22 +78,22 @@ if (__name__ == '__main__'):
     run_test_fail("../tests/syntaxor/037err.java", "037", 601)
     run_test_fail("../tests/syntaxor/038err.java", "038", 605)
     run_test_fail("../tests/syntaxor/039err.java", "039", 692)
-    run_test_fail("../tests/syntaxor/040err.java", "040", 692) #707
+    run_test_fail("../tests/syntaxor/040err.java", "040", 707) #692
     run_test_fail("../tests/syntaxor/041err.java", "041", 722)
-    run_test_fail("../tests/syntaxor/042err.java", "042", 766) #736
-    run_test_fail("../tests/syntaxor/043err.java", "043", 770) #741
-    run_test_fail("../tests/syntaxor/044err.java", "044", 746) #748
-    run_test_fail("../tests/syntaxor/045err.java", "045", 542) #759
-    run_test_fail("../tests/syntaxor/046err.java", "046", 692) #778
-    run_test_fail("../tests/syntaxor/047err.java", "047", 746) #782
-    run_test_fail("../tests/syntaxor/048err.java", "048", 766) #800
-    run_test_fail("../tests/syntaxor/049err.java", "049", 770) #804
-    run_test_fail("../tests/syntaxor/050err.java", "050", 788) #837
-    run_test_fail("../tests/syntaxor/051err.java", "051", 792) #841
-    run_test_fail("../tests/syntaxor/052err.java", "052", 948) #845
-    run_test_fail("../tests/syntaxor/053err.java", "053", 746) #862
-    run_test_fail("../tests/syntaxor/054err.java", "054", 199) #866
-    run_test_fail("../tests/syntaxor/055err.java", "055", 746) #870
+    run_test_fail("../tests/syntaxor/042err.java", "042", 736) #766
+    run_test_fail("../tests/syntaxor/043err.java", "043", 741) #770
+    run_test_fail("../tests/syntaxor/044err.java", "044", 748) #746
+    run_test_fail("../tests/syntaxor/045err.java", "045", 759) #542
+    run_test_fail("../tests/syntaxor/046err.java", "046", 778) #692
+    run_test_fail("../tests/syntaxor/047err.java", "047", 782) #746
+    run_test_fail("../tests/syntaxor/048err.java", "048", 800) #766
+    run_test_fail("../tests/syntaxor/049err.java", "049", 804) #770
+    run_test_fail("../tests/syntaxor/050err.java", "050", 837) #788
+    run_test_fail("../tests/syntaxor/051err.java", "051", 841) #792
+    run_test_fail("../tests/syntaxor/052err.java", "052", 845) #948
+    run_test_fail("../tests/syntaxor/053err.java", "053", 862) #746
+    run_test_fail("../tests/syntaxor/054err.java", "054", 866) #199
+    run_test_fail("../tests/syntaxor/055err.java", "055", 870) #746
 #   run_test_fail("../tests/syntaxor/056err.java", "056", 874)
 #   run_test_fail("../tests/syntaxor/057err.java", "057", 888)
 #   run_test_fail("../tests/syntaxor/058err.java", "058", 892)
