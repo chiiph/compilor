@@ -2,13 +2,13 @@
 <lista_sentencias>      ::= <sentencia> <lista_sentencias_rest>
 <lista_sentencias_rest> ::= LAMBDA
 <lista_sentencias_rest> ::= SCOLON <sentencia> <lista_sentencias_rest>
-<sentencia>     ::= ID ASSIGNMENT <exp>
-<sentencia>     ::= <sentencia_dib> <exp> COMMA <exp> COMMA <exp>
-<sentencia>     ::= CLEAR
-<sentencia>     ::= SETCOLOR <exp> COMMA <exp> COMMA <exp>
-<sentencia>     ::= IF PAREN_OPEN <exp> PAREN_CLOSE <sentencia_dib>
-<sentencia>     ::= IF PAREN_OPEN <exp> PAREN_CLOSE <sentencia_dib> ELSE <sentencia_dib>
-<sentencia>     ::= REPEAT PAREN_OPEN <exp> PAREN_CLOSE TIMES <sentencia_dib>
-<sentencia_dib> ::= DRAW <exp>
-<sentencia_dib> ::= MOVE <exp>
+<sentencia>             ::= ID ASSIGNMENT <exp>
+<sentencia>             ::= <sentencia_dib> <exp> COMMA <exp> COMMA <exp>
+<sentencia>             ::= CLEAR
+<sentencia>             ::= SETCOLOR <exp> COMMA <exp> COMMA <exp>
+<sentencia>             ::= IF PAREN_OPEN <exp> PAREN_CLOSE <sentencia_dib>
+<sentencia>             ::= IF PAREN_OPEN <exp> PAREN_CLOSE <sentencia_dib> ELSE <sentencia_dib>
+<sentencia>             ::= REPEAT PAREN_OPEN <exp> PAREN_CLOSE TIMES <sentencia_dib>
+<sentencia_dib>         ::= DRAW <exp>
+<sentencia_dib>         ::= MOVE <exp>
 
