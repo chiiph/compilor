@@ -50,5 +50,10 @@
 <unary expression not plus minus>           ::=   NOT <unary expression>
 <postfix expression>                        ::=   ID
 <postfix expression>                        ::=   INT_LITERAL <rest postfix expression>
+<postfix expression>                        ::=   DEF PAREN_OPEN <lista sentencias dib> PAREN_CLOSE
 <rest postfix expression>                   ::=   ANGLE
 <rest postfix expression>                   ::=   LAMBDA
+
+<lista sentencias dib>                      ::=   <sentencia_dib> <lista sentencias dib rest>
+<lista sentencias dib rest>                 ::=   LAMBDA
+<lista sentencias dib rest>                 ::=   SCOLON <list sentencias dib>
