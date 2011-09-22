@@ -290,21 +290,45 @@ class Syntaxor(object):
     def rest_declarators(self):
         if self.tok(COMMA):
             self.update_token()
-            self.rest_declarators()
-        elif self.tok(ASSIGNMENT):
-            self.update_token()
-            self.expression()
-            if self.tok(SCOLON):
+            if self.tok(IDENTIFIER):
                 self.update_token()
-                return
+                self.rest2_declarators()
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
-                                  "Se esperaba un ; al final de la declaracion.")
+                                  "%s no es un identificador valido." %
+                                  self._current_token)
+        elif self.tok(ASSIGNMENT):
+            self.update_token()
+            self.expression()
+            self.rest2_declarators()
         elif self.tok(PAREN_OPEN):
             self.update_token()
             self.rest_method_declarator()
             self.method_body()
+        elif self.tok(SCOLON):
+            self.update_token()
+            return
+        else:
+            raise SyntaxError(self._current_token.get_line(),
+                              self._current_token.get_col(),
+                              "Se esperaba un ; al final de la declaracion.")
+
+    def rest2_declarators(self):
+        if self.tok(COMMA):
+            self.update_token()
+            if self.tok(IDENTIFIER):
+                self.update_token()
+                self.rest2_declarators()
+            else:
+                raise SyntaxError(self._current_token.get_line(),
+                                  self._current_token.get_col(),
+                                  "%s no es un identificador valido." %
+                                  self._current_token)
+        elif self.tok(ASSIGNMENT):
+            self.update_token()
+            self.expression()
+            self.rest2_declarators()
         elif self.tok(SCOLON):
             self.update_token()
             return

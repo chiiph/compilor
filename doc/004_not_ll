@@ -31,8 +31,8 @@ Declaraciones
 <rest constructor body>                     ::=   <block statements> BRACE_CLOSE
 # ambiguo con block statements, se checkea despues
 #<rest constructor body>                     ::=   <explicit constructor invocation> <rest2 constructor body>
-<rest2 constructor body>                    ::=   BRACE_CLOSE
-<rest2 constructor body>                    ::=   <block statements> BRACE_CLOSE
+#<rest2 constructor body>                    ::=   BRACE_CLOSE
+#<rest2 constructor body>                    ::=   <block statements> BRACE_CLOSE
 #<explicit constructor invocation>           ::=   THIS PAREN_OPEN <rest explicit constructor invocation>
 #<explicit constructor invocation>           ::=   SUPER PAREN_OPEN <rest explicit constructor invocation>
 #<rest explicit constructor invocation>      ::=   PAREN_CLOSE SCOLON
@@ -45,10 +45,14 @@ Declaraciones
 <field modifier>                            ::=   STATIC
 
 <declarators>                               ::=   IDENTIFIER <rest declarators>
-<rest declarators>                          ::=   COMMA <rest declarators>
-<rest declarators>                          ::=   ASSIGNMENT <expression> SCOLON
+<rest declarators>                          ::=   COMMA IDENTIFIER <rest2 declarators>
+<rest declarators>                          ::=   ASSIGNMENT <expression> <rest2 declarators>
 <rest declarators>                          ::=   PAREN_OPEN <rest method declarator> <method body>
 <rest declarators>                          ::=   SCOLON
+<rest2 declarators>                          ::=   COMMA IDENTIFIER <rest2 declarators>
+<rest2 declarators>                          ::=   ASSIGNMENT <expression> <rest2 declarators>
+<rest2 declarators>                          ::=   SCOLON
+
 <rest method declarator>                    ::=   PAREN_CLOSE
 <rest method declarator>                    ::=   <formal parameter list> PAREN_CLOSE
 <method body>                               ::=   <block>
