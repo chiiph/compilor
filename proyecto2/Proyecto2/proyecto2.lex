@@ -1,4 +1,4 @@
-pacakge Proyecto2;
+package Proyecto2;
 import java_cup.runtime.Symbol;
 
 %%
@@ -6,6 +6,9 @@ import java_cup.runtime.Symbol;
 %line
 %ignorecase
 %cup
+
+%yylexthrow{ Exception
+%yylexthrow}
 
 WHITESPACE  = [ \t\r\n\f ]+
 COMMENT     = "/*"[.]*"*/"
@@ -27,7 +30,7 @@ DEF         = DEF
 {WHITESPACE}    { }
 {COMMENT}       { }
 {INT_LITERAL}   { return new Symbol(sym.INT_LITERAL, new Integer(yytext())); }
-{ID}            { return new Symbol(sym.ID, yytext());;                      }
+{ID}            { return new Symbol(sym.ID, yytext());                       }
 {EXIT}          { return new Symbol(sym.EXIT);                               }
 {CLEAR}         { return new Symbol(sym.CLEAR);                              }
 {SETCOLOR}      { return new Symbol(sym.SETCOLOR);                           }

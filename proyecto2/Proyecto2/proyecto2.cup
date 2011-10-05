@@ -1,39 +1,47 @@
-package proyecto2
+package Proyecto2;
 
 import java_cup.runtime.*;
 import java.io.*;
+import java.lang.Exception;
+
+action code
+{:
+    SymbolTable table;
+:}
 
 parser code
 {:
 	public static void main(String args[])
 	{
-		try
-		{
+		try {
 			new parser(new Yylex(System.in)).parse();
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e)	{
 			System.err.println(e.getMessage());
 		}
 	}
 :}
 
-terminal EXIT, SCOLON, ID, ASSIGNMENT, COMMA, CLEAR, SETCOLOR, IF, PAREN_OPEN, PAREN_CLOSE;
+terminal EXIT, SCOLON, ASSIGNMENT, COMMA, CLEAR, SETCOLOR, IF, PAREN_OPEN, PAREN_CLOSE;
 terminal ELSE, REPEAT, TIMES, DRAW, MOVE;
 terminal CONDITIONAL_OR, CONDITIONAL_AND, EQUALS, NOT_EQUALS, LT, GT, LT_EQ, GT_EQ, ADD, SUB;
 terminal MUL, DIV, MOD, NOT, DEF, ANGLE;
 terminal Integer INT_LITERAL;
+terminal String ID;
 
-non terminal Integer expression;
+non terminal programa;
+non terminal String expression;
 non terminal lista_sentencias, sentencia;
 non terminal sentencia_dib;
-non terminal conditional_or_expression, conditional_and_expression;
-non terminal equality_expression;
-non terminal relational_expression;
-non terminal additive_expression;
-non terminal multiplicative_expression;
-non terminal unary_expression, unary_expression_not_plus_minus;
-non terminal postfix_expression;
+non terminal String conditional_expression;
+non terminal String conditional_or_expression;
+non terminal String conditional_and_expression;
+non terminal String equality_expression;
+non terminal String relational_expression;
+non terminal String additive_expression;
+non terminal String multiplicative_expression;
+non terminal String unary_expression;
+non terminal String unary_expression_not_plus_minus;
+non terminal String postfix_expression;
 non terminal lista_sentencias_dib;
 
 precedence left ADD;
@@ -41,6 +49,7 @@ precedence left SUB;
 precedence left MUL;
 precedence left DIV;
 precedence left MOD;
+precedence right ELSE;
 
 programa              ::= lista_sentencias EXIT
                         ;
@@ -59,9 +68,9 @@ sentencia_dib         ::= DRAW expression
                         | MOVE expression:e
                         ;
 
-expression                         ::= conditional_expression
+expression                         ::= conditional_expression:e {: System.out.println("Expression: "+e); :}
                                      ;
-conditional_expression             ::= conditional_or_expression
+conditional_expression             ::= conditional_or_expression {: System.out.println("aaaapa"); :}
                                      ;
 conditional_or_expression          ::= conditional_and_expression
                                      | conditional_or_expression CONDITIONAL_OR conditional_and_expression
@@ -90,16 +99,27 @@ multiplicative_expression          ::= unary_expression
                                      ;
 unary_expression                   ::= ADD unary_expression
                                      | SUB unary_expression
-                                     | unary expression not plus minus
+                                     | unary_expression_not_plus_minus
                                      ;
-unary expression not plus minus    ::= postfix_expression
+unary_expression_not_plus_minus    ::= postfix_expression
                                      | NOT unary_expression
                                      ;
-postfix_expression                 ::= ID
-                                     | INT_LITERAL ANGLE
-                                     | INT_LITERAL
-                                     | DEF PAREN_OPEN lista_sentencias_dib PAREN_CLOSE
-                                     ;
+postfix_expression ::=
+ID:id
+{:
+if(table.isDeclared(id))
+    RESULT = id;
+else
+    throw new Exception("Varible no declarada: "+id);
+:}
+| INT_LITERAL ANGLE
+| INT_LITERAL:lit
+{:
+    System.out.println("it's a-me, an innttt"+lit);
+    RESULT = table.addAnonymVar("int", lit);
+:}
+| DEF PAREN_OPEN lista_sentencias_dib PAREN_CLOSE
+;
 
 lista_sentencias_dib               ::= sentencia_dib
                                      | lista_sentencias_dib SCOLON sentencia_dib
