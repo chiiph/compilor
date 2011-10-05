@@ -8,6 +8,7 @@ import java_cup.runtime.Symbol;
 %cup
 
 WHITESPACE  = [ \t\r\n\f ]+
+COMMENT     = "/*"[.]*"*/"
 INT_LITERAL = [0-9]+
 ID          = [a-zA-Z][a-zA-Z0-9]*
 EXIT        = EXIT
@@ -24,6 +25,7 @@ DEF         = DEF
 %%
 
 {WHITESPACE}    { }
+{COMMENT}       { }
 {INT_LITERAL}   { return new Symbol(sym.INT_LITERAL, new Integer(yytext())); }
 {ID}            { return new Symbol(sym.ID, yytext());;                      }
 {EXIT}          { return new Symbol(sym.EXIT);                               }
