@@ -248,7 +248,7 @@ expression:e1 ADD expression:e2
 {:
     RESULT = e;
 :}
-    | postfix_expression:pe
+| postfix_expression:pe
 {:
     RESULT = pe;
 :}

@@ -23,6 +23,8 @@
 <expression>            ::= <expression> GT_EQ <expression>
 <expression>            ::= <expression> EQUALS <expression>
 <expression>            ::= <expression> NOT_EQUALS <expression>
+<expression>            ::= ADD <expression>
+<expression>            ::= SUB <expression>
 <expression>            ::= NOT <expression>
 <expression>            ::= PAREN_OPEN <expression> PAREN_CLOSE
 <expression>            ::= <postfix_expression>
