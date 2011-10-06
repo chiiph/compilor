@@ -7,6 +7,7 @@ import java.lang.Exception;
 action code
 {:
     SymbolTable table;
+    Drawer      drawer = new Drawer();
 :}
 
 parser code
@@ -56,17 +57,60 @@ programa              ::= lista_sentencias EXIT
 lista_sentencias      ::= sentencia
                         | lista_sentencias SCOLON sentencia
                         ;
-sentencia             ::= ID ASSIGNMENT expression
-                        | sentencia_dib
-                        | CLEAR
-                        | SETCOLOR expression COMMA expression COMMA expression
-                        | IF PAREN_OPEN expression PAREN_CLOSE sentencia_dib
-                        | IF PAREN_OPEN expression PAREN_CLOSE sentencia_dib ELSE sentencia_dib
-                        | REPEAT PAREN_OPEN expression PAREN_CLOSE TIMES sentencia_dib
-                        ;
-sentencia_dib         ::= DRAW expression
-                        | MOVE expression:e
-                        ;
+sentencia ::= ID ASSIGNMENT expression
+|   sentencia_dib
+|   CLEAR 
+    {: 
+    drawer.reset() 
+    :}
+|   SETCOLOR expression:r COMMA expression:g COMMA expression:b
+    {:
+    OurSymbol res_r = table.get(r);
+    OurSymbol res_g = table.get(g);
+    OurSymbol res_b = table.get(b);
+    drawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
+    :}
+|   IF PAREN_OPEN expression:e {: :} PAREN_CLOSE sentencia_dib
+    {:
+    :}
+|   IF PAREN_OPEN expression:e {: :} PAREN_CLOSE sentencia_dib ELSE sentencia_dib
+    {:
+    :}
+|   REPEAT PAREN_OPEN expression:e {: :} PAREN_CLOSE TIMES sentencia_dib
+    {:
+    :}
+;
+
+sentencia_dib ::= 
+    DRAW expression:e 
+    {: 
+    /*
+    draw, int = avazar el cursor ang unidades
+    draw, did = reproducir un dibujo almacenado
+    */
+    OurSymbol res = table.get(e)
+    if (res.getType().equals("int")) {
+        drawer.draw(res.getValue()); 
+    }
+    else if (res.getType().equals("draw_id")) {
+        drawer.drawNameDraw(res.getValue());
+    }
+    :}
+|   MOVE expression:e 
+    {:
+    /*
+    move, int = avanzar el cursor ang unidades sin dibujar
+    move, ang = rotar el cursor
+    */
+    OurSymbol res= table.get(res.getValue())
+    if (res.getType().equals("int")) {
+        drawer.move(res.getValue()) 
+    }
+    else if (res.getType().equals("angle")) {
+        drawer.rotate(res.getValue()) 
+    } 
+    :}
+;
 
 expression                         ::= conditional_expression:e {: System.out.println("Expression: "+e); :}
                                      ;
