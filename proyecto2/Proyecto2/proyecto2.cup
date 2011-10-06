@@ -6,11 +6,12 @@ import java.lang.Exception;
 
 action code
 {:
-    SymbolTable table;
+  private SymbolTable table = new SymbolTable();
 :}
 
 parser code
 {:
+
 	public static void main(String args[])
 	{
 		try {
@@ -24,7 +25,7 @@ parser code
 terminal EXIT, SCOLON, ASSIGNMENT, COMMA, CLEAR, SETCOLOR, IF, PAREN_OPEN, PAREN_CLOSE;
 terminal ELSE, REPEAT, TIMES, DRAW, MOVE;
 terminal CONDITIONAL_OR, CONDITIONAL_AND, EQUALS, NOT_EQUALS, LT, GT, LT_EQ, GT_EQ, ADD, SUB;
-terminal MUL, DIV, MOD, NOT, DEF, ANGLE;
+terminal MUL, DIV, NOT, DEF, ANGLE;
 terminal Integer INT_LITERAL;
 terminal String ID;
 
@@ -48,7 +49,6 @@ precedence left ADD;
 precedence left SUB;
 precedence left MUL;
 precedence left DIV;
-precedence left MOD;
 precedence right ELSE;
 
 programa              ::= lista_sentencias EXIT
@@ -68,57 +68,405 @@ sentencia_dib         ::= DRAW expression
                         | MOVE expression:e
                         ;
 
-expression                         ::= conditional_expression:e {: System.out.println("Expression: "+e); :}
-                                     ;
-conditional_expression             ::= conditional_or_expression {: System.out.println("aaaapa"); :}
-                                     ;
-conditional_or_expression          ::= conditional_and_expression
-                                     | conditional_or_expression CONDITIONAL_OR conditional_and_expression
-                                     ;
-conditional_and_expression         ::= equality_expression
-                                     | conditional_and_expression CONDITIONAL_AND equality_expression
-                                     ;
-equality_expression                ::= relational_expression
-                                     | equality_expression EQUALS relational_expression
-                                     | equality_expression NOT_EQUALS relational_expression
-                                     ;
-relational_expression              ::= additive_expression
-                                     | relational_expression LT additive_expression
-                                     | relational_expression GT additive_expression
-                                     | relational_expression LT_EQ additive_expression
-                                     | relational_expression GT_EQ additive_expression
-                                     ;
-additive_expression                ::= multiplicative_expression
-                                     | additive_expression ADD multiplicative_expression
-                                     | additive_expression SUB multiplicative_expression
-                                     ;
-multiplicative_expression          ::= unary_expression
-                                     | multiplicative_expression MUL unary_expression
-                                     | multiplicative_expression DIV unary_expression
-                                     | multiplicative_expression MOD unary_expression
-                                     ;
-unary_expression                   ::= ADD unary_expression
-                                     | SUB unary_expression
-                                     | unary_expression_not_plus_minus
-                                     ;
-unary_expression_not_plus_minus    ::= postfix_expression
-                                     | NOT unary_expression
-                                     ;
+expression ::=
+conditional_expression:e
+{:
+ OurSymbol es = table.get(e);
+ System.out.println("Expression: "+es.getValue()+" "+es.getType());
+:}
+| PAREN_OPEN conditional_expression:e PAREN_CLOSE
+{:
+ OurSymbol es = table.get(e);
+ System.out.println("Expression: "+es.getValue()+" "+es.getType());
+:}
+;
+
+conditional_expression ::=
+conditional_or_expression:e
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN conditional_or_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+;
+
+conditional_or_expression ::=
+conditional_and_expression:e
+{:
+ RESULT = e;
+:}
+| conditional_or_expression:coe CONDITIONAL_OR conditional_and_expression:cae
+{:
+    OurSymbol coes = table.get(coe);
+    OurSymbol caes = table.get(cae);
+
+    int val = 0;
+
+    if(coes.getValue().intValue() != 0 ||
+       caes.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+:}
+| PAREN_OPEN conditional_and_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN conditional_or_expression:coe CONDITIONAL_OR conditional_and_expression:cae PAREN_CLOSE
+{:
+    OurSymbol coes = table.get(coe);
+    OurSymbol caes = table.get(cae);
+
+    int val = 0;
+
+    if(coes.getValue().intValue() != 0 ||
+       caes.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+:}
+;
+
+conditional_and_expression ::=
+equality_expression:e
+{:
+ RESULT = e;
+:}
+| conditional_and_expression:cae CONDITIONAL_AND equality_expression:ee
+{:
+    OurSymbol caes = table.get(cae);
+    OurSymbol ees = table.get(ee);
+
+    int val = 0;
+
+    if(caes.getValue().intValue() != 0 &&
+       ees.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+:}
+| PAREN_OPEN equality_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN conditional_and_expression:cae CONDITIONAL_AND equality_expression:ee PAREN_CLOSE
+{:
+    OurSymbol caes = table.get(cae);
+    OurSymbol ees = table.get(ee);
+
+    int val = 0;
+
+    if(caes.getValue().intValue() != 0 &&
+       ees.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+:}
+;
+
+equality_expression ::=
+relational_expression:e
+{:
+ RESULT = e;
+:}
+| equality_expression:ee EQUALS relational_expression:re
+{:
+    OurSymbol ees = table.get(ee);
+    OurSymbol res = table.get(re);
+
+    int result = 0;
+    if(ees.getValue().intValue() == res.getValue().intValue() &&
+       ees.getType() == res.getType())
+        result = 1;
+    RESULT = table.addAnonymVar("int", result);
+:}
+| equality_expression:ee NOT_EQUALS relational_expression:re
+{:
+    OurSymbol ees = table.get(ee);
+    OurSymbol res = table.get(re);
+
+    int result = 0;
+    if(ees.getValue().intValue() != res.getValue().intValue() ||
+       ees.getType() != res.getType())
+        result = 1;
+    RESULT = table.addAnonymVar("int", result);
+:}
+| PAREN_OPEN relational_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN equality_expression:ee EQUALS relational_expression:re PAREN_CLOSE
+{:
+    OurSymbol ees = table.get(ee);
+    OurSymbol res = table.get(re);
+
+    int result = 0;
+    if(ees.getValue().intValue() == res.getValue().intValue() &&
+       ees.getType() == res.getType())
+        result = 1;
+    RESULT = table.addAnonymVar("int", result);
+:}
+| PAREN_OPEN equality_expression:ee NOT_EQUALS relational_expression:re PAREN_CLOSE
+{:
+    OurSymbol ees = table.get(ee);
+    OurSymbol res = table.get(re);
+
+    int result = 0;
+    if(ees.getValue().intValue() != res.getValue().intValue() ||
+       ees.getType() != res.getType())
+        result = 1;
+    RESULT = table.addAnonymVar("int", result);
+:}
+;
+
+relational_expression ::=
+additive_expression:e
+{:
+ RESULT = e;
+:}
+| relational_expression:re LT additive_expression:ae
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| relational_expression:re GT additive_expression:ae
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| relational_expression:re LT_EQ additive_expression:ae
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| relational_expression:re GT_EQ additive_expression:ae
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| PAREN_OPEN additive_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN relational_expression:re LT additive_expression:ae PAREN_CLOSE
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| PAREN_OPEN relational_expression:re GT additive_expression:ae PAREN_CLOSE
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| PAREN_OPEN relational_expression:re LT_EQ additive_expression:ae PAREN_CLOSE
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+| PAREN_OPEN relational_expression:re GT_EQ additive_expression:ae PAREN_CLOSE
+{:
+    OurSymbol res = table.get(re);
+    OurSymbol aes = table.get(ae);
+
+    RESULT = table.addAnonymVar("int", (res.getValue() < aes.getValue())?1:0);
+:}
+;
+
+additive_expression ::=
+multiplicative_expression:e
+{:
+ RESULT = e;
+:}
+| additive_expression:ae ADD multiplicative_expression:me
+{:
+    OurSymbol aes = table.get(ae);
+    OurSymbol mes = table.get(me);
+
+    String type = "int";
+    if(aes.getType() == "angle" || mes.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                aes.getValue()+mes.getValue());
+:}
+| additive_expression:ae SUB multiplicative_expression:me
+{:
+    OurSymbol aes = table.get(ae);
+    OurSymbol mes = table.get(me);
+
+    String type = "int";
+    if(aes.getType() == "angle" || mes.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                aes.getValue()-mes.getValue());
+:}
+| PAREN_OPEN multiplicative_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN additive_expression:ae ADD multiplicative_expression:me PAREN_CLOSE
+{:
+    OurSymbol aes = table.get(ae);
+    OurSymbol mes = table.get(me);
+
+    String type = "int";
+    if(aes.getType() == "angle" || mes.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                aes.getValue()+mes.getValue());
+:}
+| PAREN_OPEN additive_expression:ae SUB multiplicative_expression:me PAREN_CLOSE
+{:
+    OurSymbol aes = table.get(ae);
+    OurSymbol mes = table.get(me);
+
+    String type = "int";
+    if(aes.getType() == "angle" || mes.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                aes.getValue()-mes.getValue());
+:}
+;
+
+multiplicative_expression ::=
+unary_expression:e
+{:
+ RESULT = e;
+:}
+| multiplicative_expression:me MUL unary_expression:ue
+{:
+    OurSymbol mes = table.get(me);
+    OurSymbol ues = table.get(ue);
+
+    if(ues.getType() == "int") {
+        RESULT = table.addAnonymVar(mes.getType(), // el tipo es el de la derecha
+                                    mes.getValue()*ues.getValue());
+    } else {
+        throw new Exception("Problema con tipos!");
+    }
+:}
+| multiplicative_expression:me DIV unary_expression:ue
+{:
+    OurSymbol mes = table.get(me);
+    OurSymbol ues = table.get(ue);
+
+    if(ues.getType() == "int") {
+        RESULT = table.addAnonymVar(mes.getType(), // el tipo es el de la derecha
+                                    mes.getValue()/ues.getValue());
+    } else {
+        throw new Exception("Problema con tipos2!");
+    }
+:}
+| PAREN_OPEN unary_expression:e PAREN_CLOSE
+{:
+ RESULT = e;
+:}
+| PAREN_OPEN multiplicative_expression:me MUL unary_expression:ue PAREN_CLOSE
+{:
+    OurSymbol mes = table.get(me);
+    OurSymbol ues = table.get(ue);
+
+    if(ues.getType() == "int") {
+        RESULT = table.addAnonymVar(mes.getType(), // el tipo es el de la derecha
+                                    mes.getValue()*ues.getValue());
+    } else {
+        throw new Exception("Problema con tipos!");
+    }
+:}
+| PAREN_OPEN multiplicative_expression:me DIV unary_expression:ue PAREN_CLOSE
+{:
+    OurSymbol mes = table.get(me);
+    OurSymbol ues = table.get(ue);
+
+    if(ues.getType() == "int") {
+        RESULT = table.addAnonymVar(mes.getType(), // el tipo es el de la derecha
+                                    mes.getValue()/ues.getValue());
+    } else {
+        throw new Exception("Problema con tipos2!");
+    }
+:}
+;
+unary_expression ::=
+ADD unary_expression:e
+{:
+ OurSymbol s = table.get(e);
+ RESULT = table.addAnonymVar(s.getType(), +s.getValue());
+:}
+| SUB unary_expression:e
+{:
+    OurSymbol s = table.get(e);
+    RESULT = table.addAnonymVar(s.getType(), -s.getValue());
+:}
+| unary_expression_not_plus_minus:e
+{:
+    RESULT = e;
+:}
+;
+unary_expression_not_plus_minus ::=
+postfix_expression:p
+{:
+ RESULT = p;
+:}
+| NOT unary_expression:id
+{:
+    OurSymbol s = table.get(id);
+    Integer val = s.getValue();
+    if(val == 0)
+        RESULT = table.addAnonymVar(s.getType(), 1);
+    else
+        RESULT = table.addAnonymVar(s.getType(), 0);
+:}
+| PAREN_OPEN NOT unary_expression:id PAREN_CLOSE
+{:
+    OurSymbol s = table.get(id);
+    Integer val = s.getValue();
+    if(val == 0)
+        RESULT = table.addAnonymVar(s.getType(), 1);
+    else
+        RESULT = table.addAnonymVar(s.getType(), 0);
+:}
+;
+
 postfix_expression ::=
 ID:id
 {:
 if(table.isDeclared(id))
     RESULT = id;
 else
-    throw new Exception("Varible no declarada: "+id);
+    throw new Exception("Variable no declarada: "+id);
 :}
-| INT_LITERAL ANGLE
+| INT_LITERAL:lit ANGLE
+{:
+    System.out.println("INT_LITERAL ANGLE: "+lit);
+    RESULT = table.addAnonymVar("angle", lit);
+:}
 | INT_LITERAL:lit
 {:
-    System.out.println("it's a-me, an innttt"+lit);
+    System.out.println("INT_LITERAL: "+lit);
     RESULT = table.addAnonymVar("int", lit);
 :}
 | DEF PAREN_OPEN lista_sentencias_dib PAREN_CLOSE
+{:
+:}
 ;
 
 lista_sentencias_dib               ::= sentencia_dib
