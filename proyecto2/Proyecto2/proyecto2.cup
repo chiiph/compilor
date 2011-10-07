@@ -93,7 +93,7 @@ sentencia ::=
 
 sentencia_dib ::= 
     DRAW expression
-        {: 
+        {:     
         /*
         draw, int = avazar el cursor ang unidades
         draw, did = reproducir un dibujo almacenado
