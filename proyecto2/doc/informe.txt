@@ -1,0 +1,299 @@
+= Proyecto 2: JLex/CUP
+:Author: Garay, Iñaki LU 67387; Touceda, Tomás LU 84024
+
+== Gramática completa del Mini-Lenguaje
+
+<programa>              ::= <lista_sentencias> EXIT
+<lista_sentencias>      ::= <sentencia>
+<lista_sentencias>      ::= <lista_sentencias> SCOLON <sentencia>
+<sentencia>             ::= ID ASSIGNMENT <expression>
+<sentencia>             ::= <sentencia_dib>
+<sentencia>             ::= CLEAR
+<sentencia>             ::= SETCOLOR <expression> COMMA <expression> COMMA <expression>
+<sentencia>             ::= IF PAREN_OPEN <expression> PAREN_CLOSE <sentencia_dib>
+<sentencia>             ::= IF PAREN_OPEN <expression> PAREN_CLOSE <sentencia_dib> ELSE <sentencia_dib>
+<sentencia>             ::= REPEAT PAREN_OPEN <expression> PAREN_CLOSE TIMES <sentencia_dib>
+<sentencia_dib>         ::= DRAW <expression>
+<sentencia_dib>         ::= MOVE <expression>
+
+<expression>            ::= <expression> ADD <expression>
+<expression>            ::= <expression> SUB <expression>
+<expression>            ::= <expression> MUL <expression>
+<expression>            ::= <expression> DIV <expression>
+<expression>            ::= <expression> CONDITIONAL_AND <expression>
+<expression>            ::= <expression> CONDITIONAL_OR <expression>
+<expression>            ::= <expression> LT <expression>
+<expression>            ::= <expression> GT <expression>
+<expression>            ::= <expression> LT_EQ <expression>
+<expression>            ::= <expression> GT_EQ <expression>
+<expression>            ::= <expression> EQUALS <expression>
+<expression>            ::= <expression> NOT_EQUALS <expression>
+<expression>            ::= ADD <expression>
+<expression>            ::= SUB <expression>
+<expression>            ::= NOT <expression>
+<expression>            ::= PAREN_OPEN <expression> PAREN_CLOSE
+<expression>            ::= <postfix_expression>
+
+<postfix_expression>    ::= ID
+<postfix_expression>    ::= INT_LITERAL ANGLE
+<postfix_expression>    ::= INT_LITERAL
+<postfix_expression>    ::= DEF PAREN_OPEN <lista_sentencias_dib> PAREN_CLOSE
+
+<lista_sentencias_dib>  ::= <sentencia_dib>
+<lista_sentencias_dib>  ::= <lista_sentencias_dib> SCOLON <sentencia_dib>
+
+== Componentes léxicos
+
+[options="header"]
+|===
+|Token          |Expresión regular                          |Ejemplos
+|IDENTIFIER     |[a-zA-Z_\$][a-zA-Z_\$0-9]*                 |hola
+|WHITESPACE     |[ \t\r\n\f ]+                              |
+|COMMENT        |"/*"[.]*"*/"                               | /* comentario */
+|INT_LITERAL    |[0-9]+                                     | 42
+|ID             |[a-zA-Z][a-zA-Z0-9]*                       | id12
+|EXIT           |"EXIT"                                     |
+|CLEAR          |"CLEAR"                                    |
+|SETCOLOR       |"SETCOLOR"                                 |
+|IF             |"IF"                                       |
+|ELSE           |"ELSE"                                     |
+|REPEAT         |"REPEAT"                                   |
+|TIMES          |"TIMES"                                    |
+|DRAW           |"DRAW"                                     |
+|MOVE           |"MOVE"                                     |
+|DEF            |"DEF"                                      |
+|ASSIGNMENT     |"<-"                                       |
+|CONDITIONAL_OR |"||"                                       |
+|CONDITIONAL_AND|"&&"                                       |
+|EQUALS         |"=="                                       |
+|NOT_EQUALS     |"!="                                       |
+|LT_EQ          |"<="                                       |
+|GT_EQ          |">="                                       |
+|SCOLON         |";"                                        |
+|COMMA          |","                                        |
+|PAREN_OPEN     |"("                                        |
+|PAREN_CLOSE    |")"                                        |
+|LT             |"<"                                        |
+|GT             |">"                                        |
+|ADD            |"+"                                        |
+|SUB            |"-"                                        |
+|MUL            |"*"                                        |
+|DIV            |"/"                                        |
+|NOT            |"!"                                        |
+|ANGLE          |"_"                                        |
+|===
+
+== Definición Dirigida por la Sintaxis para expression
+
+Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no de la forma usual (tabla con dos columnas), sino que se pondrá por cada regla, la acción correspondiente en la linea a continuación de la misma.
+
+<expression> ::= <expression> ADD <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    String type = e1s.getType();
+
+    RESULT = table.addAnonymVar(type,
+                                e1s.getValue()+e2s.getValue());
+---------------------------------------------------------------------
+<expression> ::= <expression> SUB <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    String type = e1s.getType();
+
+    RESULT = table.addAnonymVar(type,
+                                e1s.getValue()-e2s.getValue());
+---------------------------------------------------------------------
+<expression> ::= <expression> MUL <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if((e1s.getType() == e2s.getType()) &&
+       e1s.getType() == "angle")
+        throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
+
+    String type = "int";
+
+    if(e1s.getType() == "angle" || e2s.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                e1s.getValue()*e2s.getValue());
+---------------------------------------------------------------------
+<expression> ::= <expression> DIV <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if((e1s.getType() == e2s.getType()) &&
+       e1s.getType() == "angle")
+        throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
+
+    if((e1s.getType() != e2s.getType()) &&
+       e1s.getType() != "angle")
+        throw new Exception("Error: solo el primero de los operandos puede ser de tipo angulo.");
+
+    String type = "int";
+
+    if(e1s.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                e1s.getValue()/e2s.getValue());
+---------------------------------------------------------------------
+<expression> ::= <expression> CONDITIONAL_AND <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    if(e1s.getType() != "int")
+        throw new Exception("Error: los operandos no pueden ser de tipo angle.");
+
+    int val = 0;
+
+    if(e1s.getValue().intValue() != 0 &&
+       e2s.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+---------------------------------------------------------------------
+<expression> ::= <expression> CONDITIONAL_OR <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    if(e1s.getType() != "int")
+        throw new Exception("Error: los operandos no pueden ser de tipo angle.");
+
+    int val = 0;
+
+    if(e1s.getValue().intValue() != 0 ||
+       e2s.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+---------------------------------------------------------------------
+<expression> ::= <expression> LT <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() < e2s.getValue())?1:0);
+---------------------------------------------------------------------
+<expression> ::= <expression> GT <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() > e2s.getValue())?1:0);
+---------------------------------------------------------------------
+<expression> ::= <expression> LT_EQ <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() >= e2s.getValue())?1:0);
+---------------------------------------------------------------------
+<expression> ::= <expression> GT_EQ <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() <= e2s.getValue())?1:0);
+---------------------------------------------------------------------
+<expression> ::= <expression> EQUALS <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() == e2s.getValue().intValue())?1:0);
+---------------------------------------------------------------------
+<expression> ::= <expression> NOT_EQUALS <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e1s.getType() != e2s.getType())
+        throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() != e2s.getValue().intValue())?1:0);
+---------------------------------------------------------------------
+<expression>            ::= ADD <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol s = table.get(e1);
+    RESULT = table.addAnonymVar(s.getType(), +s.getValue());
+---------------------------------------------------------------------
+<expression>            ::= SUB <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol s = table.get(e1);
+    RESULT = table.addAnonymVar(s.getType(), -s.getValue());
+---------------------------------------------------------------------
+<expression> ::= NOT <expression>
+[source,java]
+---------------------------------------------------------------------
+    OurSymbol s = table.get(e1);
+    Integer val = s.getValue();
+    if(val == 0)
+        RESULT = table.addAnonymVar(s.getType(), 1);
+    else
+        RESULT = table.addAnonymVar(s.getType(), 0);
+---------------------------------------------------------------------
+<expression> ::= PAREN_OPEN <expression> PAREN_CLOSE
+[source,java]
+---------------------------------------------------------------------
+    RESULT = e;
+---------------------------------------------------------------------
+<expression> ::= <postfix_expression>
+[source,java]
+---------------------------------------------------------------------
+    RESULT = pe;
+---------------------------------------------------------------------
+
+=== Descripción general de la aplicación
+
+=== Clases auxiliares usadas
