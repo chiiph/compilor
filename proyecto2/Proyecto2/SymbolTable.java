@@ -18,10 +18,10 @@ public class SymbolTable {
     // 2: Variable declarada de distinto tipo
     public int addVar(String type, String name, Integer value) {
         for(int i = 0; i < table.size(); i++) {
-            if(table.get(i).getName().equals(name) &&
+            if(table.get(i).getName().compareToIgnoreCase(name) == 0 &&
                table.get(i).getType().equals(type))
                 return 1;
-            if(table.get(i).getName().equals(name) &&
+            if(table.get(i).getName().compareToIgnoreCase(name) == 0 &&
                !(table.get(i).getType().equals(type)))
                 return 2;
         }
@@ -32,7 +32,7 @@ public class SymbolTable {
 
     public boolean isDeclared(String name) {
         for(int i = 0; i < table.size(); i++) {
-            if(table.get(i).getName().equals(name))
+            if(table.get(i).getName().compareToIgnoreCase(name) == 0)
                 return true;
         }
 
@@ -41,7 +41,7 @@ public class SymbolTable {
 
     public OurSymbol get(String name) {
         for(int i = 0; i < table.size(); i++) {
-            if(table.get(i).getName().equals(name))
+            if(table.get(i).getName().compareToIgnoreCase(name) == 0)
                 return table.get(i);
         }
 
@@ -50,7 +50,7 @@ public class SymbolTable {
 
     public Integer getValue(String name) {
         for(int i = 0; i < table.size(); i++) {
-            if(table.get(i).getName().equals(name))
+            if(table.get(i).getName().compareToIgnoreCase(name) == 0)
                 return table.get(i).getValue();
         }
 
@@ -60,7 +60,7 @@ public class SymbolTable {
     public void setValue(String name, Integer value) {
         int pos = -1;
         for(int i = 0; i < table.size(); i++) {
-            if(table.get(i).getName().equals(name)) {
+            if(table.get(i).getName().compareToIgnoreCase(name) == 0) {
                 pos = i;
                 break;
             }
