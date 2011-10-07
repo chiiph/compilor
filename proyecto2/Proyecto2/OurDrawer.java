@@ -9,7 +9,7 @@ public class OurDrawer {
     }
 
     public void eval(String command) {
-        
+
         String[] command_parameters = command.split(",");
 
         if (command.startsWith("draw")) {
@@ -34,4 +34,12 @@ public class OurDrawer {
         drawer.seColor(r, g, b);
     }
 
+    public void setNamedDraw(int id, String list) {
+        String cmds[] = list.split(";");
+        drawer.beginNamedDraw(id);
+        for(int i = 0; i < cmds.size(), i++)
+            eval(cmds[i]);
+
+        drawer.endNamedDraw();
+    }
 }
