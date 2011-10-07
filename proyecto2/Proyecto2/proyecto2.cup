@@ -69,27 +69,29 @@ sentencia ::=
         OurSymbol res_b = table.get(b);
         drawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
         :}
-    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:then 
+    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene 
         {:
-        OurSymbol cond_sym = table.get(econd);
-        if (cond_sym.getValue()) {
-            OurSymbol then_sym = table.get(then);
-            ourDrawer.eval(then);
+        int condition = table.get(econd).getValue();
+        if (condition != 0) {
+            ourDrawer.eval(thene);
         }
         :}
-    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:then ELSE sentencia_dib:else 
+    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene ELSE sentencia_dib:elsee 
         {:
-        OurSymbol cond_sym = table.get(econd);
-        if (cond_sym.getValue()) {
-            OutSymbol then_sym = table.get(then);
-            ourDrawer.eval(then_sym.getValue());
+        int cond_sym = table.get(econd).getValue();
+        if (condition != 0) {
+            ourDrawer.eval(thene);
         }
         else {
-            ourDrawer.eval(else_sym.GetValue());
+            ourDrawer.eval(elsee);
         }
         :}
     | REPEAT PAREN_OPEN expression:econd PAREN_CLOSE TIMES sentencia_dib:rbody
         {:
+        int i = 0, times = table.get(econd).getValue();
+        for (i = 0; i < times, i++) {
+            ourDrawer.eval(rbody);
+        }
         :}
     ;
 
@@ -101,11 +103,12 @@ sentencia_dib ::=
         draw, did = reproducir un dibujo almacenado
         */
         OurSymbol res = table.get(e)
+        /* go see the eval method in the OurDrawer class. */
         if (res.getType().equals("int")) {
-            drawer.draw(res.getValue());
+            RETURN = "draw," + res.getValue().toString();
         }
         else if (res.getType().equals("draw_id")) {
-            drawer.drawNameDraw(res.getValue());
+            RETURN = "draw_named," + res.getValue().toString();
         }
         :}
     | MOVE expression:e
@@ -116,10 +119,10 @@ sentencia_dib ::=
         */
         OurSymbol res= table.get(res.getValue())
         if (res.getType().equals("int")) {
-            drawer.move(res.getValue())
+            RETURN = "move," + res.getValue().toString();
         }
         else if (res.getType().equals("angle")) {
-            drawer.rotate(res.getValue())
+            RETURN = "rotate," + res.getValue().toString();
         }
         :}
     ;
