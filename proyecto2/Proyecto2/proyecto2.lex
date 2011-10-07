@@ -24,7 +24,7 @@ TIMES       = TIMES
 DRAW        = DRAW
 MOVE        = MOVE
 DEF         = DEF
-
+ANGLE       = D
 %%
 
 {WHITESPACE}    { }
@@ -41,6 +41,7 @@ DEF         = DEF
 {MOVE}          { return new Symbol(sym.MOVE);                               }
 {DEF}           { return new Symbol(sym.DEF);                                }
 {ID}            { return new Symbol(sym.ID, yytext());                       }
+{ANGLE}         { return new Symbol(sym.ANGLE);                              }
 "<-"            { return new Symbol(sym.ASSIGNMENT);                         }
 "||"            { return new Symbol(sym.CONDITIONAL_OR);                     }
 "&&"            { return new Symbol(sym.CONDITIONAL_AND);                    }
@@ -59,5 +60,4 @@ DEF         = DEF
 "*"             { return new Symbol(sym.MUL);                                }
 "/"             { return new Symbol(sym.DIV);                                }
 "!"             { return new Symbol(sym.NOT);                                }
-"d"             { return new Symbol(sym.ANGLE);                              }
 .               { throw new Exception("Error léxico: " + yytext() + " en línea: " + (yyline + 1)); }
