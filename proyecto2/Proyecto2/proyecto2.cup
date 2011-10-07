@@ -58,14 +58,13 @@ sentencia ::=
         {:
         OurSymbol es = table.get(e);
 
-        int res = table.addVar(id, es.getType(), es.getValue());
+        int res = table.addVar(es.getType(), id, es.getValue());
         if(res == 1)
            table.setValue(id, es.getValue());
         else if(res == 2)
            throw new Exception("Tipo incompatible, no se puede asignar un " +
                                es.getType() + " a un " + table.get(id).getType());
 
-        System.out.println(es.getValue());
         :}
     | sentencia_dib:s
         {:
@@ -349,6 +348,7 @@ postfix_expression ::=
         {:
             System.out.println("INT_LITERAL: "+lit);
             RESULT = table.addAnonymVar("int", lit);
+            System.out.println(RESULT);
         :}
     | DEF PAREN_OPEN lista_sentencias_dib:list PAREN_CLOSE
         {:

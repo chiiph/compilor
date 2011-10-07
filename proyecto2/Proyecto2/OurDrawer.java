@@ -8,6 +8,7 @@ public class OurDrawer {
 
     public OurDrawer() {
         drawer = new Drawer();
+        drawer.setVisible(true);
     }
 
     public void evaluate(String command) {

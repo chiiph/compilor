@@ -30,7 +30,6 @@ DEF         = DEF
 {WHITESPACE}    { }
 {COMMENT}       { }
 {INT_LITERAL}   { return new Symbol(sym.INT_LITERAL, new Integer(yytext())); }
-{ID}            { return new Symbol(sym.ID, yytext());                       }
 {EXIT}          { return new Symbol(sym.EXIT);                               }
 {CLEAR}         { return new Symbol(sym.CLEAR);                              }
 {SETCOLOR}      { return new Symbol(sym.SETCOLOR);                           }
@@ -41,6 +40,7 @@ DEF         = DEF
 {DRAW}          { return new Symbol(sym.DRAW);                               }
 {MOVE}          { return new Symbol(sym.MOVE);                               }
 {DEF}           { return new Symbol(sym.DEF);                                }
+{ID}            { return new Symbol(sym.ID, yytext());                       }
 "<-"            { return new Symbol(sym.ASSIGNMENT);                         }
 "||"            { return new Symbol(sym.CONDITIONAL_OR);                     }
 "&&"            { return new Symbol(sym.CONDITIONAL_AND);                    }
