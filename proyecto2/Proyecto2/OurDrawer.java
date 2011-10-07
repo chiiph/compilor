@@ -1,28 +1,30 @@
 package Proyecto2;
 
+import Proyecto2.Drawer;
+
 public class OurDrawer {
 
-    private drawer;
+    private Drawer drawer;
 
     public OurDrawer() {
         drawer = new Drawer();
     }
 
-    public void eval(String command) {
+    public void evaluate(String command) {
 
         String[] command_parameters = command.split(",");
 
         if (command.startsWith("draw")) {
-            drawer.draw(Integer(command_parameters[1]));
+            drawer.draw(new Integer(command_parameters[1]));
         }
         if (command.startsWith("draw_named")) {
-            drawer.drawNameDraw(Integer(command_parameters[1]));
+            drawer.drawNamedDraw(new Integer(command_parameters[1]));
         }
         if (command.startsWith("rotate")) {
-            drawer.rotate(Integer(command_parameters[1]));
+            drawer.rotate(new Integer(command_parameters[1]));
         }
         if (command.startsWith("move")) {
-            drawer.move(Integer(command_parameters[1]));
+            drawer.move(new Integer(command_parameters[1]));
         }
     }
 
@@ -31,14 +33,14 @@ public class OurDrawer {
     }
 
     public void setColor(int r, int g, int b) {
-        drawer.seColor(r, g, b);
+        drawer.setColor(r, g, b);
     }
 
     public void setNamedDraw(int id, String list) {
-        String cmds[] = list.split(";");
+        String[] cmds = list.split(";");
         drawer.beginNamedDraw(id);
-        for(int i = 0; i < cmds.size(), i++)
-            eval(cmds[i]);
+        for(int i = 0; i < cmds.length; i++)
+            evaluate(cmds[i]);
 
         drawer.endNamedDraw();
     }

@@ -8,6 +8,7 @@ action code
 {:
     private SymbolTable table = new SymbolTable();
     OurDrawer ourDrawer = new OurDrawer();
+    private int last_draw_id = 0;
 :}
 
 parser code
@@ -29,12 +30,12 @@ terminal MUL, DIV, NOT, DEF, ANGLE;
 terminal Integer INT_LITERAL;
 terminal String ID;
 
-non terminal programa;
+non terminal programa, sentencia;
 non terminal String expression;
-non terminal lista_sentencias, sentencia;
-non terminal sentencia_dib;
+non terminal lista_sentencias;
+non terminal String sentencia_dib;
 non terminal String postfix_expression;
-non terminal lista_sentencias_dib;
+non terminal String lista_sentencias_dib;
 
 precedence left ADD, SUB;
 precedence left MUL, DIV;
@@ -47,68 +48,80 @@ precedence right ELSE;
 programa ::=
     lista_sentencias EXIT
     ;
-lista_sentencias ::= 
+lista_sentencias ::=
     sentencia
     | lista_sentencias SCOLON sentencia
     ;
 
-sentencia ::= 
-    ID ASSIGNMENT expression:e 
-        {: 
-        System.out.println(table.get(e).getValue()); 
+sentencia ::=
+    ID:id ASSIGNMENT expression:e
+        {:
+        OurSymbol es = table.get(e);
+
+        int res = table.addVar(id, es.getType(), es.getValue());
+        if(res == 1)
+           table.setValue(id, es.getValue());
+        else if(res == 2)
+           throw new Exception("Tipo incompatible, no se puede asignar un " +
+                               es.getType() + " a un " + table.get(id).getType());
+
+        System.out.println(es.getValue());
         :}
-    | sentencia_dib
+    | sentencia_dib:s
+        {:
+        ourDrawer.evaluate(s);
+        :}
     | CLEAR
         {:
-        drawer.reset()
+        ourDrawer.reset();
         :}
-    | SETCOLOR expression COMMA expression COMMA expression
+    | SETCOLOR expression:r COMMA expression:g COMMA expression:b
         {:
         OurSymbol res_r = table.get(r);
         OurSymbol res_g = table.get(g);
         OurSymbol res_b = table.get(b);
-        drawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
+        ourDrawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
         :}
-    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene 
+    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene
         {:
         int condition = table.get(econd).getValue();
         if (condition != 0) {
-            ourDrawer.eval(thene);
+            ourDrawer.evaluate(thene);
         }
         :}
-    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene ELSE sentencia_dib:elsee 
+    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene ELSE sentencia_dib:elsee
         {:
-        int cond_sym = table.get(econd).getValue();
+        int condition = table.get(econd).getValue();
         if (condition != 0) {
-            ourDrawer.eval(thene);
+            ourDrawer.evaluate(thene);
         }
         else {
-            ourDrawer.eval(elsee);
+            ourDrawer.evaluate(elsee);
         }
         :}
     | REPEAT PAREN_OPEN expression:econd PAREN_CLOSE TIMES sentencia_dib:rbody
         {:
         int i = 0, times = table.get(econd).getValue();
-        for (i = 0; i < times, i++) {
-            ourDrawer.eval(rbody);
+        for (i = 0; i < times; i++) {
+            ourDrawer.evaluate(rbody);
         }
         :}
     ;
 
 sentencia_dib ::=
-    DRAW expression
+    DRAW expression:e
         {:
         /*
         draw, int = avazar el cursor ang unidades
         draw, did = reproducir un dibujo almacenado
         */
-        OurSymbol res = table.get(e)
+        OurSymbol res = table.get(e);
         /* go see the eval method in the OurDrawer class. */
         if (res.getType().equals("int")) {
-            RETURN = "draw," + res.getValue().toString();
+            RESULT = "draw," + res.getValue().toString();
         }
         else if (res.getType().equals("draw_id")) {
-            RETURN = "draw_named," + res.getValue().toString();
+            RESULT = "draw_named," + res.getValue().toString();
         }
         :}
     | MOVE expression:e
@@ -117,12 +130,12 @@ sentencia_dib ::=
         move, int = avanzar el cursor ang unidades sin dibujar
         move, ang = rotar el cursor
         */
-        OurSymbol res= table.get(res.getValue())
+        OurSymbol res = table.get(e);
         if (res.getType().equals("int")) {
-            RETURN = "move," + res.getValue().toString();
+            RESULT = "move," + res.getValue().toString();
         }
         else if (res.getType().equals("angle")) {
-            RETURN = "rotate," + res.getValue().toString();
+            RESULT = "rotate," + res.getValue().toString();
         }
         :}
     ;
@@ -337,12 +350,20 @@ postfix_expression ::=
             System.out.println("INT_LITERAL: "+lit);
             RESULT = table.addAnonymVar("int", lit);
         :}
-    | DEF PAREN_OPEN lista_sentencias_dib PAREN_CLOSE
+    | DEF PAREN_OPEN lista_sentencias_dib:list PAREN_CLOSE
         {:
+            ourDrawer.setNamedDraw(last_draw_id, list);
+            RESULT = table.addAnonymVar("draw_id", last_draw_id++);
         :}
     ;
 
 lista_sentencias_dib ::=
-    sentencia_dib
-    | lista_sentencias_dib SCOLON sentencia_dib
+    sentencia_dib:s
+        {:
+            RESULT = s;
+        :}
+    | lista_sentencias_dib:list SCOLON sentencia_dib:s
+        {:
+            RESULT = list + ";" + s;
+        :}
     ;
