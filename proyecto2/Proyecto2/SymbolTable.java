@@ -41,8 +41,6 @@ public class SymbolTable {
 
     public OurSymbol get(String name) {
         for(int i = 0; i < table.size(); i++) {
-          System.out.println("AEEEEEEE "+table.get(i).getName());
-
             if(table.get(i).getName().equals(name))
                 return table.get(i);
         }

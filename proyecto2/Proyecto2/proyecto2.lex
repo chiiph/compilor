@@ -59,5 +59,5 @@ DEF         = DEF
 "*"             { return new Symbol(sym.MUL);                                }
 "/"             { return new Symbol(sym.DIV);                                }
 "!"             { return new Symbol(sym.NOT);                                }
-"_"             { return new Symbol(sym.ANGLE);                              }
+"d"             { return new Symbol(sym.ANGLE);                              }
 .               { throw new Exception("Error léxico: " + yytext() + " en línea: " + (yyline + 1)); }
