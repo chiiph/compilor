@@ -6,12 +6,13 @@ import java.lang.Exception;
 
 action code
 {:
-    SymbolTable table;
-    Drawer      drawer = new Drawer();
+    private SymbolTable table = new SymbolTable();
+    Drawer drawer = new Drawer();
 :}
 
 parser code
 {:
+
 	public static void main(String args[])
 	{
 		try {
@@ -25,7 +26,7 @@ parser code
 terminal EXIT, SCOLON, ASSIGNMENT, COMMA, CLEAR, SETCOLOR, IF, PAREN_OPEN, PAREN_CLOSE;
 terminal ELSE, REPEAT, TIMES, DRAW, MOVE;
 terminal CONDITIONAL_OR, CONDITIONAL_AND, EQUALS, NOT_EQUALS, LT, GT, LT_EQ, GT_EQ, ADD, SUB;
-terminal MUL, DIV, MOD, NOT, DEF, ANGLE;
+terminal MUL, DIV, NOT, DEF, ANGLE;
 terminal Integer INT_LITERAL;
 terminal String ID;
 
@@ -33,56 +34,41 @@ non terminal programa;
 non terminal String expression;
 non terminal lista_sentencias, sentencia;
 non terminal sentencia_dib;
-non terminal String conditional_expression;
-non terminal String conditional_or_expression;
-non terminal String conditional_and_expression;
-non terminal String equality_expression;
-non terminal String relational_expression;
-non terminal String additive_expression;
-non terminal String multiplicative_expression;
-non terminal String unary_expression;
-non terminal String unary_expression_not_plus_minus;
 non terminal String postfix_expression;
 non terminal lista_sentencias_dib;
 
-precedence left ADD;
-precedence left SUB;
-precedence left MUL;
-precedence left DIV;
-precedence left MOD;
+precedence left ADD, SUB;
+precedence left MUL, DIV;
+precedence left CONDITIONAL_AND;
+precedence left CONDITIONAL_OR;
+precedence left GT, LT, GT_EQ, LT_EQ;
+precedence left EQUALS, NOT_EQUALS;
 precedence right ELSE;
+
 
 programa              ::= lista_sentencias EXIT
                         ;
 lista_sentencias      ::= sentencia
                         | lista_sentencias SCOLON sentencia
                         ;
-sentencia ::= ID ASSIGNMENT expression
-|   sentencia_dib
-|   CLEAR 
+sentencia             ::= ID ASSIGNMENT expression:e {: System.out.println(table.get(e).getValue()); :}
+                        | sentencia_dib
+                        | CLEAR
     {: 
     drawer.reset() 
     :}
-|   SETCOLOR expression:r COMMA expression:g COMMA expression:b
+                        | SETCOLOR expression COMMA expression COMMA expression
     {:
     OurSymbol res_r = table.get(r);
     OurSymbol res_g = table.get(g);
     OurSymbol res_b = table.get(b);
     drawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
     :}
-|   IF PAREN_OPEN expression:e {: :} PAREN_CLOSE sentencia_dib
-    {:
-    :}
-|   IF PAREN_OPEN expression:e {: :} PAREN_CLOSE sentencia_dib ELSE sentencia_dib
-    {:
-    :}
-|   REPEAT PAREN_OPEN expression:e {: :} PAREN_CLOSE TIMES sentencia_dib
-    {:
-    :}
-;
-
-sentencia_dib ::= 
-    DRAW expression:e 
+                        | IF PAREN_OPEN expression PAREN_CLOSE sentencia_dib
+                        | IF PAREN_OPEN expression PAREN_CLOSE sentencia_dib ELSE sentencia_dib
+                        | REPEAT PAREN_OPEN expression PAREN_CLOSE TIMES sentencia_dib
+                        ;
+sentencia_dib         ::= DRAW expression
     {: 
     /*
     draw, int = avazar el cursor ang unidades
@@ -96,7 +82,7 @@ sentencia_dib ::=
         drawer.drawNameDraw(res.getValue());
     }
     :}
-|   MOVE expression:e 
+                        | MOVE expression:e
     {:
     /*
     move, int = avanzar el cursor ang unidades sin dibujar
@@ -110,59 +96,175 @@ sentencia_dib ::=
         drawer.rotate(res.getValue()) 
     } 
     :}
+                        ;
+
+expression ::=
+expression:e1 ADD expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    String type = "int";
+    if(e1s.getType() == "angle" || e2s.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                e1s.getValue()+e2s.getValue());
+:}
+    | expression:e1 SUB expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    String type = "int";
+    if(e1s.getType() == "angle" || e2s.getType() == "angle")
+        type = "angle";
+
+    RESULT = table.addAnonymVar(type,
+                                e1s.getValue()-e2s.getValue());
+:}
+    | expression:e1 MUL expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e2s.getType() == "int") {
+        RESULT = table.addAnonymVar(e1s.getType(), // el tipo es el de la derecha
+                                    e1s.getValue()*e2s.getValue());
+    } else {
+        throw new Exception("Problema con tipos!");
+    }
+:}
+    | expression:e1 DIV expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    if(e2s.getType() == "int") {
+        RESULT = table.addAnonymVar(e1s.getType(), // el tipo es el de la derecha
+                                    e1s.getValue()/e2s.getValue());
+    } else {
+        throw new Exception("Problema con tipos2!");
+    }
+:}
+    | expression:e1 LT expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() < e2s.getValue())?1:0);
+:}
+    | expression:e1 GT expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() > e2s.getValue())?1:0);
+:}
+    | expression:e1 LT_EQ expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() >= e2s.getValue())?1:0);
+:}
+    | expression:e1 GT_EQ expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue() <= e2s.getValue())?1:0);
+:}
+    | expression:e1 EQUALS expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() == e2s.getValue().intValue())?1:0);
+:}
+    | expression:e1 CONDITIONAL_AND expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    int val = 0;
+
+    if(e1s.getValue().intValue() != 0 &&
+       e2s.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+:}
+    | expression:e1 CONDITIONAL_OR expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    int val = 0;
+
+    if(e1s.getValue().intValue() != 0 ||
+       e2s.getValue().intValue() != 0)
+        val = 1;
+
+    RESULT = table.addAnonymVar("int", val);
+:}
+    | expression:e1 NOT_EQUALS expression:e2
+{:
+    OurSymbol e1s = table.get(e1);
+    OurSymbol e2s = table.get(e2);
+
+    RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() != e2s.getValue().intValue())?1:0);
+:}
+    | ADD expression:e1
+{:
+    OurSymbol s = table.get(e1);
+    RESULT = table.addAnonymVar(s.getType(), +s.getValue());
+:}
+    | SUB expression:e1
+{:
+    OurSymbol s = table.get(e1);
+    RESULT = table.addAnonymVar(s.getType(), -s.getValue());
+:}
+    | NOT expression:e1
+{:
+    OurSymbol s = table.get(e1);
+    Integer val = s.getValue();
+    if(val == 0)
+        RESULT = table.addAnonymVar(s.getType(), 1);
+    else
+        RESULT = table.addAnonymVar(s.getType(), 0);
+:}
+    | PAREN_OPEN expression:e PAREN_CLOSE
+{:
+    RESULT = e;
+:}
+    | postfix_expression:pe
+{:
+    RESULT = pe;
+:}
 ;
 
-expression                         ::= conditional_expression:e {: System.out.println("Expression: "+e); :}
-                                     ;
-conditional_expression             ::= conditional_or_expression {: System.out.println("aaaapa"); :}
-                                     ;
-conditional_or_expression          ::= conditional_and_expression
-                                     | conditional_or_expression CONDITIONAL_OR conditional_and_expression
-                                     ;
-conditional_and_expression         ::= equality_expression
-                                     | conditional_and_expression CONDITIONAL_AND equality_expression
-                                     ;
-equality_expression                ::= relational_expression
-                                     | equality_expression EQUALS relational_expression
-                                     | equality_expression NOT_EQUALS relational_expression
-                                     ;
-relational_expression              ::= additive_expression
-                                     | relational_expression LT additive_expression
-                                     | relational_expression GT additive_expression
-                                     | relational_expression LT_EQ additive_expression
-                                     | relational_expression GT_EQ additive_expression
-                                     ;
-additive_expression                ::= multiplicative_expression
-                                     | additive_expression ADD multiplicative_expression
-                                     | additive_expression SUB multiplicative_expression
-                                     ;
-multiplicative_expression          ::= unary_expression
-                                     | multiplicative_expression MUL unary_expression
-                                     | multiplicative_expression DIV unary_expression
-                                     | multiplicative_expression MOD unary_expression
-                                     ;
-unary_expression                   ::= ADD unary_expression
-                                     | SUB unary_expression
-                                     | unary_expression_not_plus_minus
-                                     ;
-unary_expression_not_plus_minus    ::= postfix_expression
-                                     | NOT unary_expression
-                                     ;
 postfix_expression ::=
 ID:id
 {:
 if(table.isDeclared(id))
     RESULT = id;
 else
-    throw new Exception("Varible no declarada: "+id);
+    throw new Exception("Variable no declarada: "+id);
 :}
-| INT_LITERAL ANGLE
+| INT_LITERAL:lit ANGLE
+{:
+    System.out.println("INT_LITERAL ANGLE: "+lit);
+    RESULT = table.addAnonymVar("angle", lit);
+:}
 | INT_LITERAL:lit
 {:
-    System.out.println("it's a-me, an innttt"+lit);
+    System.out.println("INT_LITERAL: "+lit);
     RESULT = table.addAnonymVar("int", lit);
 :}
 | DEF PAREN_OPEN lista_sentencias_dib PAREN_CLOSE
+{:
+:}
 ;
 
 lista_sentencias_dib               ::= sentencia_dib

@@ -14,4 +14,6 @@ public class OurSymbol {
     public String getName() { return name; }
     public String getType() { return type; }
     public Integer getValue() { return value; }
+
+    public void setValue(Integer v) { this.value = v; }
 }

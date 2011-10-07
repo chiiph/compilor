@@ -6,11 +6,11 @@ import java.util.LinkedList;
 
 public class SymbolTable {
     private LinkedList<OurSymbol> table;
-
-    private SecureRandom random = new SecureRandom();
+    private int lastAnon;
 
     public SymbolTable() {
-
+        lastAnon = 0;
+        table = new LinkedList();
     }
 
     // 0: Ok
@@ -39,6 +39,15 @@ public class SymbolTable {
         return false;
     }
 
+    public OurSymbol get(String name) {
+        for(int i = 0; i < table.size(); i++) {
+            if(table.get(i).getName().equals(name))
+                return table.get(i);
+        }
+
+        return null;
+    }
+
     public Integer getValue(String name) {
         for(int i = 0; i < table.size(); i++) {
             if(table.get(i).getName().equals(name))
@@ -48,14 +57,26 @@ public class SymbolTable {
         return null;
     }
 
-    public String addAnonymVar(String type, Integer value) {
-        int res = 1;
-        String name = "";
-        while(res != 0) {
-            name = (new BigInteger(130, random)).toString(32);
-            res = addVar(type, name, value);
+    public void setValue(String name, Integer value) {
+        int pos = -1;
+        for(int i = 0; i < table.size(); i++) {
+            if(table.get(i).getName().equals(name)) {
+                pos = i;
+                break;
+            }
         }
 
+        if(pos == -1)
+            return;
+
+        table.get(pos).setValue(value);
+    }
+
+    public String addAnonymVar(String type, Integer value) {
+        int res = 1;
+        String name = "__anon" + lastAnon++;
+
+        res = addVar(type, name, value);
         return name;
     }
 }

@@ -3,4 +3,4 @@
 rm parser.java sym.java *.lex.java
 jlex *.lex
 cup *.cup
-javac *.java
+CLASSPATH=$CLASSPATH:/usr/share/java/cup.jar javac *.java
