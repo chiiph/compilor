@@ -7,7 +7,7 @@ import java.lang.Exception;
 action code
 {:
     private SymbolTable table = new SymbolTable();
-    Drawer drawer = new Drawer();
+    OurDrawer ourDrawer = new OurDrawer();
 :}
 
 parser code
@@ -47,14 +47,15 @@ precedence right ELSE;
 programa ::=
     lista_sentencias EXIT
     ;
-lista_sentencias ::=
+lista_sentencias ::= 
     sentencia
     | lista_sentencias SCOLON sentencia
     ;
-sentencia ::=
-    ID ASSIGNMENT expression:e
-        {:
-        System.out.println(table.get(e).getValue());
+
+sentencia ::= 
+    ID ASSIGNMENT expression:e 
+        {: 
+        System.out.println(table.get(e).getValue()); 
         :}
     | sentencia_dib
     | CLEAR
@@ -68,25 +69,26 @@ sentencia ::=
         OurSymbol res_b = table.get(b);
         drawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
         :}
-    | IF PAREN_OPEN expression:econd
+    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:then 
         {:
+        OurSymbol cond_sym = table.get(econd);
+        if (cond_sym.getValue()) {
+            OurSymbol then_sym = table.get(then);
+            ourDrawer.eval(then);
+        }
         :}
-      PAREN_CLOSE sentencia_dib:then
+    | IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:then ELSE sentencia_dib:else 
         {:
+        OurSymbol cond_sym = table.get(econd);
+        if (cond_sym.getValue()) {
+            OutSymbol then_sym = table.get(then);
+            ourDrawer.eval(then_sym.getValue());
+        }
+        else {
+            ourDrawer.eval(else_sym.GetValue());
+        }
         :}
-    | IF PAREN_OPEN expression:econd
-        {:
-        :}
-      PAREN_CLOSE sentencia_dib:then
-        {:
-        :}
-      ELSE sentencia_dib:else
-        {:
-        :}
-    | REPEAT PAREN_OPEN expression:econd
-        {:
-        :}
-      PAREN_CLOSE TIMES sentencia_dib:rbody
+    | REPEAT PAREN_OPEN expression:econd PAREN_CLOSE TIMES sentencia_dib:rbody
         {:
         :}
     ;
