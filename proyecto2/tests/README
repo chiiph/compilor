@@ -1,0 +1,34 @@
+Descripción de los tests.
+
+001err.txt
+  Asignar a una variable declara implícitamente como un tipo X un valor de tipo Y.
+
+002err.txt
+  Operaciones mixtas no permitidas.
+
+003err.txt
+  Llamar a setColor con parámetros no enteros.
+
+004err.txt
+  Expresión utilizada como condición de un IF que no es de tipo entero.
+
+005err.txt
+  Expresión utilizada como condición de un IF con ELSE.
+
+006err.txt
+  Expresión utilizada en un repeat que no es de tipo entero.
+
+007err.txt
+  Utilización de DRAW con tipo angle.
+
+008err.txt
+  Utilización de una variable no definida.
+
+009err.txt
+  Utilización de una expresión mixta dentro de la condición de un IF.
+
+010err.txt
+  Utilización de expresión mixta parentizada.
+
+011err.txt
+  Utilización de MOVE con parámetro draw_id.
