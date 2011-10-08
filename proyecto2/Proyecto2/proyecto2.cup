@@ -22,11 +22,11 @@ parser code
         }
     }
     public void syntax_error(java_cup.runtime.Symbol sym) {
-        System.out.println("6666 Error parsing at line " + sym.left);
-        }
+        System.out.println("Error parsing at line " + (sym.left + 1));
+    }
     public void unrecovered_syntax_error(java_cup.runtime.Symbol sym) {
-        System.out.println("6666 Error parsing at line " + sym.left);
-        }
+        System.out.println("Error parsing at line " + (sym.left + 1));
+    }
 :}
 
 terminal EXIT, SCOLON, ASSIGNMENT, COMMA, CLEAR, SETCOLOR, IF, PAREN_OPEN, PAREN_CLOSE;
@@ -52,7 +52,7 @@ precedence left EQUALS, NOT_EQUALS;
 precedence right ELSE;
 
 programa ::=
-    lista_sentencias EXIT
+    lista_sentencias SCOLON EXIT
     ;
 lista_sentencias ::=
     sentencia
