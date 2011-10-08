@@ -1,0 +1,3 @@
+if(10d)
+   draw 20;
+exit

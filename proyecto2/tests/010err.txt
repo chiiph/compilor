@@ -1,0 +1,3 @@
+repeat((10d * 20) > 3) times
+   draw 200;
+exit

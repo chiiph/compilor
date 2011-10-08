@@ -1,0 +1,3 @@
+repeat(10d) times
+   draw 100;
+exit

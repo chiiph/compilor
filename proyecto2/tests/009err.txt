@@ -1,0 +1,6 @@
+var <- 10;
+var2 <- 20d;
+
+if(var + var2)
+   draw 12;
+exit
