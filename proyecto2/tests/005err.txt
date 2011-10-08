@@ -1,5 +1,5 @@
 if(10d)
-   draw 100;
+   draw 100
 else
    draw 40;
 exit
