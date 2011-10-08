@@ -1,0 +1,2 @@
+draw 10d;
+exit

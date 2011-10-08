@@ -1,0 +1,3 @@
+val <- def(draw 100);
+move val;
+exit
