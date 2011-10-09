@@ -83,11 +83,15 @@
 |ANGLE          |"D"                                        |
 |===
 
-_Nota:_ Todos los tokens que contienen carácteres alfabéticos, si bien aparecen en mayúsculas, son igualmente considerados si aparecen en minúscula. Es decir, DEF es igual a dEf, y a la vez es igual a def.
+_Nota:_ Todos los tokens que contienen carácteres alfabéticos, si bien aparecen
+en mayúsculas, son igualmente considerados si aparecen en minúscula. Es decir,
+DEF es igual a dEf, y a la vez es igual a def.
 
 == Definición Dirigida por la Sintaxis para expression
 
-Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no de la forma usual (tabla con dos columnas), sino que se pondrá por cada regla, la acción correspondiente en la linea a continuación de la misma.
+Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no de
+la forma usual (tabla con dos columnas), sino que se pondrá por cada regla, la
+acción correspondiente en la linea a continuación de la misma.
 
 <expression> ::= <expression> ADD <expression>
 [source,java]
@@ -306,16 +310,26 @@ Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no 
 
 == SymbolTable.java
 
-Esta clase es la que abstrae el manejo de variables y facilita los checkeos semánticos.
+Esta clase es la que abstrae el manejo de variables y facilita los checkeos
+semánticos.
 
 == OurSymbol.java
 
-Esta clase abstrae la representación interna, separada de lo que proporciona la clase java_cup.runtime.Symbol, de símbolo. A la vez, los objetos de este tipo son utilizados como filas en la tabla de símbolos (SymbolTable).
+Esta clase abstrae la representación interna, separada de lo que proporciona la
+clase java_cup.runtime.Symbol, de símbolo. A la vez, los objetos de este tipo
+son utilizados como filas en la tabla de símbolos (SymbolTable).
 
 == OurDrawer.java
 
-OurDrawer, por como se diagramó la ejecución de los comandos de dibujo en casos como el de sentencias condicionales, es una clase que tiene la capacidad de interpretar comandos simples. Estos comandos están formados de la siguiente manera: "<comando>,<número>", donde <comando> puede ser "draw", "move", o "rotate", y <número> puede ser únicamente un entero.
+OurDrawer, por como se diagramó la ejecución de los comandos de dibujo en casos
+como el de sentencias condicionales, es una clase que tiene la capacidad de
+interpretar comandos simples. Estos comandos están formados de la siguiente
+manera: "<comando>,<número>", donde <comando> puede ser "draw", "move",
+o "rotate", y <número> puede ser únicamente un entero.
 
 === Casos de prueba
 
-Los casos de prueba están focalizados a corroborar que los checkeos semánticos se comportan como lo estipulado. Los checkeos de los módulos de análisis léxico y sintáctico están implícitos en ellos y en los casos de tests correctos proporcionados por la cátedra.
+Los casos de prueba están focalizados a corroborar que los checkeos semánticos
+se comportan como lo estipulado. Los checkeos de los módulos de análisis léxico
+y sintáctico están implícitos en ellos y en los casos de tests correctos
+proporcionados por la cátedra.
