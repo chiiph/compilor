@@ -124,7 +124,6 @@ sentencia ::=
                                   table.get(id).getType();
             throw new Exception(errormessage);
         }
-
         :}
     | sentencia_dib:s
         {:
@@ -244,7 +243,7 @@ expression ::=
         /* Este chequeo se haca despues porque ahora puedo asegurar que ambos
          * operandos son del mismo tipo, y puedo fijarme solo en el primero. 
          */
-        if (e1s.getType().equals("int") || e1s.getType().equals("angle"))
+        if (!((e1s.getType() == "int") || (e1s.getType() == "angle")))
             throw new Exception("Error: los operandos de una suma deben ser o bien de tipo entero o bien de tipo angulo.");
 
         String type = e1s.getType();
