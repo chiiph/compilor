@@ -202,7 +202,7 @@ sentencia_dib ::=
 
         /* go see the eval method in the OurDrawer class. */
         OurSymbol res = table.get(e);
-        if (res.getType() == "int)) {
+        if (res.getType() == "int") {
             RESULT = "draw," + res.getValue().toString();
         }
         else if (res.getType() == "draw_id") {
@@ -303,7 +303,7 @@ expression ::=
 
         if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
            throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
-        if (e1s.getType() != e2s.getType()
+        if (e1s.getType() != e2s.getType())
            throw new Exception("Error: los operandos deben ser del mismo tipo.");
 
         RESULT = table.addAnonymVar("int", (e1s.getValue() < e2s.getValue()) ? 1 : 0);
