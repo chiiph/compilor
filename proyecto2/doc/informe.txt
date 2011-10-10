@@ -3,44 +3,46 @@
 
 == Gramática completa del Mini-Lenguaje
 
-<programa>              ::= <lista_sentencias> EXIT
-<lista_sentencias>      ::= <sentencia>
-<lista_sentencias>      ::= <lista_sentencias> SCOLON <sentencia>
-<sentencia>             ::= ID ASSIGNMENT <expression>
-<sentencia>             ::= <sentencia_dib>
-<sentencia>             ::= CLEAR
-<sentencia>             ::= SETCOLOR <expression> COMMA <expression> COMMA <expression>
-<sentencia>             ::= IF PAREN_OPEN <expression> PAREN_CLOSE <sentencia_dib>
-<sentencia>             ::= IF PAREN_OPEN <expression> PAREN_CLOSE <sentencia_dib> ELSE <sentencia_dib>
-<sentencia>             ::= REPEAT PAREN_OPEN <expression> PAREN_CLOSE TIMES <sentencia_dib>
-<sentencia_dib>         ::= DRAW <expression>
-<sentencia_dib>         ::= MOVE <expression>
+----
+<programa>             ::= <lista_sentencias> EXIT
+<lista_sentencias>     ::= <sentencia>
+<lista_sentencias>     ::= <lista_sentencias> SCOLON <sentencia>
+<sentencia>            ::= ID ASSIGNMENT <expression>
+<sentencia>            ::= <sentencia_dib>
+<sentencia>            ::= CLEAR
+<sentencia>            ::= SETCOLOR <expression> COMMA <expression> COMMA <expression>
+<sentencia>            ::= IF PAREN_OPEN <expression> PAREN_CLOSE <sentencia_dib>
+<sentencia>            ::= IF PAREN_OPEN <expression> PAREN_CLOSE <sentencia_dib> ELSE <sentencia_dib>
+<sentencia>            ::= REPEAT PAREN_OPEN <expression> PAREN_CLOSE TIMES <sentencia_dib>
+<sentencia_dib>        ::= DRAW <expression>
+<sentencia_dib>        ::= MOVE <expression>
 
-<expression>            ::= <expression> ADD <expression>
-<expression>            ::= <expression> SUB <expression>
-<expression>            ::= <expression> MUL <expression>
-<expression>            ::= <expression> DIV <expression>
-<expression>            ::= <expression> CONDITIONAL_AND <expression>
-<expression>            ::= <expression> CONDITIONAL_OR <expression>
-<expression>            ::= <expression> LT <expression>
-<expression>            ::= <expression> GT <expression>
-<expression>            ::= <expression> LT_EQ <expression>
-<expression>            ::= <expression> GT_EQ <expression>
-<expression>            ::= <expression> EQUALS <expression>
-<expression>            ::= <expression> NOT_EQUALS <expression>
-<expression>            ::= ADD <expression>
-<expression>            ::= SUB <expression>
-<expression>            ::= NOT <expression>
-<expression>            ::= PAREN_OPEN <expression> PAREN_CLOSE
-<expression>            ::= <postfix_expression>
+<expression>           ::= <expression> ADD <expression>
+<expression>           ::= <expression> SUB <expression>
+<expression>           ::= <expression> MUL <expression>
+<expression>           ::= <expression> DIV <expression>
+<expression>           ::= <expression> CONDITIONAL_AND <expression>
+<expression>           ::= <expression> CONDITIONAL_OR <expression>
+<expression>           ::= <expression> LT <expression>
+<expression>           ::= <expression> GT <expression>
+<expression>           ::= <expression> LT_EQ <expression>
+<expression>           ::= <expression> GT_EQ <expression>
+<expression>           ::= <expression> EQUALS <expression>
+<expression>           ::= <expression> NOT_EQUALS <expression>
+<expression>           ::= ADD <expression>
+<expression>           ::= SUB <expression>
+<expression>           ::= NOT <expression>
+<expression>           ::= PAREN_OPEN <expression> PAREN_CLOSE
+<expression>           ::= <postfix_expression>
 
-<postfix_expression>    ::= ID
-<postfix_expression>    ::= INT_LITERAL ANGLE
-<postfix_expression>    ::= INT_LITERAL
-<postfix_expression>    ::= DEF PAREN_OPEN <lista_sentencias_dib> PAREN_CLOSE
+<postfix_expression>   ::= ID
+<postfix_expression>   ::= INT_LITERAL ANGLE
+<postfix_expression>   ::= INT_LITERAL
+<postfix_expression>   ::= DEF PAREN_OPEN <lista_sentencias_dib> PAREN_CLOSE
 
-<lista_sentencias_dib>  ::= <sentencia_dib>
-<lista_sentencias_dib>  ::= <lista_sentencias_dib> SCOLON <sentencia_dib>
+<lista_sentencias_dib> ::= <sentencia_dib>
+<lista_sentencias_dib> ::= <lista_sentencias_dib> SCOLON <sentencia_dib>
+----
 
 == Componentes léxicos
 
@@ -93,53 +95,63 @@ Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no 
 la forma usual (tabla con dos columnas), sino que se pondrá por cada regla, la
 acción correspondiente en la linea a continuación de la misma.
 
+----
 <expression> ::= <expression> ADD <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
     OurSymbol e2s = table.get(e2);
-
     if(e1s.getType() != e2s.getType())
         throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
     String type = e1s.getType();
-
-    RESULT = table.addAnonymVar(type,
-                                e1s.getValue()+e2s.getValue());
+    RESULT = table.addAnonymVar(type, e1s.getValue()+e2s.getValue());
 ---------------------------------------------------------------------
+
+Esta acción verifica que los tipos de los dos operandos de una suma sean iguales.
+Para cada subexpresión, se recupera de la tabla de símbolos la variable anonima que contiene su valor, y de ahi se recupera su tipo.
+En caso de que difieran, se levanta una excepción.
+Caso contrario, se inserta el valor de la suma en una variable anonima en la table de simbolos.
+
+----
 <expression> ::= <expression> SUB <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
     OurSymbol e2s = table.get(e2);
-
     if(e1s.getType() != e2s.getType())
         throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
     String type = e1s.getType();
-
-    RESULT = table.addAnonymVar(type,
-                                e1s.getValue()-e2s.getValue());
+    RESULT = table.addAnonymVar(type, e1s.getValue()-e2s.getValue());
 ---------------------------------------------------------------------
+
+Esta acción realiza lo mismo para la operación de sustracción.
+
+----
 <expression> ::= <expression> MUL <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
     OurSymbol e2s = table.get(e2);
-
-    if((e1s.getType() == e2s.getType()) &&
-       e1s.getType() == "angle")
+    if((e1s.getType() == e2s.getType()) && e1s.getType() == "angle")
         throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
-
     String type = "int";
-
     if(e1s.getType() == "angle" || e2s.getType() == "angle")
         type = "angle";
-
-    RESULT = table.addAnonymVar(type,
-                                e1s.getValue()*e2s.getValue());
+    RESULT = table.addAnonymVar(type, e1s.getValue()*e2s.getValue());
 ---------------------------------------------------------------------
+
+
+
+----
 <expression> ::= <expression> DIV <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -161,7 +173,11 @@ acción correspondiente en la linea a continuación de la misma.
     RESULT = table.addAnonymVar(type,
                                 e1s.getValue()/e2s.getValue());
 ---------------------------------------------------------------------
+
+----
 <expression> ::= <expression> CONDITIONAL_AND <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -181,7 +197,11 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", val);
 ---------------------------------------------------------------------
+
+----
 <expression> ::= <expression> CONDITIONAL_OR <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -201,7 +221,13 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", val);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <expression> LT <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -212,7 +238,13 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", (e1s.getValue() < e2s.getValue())?1:0);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <expression> GT <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -223,7 +255,13 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", (e1s.getValue() > e2s.getValue())?1:0);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <expression> LT_EQ <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -234,7 +272,13 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", (e1s.getValue() >= e2s.getValue())?1:0);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <expression> GT_EQ <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -245,7 +289,12 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", (e1s.getValue() <= e2s.getValue())?1:0);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <expression> EQUALS <expression>
+----
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -256,7 +305,13 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() == e2s.getValue().intValue())?1:0);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <expression> NOT_EQUALS <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol e1s = table.get(e1);
@@ -267,19 +322,37 @@ acción correspondiente en la linea a continuación de la misma.
 
     RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() != e2s.getValue().intValue())?1:0);
 ---------------------------------------------------------------------
+
+
+----
 <expression>            ::= ADD <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol s = table.get(e1);
     RESULT = table.addAnonymVar(s.getType(), +s.getValue());
 ---------------------------------------------------------------------
+
+
+----
 <expression>            ::= SUB <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol s = table.get(e1);
     RESULT = table.addAnonymVar(s.getType(), -s.getValue());
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= NOT <expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     OurSymbol s = table.get(e1);
@@ -289,12 +362,24 @@ acción correspondiente en la linea a continuación de la misma.
     else
         RESULT = table.addAnonymVar(s.getType(), 0);
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= PAREN_OPEN <expression> PAREN_CLOSE
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     RESULT = e;
 ---------------------------------------------------------------------
+
+
+----
 <expression> ::= <postfix_expression>
+----
+
+
 [source,java]
 ---------------------------------------------------------------------
     RESULT = pe;
@@ -308,18 +393,18 @@ acción correspondiente en la linea a continuación de la misma.
 
 === Clases auxiliares usadas
 
-== SymbolTable.java
+==== SymbolTable.java
 
 Esta clase es la que abstrae el manejo de variables y facilita los checkeos
 semánticos.
 
-== OurSymbol.java
+==== OurSymbol.java
 
 Esta clase abstrae la representación interna, separada de lo que proporciona la
 clase java_cup.runtime.Symbol, de símbolo. A la vez, los objetos de este tipo
 son utilizados como filas en la tabla de símbolos (SymbolTable).
 
-== OurDrawer.java
+==== OurDrawer.java
 
 OurDrawer, por como se diagramó la ejecución de los comandos de dibujo en casos
 como el de sentencias condicionales, es una clase que tiene la capacidad de
