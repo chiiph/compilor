@@ -9,9 +9,9 @@ action code
 /*
     TODO LIST Y COMENTARIOS
     probar comentarios
-    
+
     mul abajo del unico throw exceptop
-    agregar chequep que 
+    agregar chequep que
     si el tipo e2c es angulo entonces y el del e1s es distinto de angulo
     tirar error que diga
     que para que sea sea mixt
@@ -34,7 +34,7 @@ action code
 ¶
 chequeos de tipo¶
     +, - -> entero y entero¶
-            angulo y angulo¶                                                                                                                                   
+            angulo y angulo¶
     *    -> entero y entero¶
             entero y angulo¶
             angulo y entero¶
@@ -179,7 +179,7 @@ sentencia ::=
         {:
         OurSymbol cond_sym = table.get(econd);
         int i = 0, times = cond_sym.getValue();
-        
+
         if (cond_sym.getType().equals("int")) {
             for (i = 0; i < times; i++) {
                 ourDrawer.evaluate(rbody);
@@ -207,7 +207,7 @@ sentencia_dib ::=
         else if (res.getType() == "draw_id") {
             RESULT = "draw_named," + res.getValue().toString();
         }
-        else { 
+        else {
             throw new Exception("Error! El tipo del argumento de DRAW debe ser o bien entero o bien dibujo.");
         }
         :}
@@ -241,7 +241,7 @@ expression ::=
             throw new Exception("Error: los operandos de una suma deben ser del mismo tipo.");
 
         /* Este chequeo se haca despues porque ahora puedo asegurar que ambos
-         * operandos son del mismo tipo, y puedo fijarme solo en el primero. 
+         * operandos son del mismo tipo, y puedo fijarme solo en el primero.
          */
         if (!((e1s.getType() == "int") || (e1s.getType() == "angle")))
             throw new Exception("Error: los operandos de una suma deben ser o bien de tipo entero o bien de tipo angulo.");
@@ -256,8 +256,8 @@ expression ::=
 
         if (e1s.getType() != e2s.getType())
             throw new Exception("Error: los operandos deben ser del mismo tipo.");
-        if ((e1s.getType() != "int") || (e1s.getType() != "angle"))
-            throw new Exception("Error: los operandos de una resta deben ser o bien de tipo entero o bien de tipo angulo.");
+        if ((e1s.getType() != "int") && (e1s.getType() != "angle"))
+            throw new Exception(e1s.getType() + " " + e2s.getType() + " Error: los operandos de una resta deben ser o bien de tipo entero o bien de tipo angulo.");
 
         String type = e1s.getType();
         RESULT = table.addAnonymVar(type, e1s.getValue() - e2s.getValue());
