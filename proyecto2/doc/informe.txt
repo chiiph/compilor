@@ -4,7 +4,7 @@
 == Gramática completa del Mini-Lenguaje
 
 ----
-<programa>             ::= <lista_sentencias> EXIT
+<programa>             ::= <lista_sentencias> SCOLON EXIT
 <lista_sentencias>     ::= <sentencia>
 <lista_sentencias>     ::= <lista_sentencias> SCOLON <sentencia>
 <sentencia>            ::= ID ASSIGNMENT <expression>
@@ -106,7 +106,7 @@ acción correspondiente en la linea a continuación de la misma.
     if(e1s.getType() != e2s.getType())
         throw new Exception("Error: los operandos deben ser del mismo tipo.");
     String type = e1s.getType();
-    RESULT = table.addAnonymVar(type, e1s.getValue()+e2s.getValue());
+    RESULT = table.addAnonymVar(type, e1s.getValue() + e2s.getValue());
 ---------------------------------------------------------------------
 
 Esta acción verifica que los tipos de los dos operandos de una suma sean iguales.
