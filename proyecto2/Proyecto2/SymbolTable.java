@@ -10,7 +10,7 @@ public class SymbolTable {
 
     public SymbolTable() {
         lastAnon = 0;
-        table = new LinkedList();
+        table = new LinkedList<OurSymbol>();
     }
 
     // 0: Ok
