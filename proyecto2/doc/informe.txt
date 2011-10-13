@@ -1,7 +1,7 @@
 = Proyecto 2: JLex/CUP
 :Author: Garay, Iñaki LU 67387; Touceda, Tomás LU 84024
 
-== Gramática completa del Mini-Lenguaje
+== Gramatica completa del Mini-Lenguaje
 
 ----
 <programa>             ::= <lista_sentencias> SCOLON EXIT
@@ -44,7 +44,7 @@
 <lista_sentencias_dib> ::= <lista_sentencias_dib> SCOLON <sentencia_dib>
 ----
 
-== Componentes léxicos
+== Componentes lexicos
 
 [options="header"]
 |===
@@ -65,7 +65,7 @@
 |MOVE           |"MOVE"                                     |
 |DEF            |"DEF"                                      |
 |ASSIGNMENT     |"<-"                                       |
-|CONDITIONAL_OR |"||"                                       |
+|CONDITIONAL_OR |"\|\|"                                     |
 |CONDITIONAL_AND|"&&"                                       |
 |EQUALS         |"=="                                       |
 |NOT_EQUALS     |"!="                                       |
@@ -89,322 +89,17 @@ _Nota:_ Todos los tokens que contienen carácteres alfabéticos, si bien aparece
 en mayúsculas, son igualmente considerados si aparecen en minúscula. Es decir,
 DEF es igual a dEf, y a la vez es igual a def.
 
-== Definición Dirigida por la Sintaxis para expression
-
-Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no de
-la forma usual (tabla con dos columnas), sino que se pondrá por cada regla, la
-acción correspondiente en la linea a continuación de la misma.
-
-----
-<expression> ::= <expression> ADD <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-    String type = e1s.getType();
-    RESULT = table.addAnonymVar(type, e1s.getValue() + e2s.getValue());
----------------------------------------------------------------------
-
-Esta acción verifica que los tipos de los dos operandos de una suma sean iguales.
-Para cada subexpresión, se recupera de la tabla de símbolos la variable anonima que contiene su valor, y de ahi se recupera su tipo.
-En caso de que difieran, se levanta una excepción.
-Caso contrario, se inserta el valor de la suma en una variable anonima en la table de simbolos.
-
-----
-<expression> ::= <expression> SUB <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-    String type = e1s.getType();
-    RESULT = table.addAnonymVar(type, e1s.getValue()-e2s.getValue());
----------------------------------------------------------------------
-
-Esta acción realiza lo mismo para la operación de sustracción.
-
-----
-<expression> ::= <expression> MUL <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-    if((e1s.getType() == e2s.getType()) && e1s.getType() == "angle")
-        throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
-    String type = "int";
-    if(e1s.getType() == "angle" || e2s.getType() == "angle")
-        type = "angle";
-    RESULT = table.addAnonymVar(type, e1s.getValue()*e2s.getValue());
----------------------------------------------------------------------
-
-
-
-----
-<expression> ::= <expression> DIV <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if((e1s.getType() == e2s.getType()) &&
-       e1s.getType() == "angle")
-        throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
-
-    if((e1s.getType() != e2s.getType()) &&
-       e1s.getType() != "angle")
-        throw new Exception("Error: solo el primero de los operandos puede ser de tipo angulo.");
-
-    String type = "int";
-
-    if(e1s.getType() == "angle")
-        type = "angle";
-
-    RESULT = table.addAnonymVar(type,
-                                e1s.getValue()/e2s.getValue());
----------------------------------------------------------------------
-
-----
-<expression> ::= <expression> CONDITIONAL_AND <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    if(e1s.getType() != "int")
-        throw new Exception("Error: los operandos no pueden ser de tipo angle.");
-
-    int val = 0;
-
-    if(e1s.getValue().intValue() != 0 &&
-       e2s.getValue().intValue() != 0)
-        val = 1;
-
-    RESULT = table.addAnonymVar("int", val);
----------------------------------------------------------------------
-
-----
-<expression> ::= <expression> CONDITIONAL_OR <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    if(e1s.getType() != "int")
-        throw new Exception("Error: los operandos no pueden ser de tipo angle.");
-
-    int val = 0;
-
-    if(e1s.getValue().intValue() != 0 ||
-       e2s.getValue().intValue() != 0)
-        val = 1;
-
-    RESULT = table.addAnonymVar("int", val);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <expression> LT <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    RESULT = table.addAnonymVar("int", (e1s.getValue() < e2s.getValue())?1:0);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <expression> GT <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    RESULT = table.addAnonymVar("int", (e1s.getValue() > e2s.getValue())?1:0);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <expression> LT_EQ <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    RESULT = table.addAnonymVar("int", (e1s.getValue() >= e2s.getValue())?1:0);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <expression> GT_EQ <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    RESULT = table.addAnonymVar("int", (e1s.getValue() <= e2s.getValue())?1:0);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <expression> EQUALS <expression>
-----
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() == e2s.getValue().intValue())?1:0);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <expression> NOT_EQUALS <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol e1s = table.get(e1);
-    OurSymbol e2s = table.get(e2);
-
-    if(e1s.getType() != e2s.getType())
-        throw new Exception("Error: los operandos deben ser del mismo tipo.");
-
-    RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() != e2s.getValue().intValue())?1:0);
----------------------------------------------------------------------
-
-
-----
-<expression>            ::= ADD <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol s = table.get(e1);
-    RESULT = table.addAnonymVar(s.getType(), +s.getValue());
----------------------------------------------------------------------
-
-
-----
-<expression>            ::= SUB <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol s = table.get(e1);
-    RESULT = table.addAnonymVar(s.getType(), -s.getValue());
----------------------------------------------------------------------
-
-
-----
-<expression> ::= NOT <expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    OurSymbol s = table.get(e1);
-    Integer val = s.getValue();
-    if(val == 0)
-        RESULT = table.addAnonymVar(s.getType(), 1);
-    else
-        RESULT = table.addAnonymVar(s.getType(), 0);
----------------------------------------------------------------------
-
-
-----
-<expression> ::= PAREN_OPEN <expression> PAREN_CLOSE
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    RESULT = e;
----------------------------------------------------------------------
-
-
-----
-<expression> ::= <postfix_expression>
-----
-
-
-[source,java]
----------------------------------------------------------------------
-    RESULT = pe;
----------------------------------------------------------------------
-
 === Descripción general de la aplicación
-
-== proyecto2.lex
-
-== proyecto2.cup
 
 === Clases auxiliares usadas
 
-==== SymbolTable.java
+==== +OurSymbol.java+
 
-Esta clase es la que abstrae el manejo de variables y facilita los checkeos
-semánticos.
+Esta clase abstrae la representación interna de unsímbolo, separada de lo que
+proporciona la clase +java_cup.runtime.Symbol+. A la vez, los objetos de este
+tipo son utilizados como filas en la tabla de símbolos (SymbolTable).
 
-==== OurSymbol.java
-
-Esta clase abstrae la representación interna, separada de lo que proporciona la
-clase java_cup.runtime.Symbol, de símbolo. A la vez, los objetos de este tipo
-son utilizados como filas en la tabla de símbolos (SymbolTable).
-
-==== OurDrawer.java
+==== +OurDrawer.java+
 
 OurDrawer, por como se diagramó la ejecución de los comandos de dibujo en casos
 como el de sentencias condicionales, es una clase que tiene la capacidad de
@@ -412,9 +107,552 @@ interpretar comandos simples. Estos comandos están formados de la siguiente
 manera: "<comando>,<número>", donde <comando> puede ser "draw", "move",
 o "rotate", y <número> puede ser únicamente un entero.
 
+==== +SymbolTable.java+
+
+Esta clase es la que abstrae el manejo de variables y facilita los checkeos
+semánticos.
+
 === Casos de prueba
 
 Los casos de prueba están focalizados a corroborar que los checkeos semánticos
 se comportan como lo estipulado. Los checkeos de los módulos de análisis léxico
 y sintáctico están implícitos en ellos y en los casos de tests correctos
 proporcionados por la cátedra.
+
+== Definición Dirigida por Sintaxis
+
+Por una cuestión de comodidad de lectura y de formato, se expresará la DDS no de
+la forma usual (tabla con dos columnas), sino que se pondrá por cada regla, la
+acción correspondiente en la linea a continuación de la misma.
+
+.Asignación
+
+----
+sentencia ::= ID:id ASSIGNMENT expression:e
+----
+
+[source,java]
+----
+OurSymbol es = table.get(e);
+
+int res = table.addVar(es.getType(), id, es.getValue());
+if (res == 1)
+    table.setValue(id, es.getValue());
+else if (res == 2) {
+    String errormessage = "Tipo incompatible, no se puede asignar un " +
+                          es.getType() +
+                          " a un " +
+                          table.get(id).getType();
+    throw new Exception(errormessage);
+}
+----
+
+.Evaluacion de una sentencia de dibujo
+
+----
+sentencia ::= sentencia_dib:s
+----
+
+[source,java]
+----
+ourDrawer.evaluate(s);
+----
+
+.Sentencia de dibujo +CLEAR+
+----
+sentencia ::= CLEAR
+----
+
+[source,java]
+----
+ourDrawer.reset();
+----
+
+.Sentencia de dibujo +SETCOLOR+
+
+----
+sentencia ::= SETCOLOR expression:r COMMA expression:g COMMA expression:b
+----
+
+[source,java]
+----
+OurSymbol res_r = table.get(r);
+OurSymbol res_g = table.get(g);
+OurSymbol res_b = table.get(b);
+
+if (!(res_r.getType().equals("int"))) { throw new Exception("El 1er argumento debe ser de tipo entero!"); }
+if (!(res_g.getType().equals("int"))) { throw new Exception("El 2do argumento debe ser de tipo entero!"); }
+if (!(res_b.getType().equals("int"))) { throw new Exception("El 3er argumento debe ser de tipo entero!"); }
+ourDrawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
+----
+
+.Sentencia condicional +IF+
+
+----
+sentencia ::= IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene
+----
+
+[source,java]
+----
+OurSymbol cond_sym = table.get(econd);
+int cond_val = table.get(econd).getValue();
+
+if (cond_sym.getType() == "int") {
+    if (cond_val != 0) {
+        ourDrawer.evaluate(thene);
+    }
+}
+else {
+    throw new Exception("Error! El tipo del resultado de la expresion condicional debe ser entero o booleano.");
+}
+----
+
+.Sentencia condicional +IF-ELSE+
+
+----
+sentencia ::= IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene ELSE sentencia_dib:elsee
+----
+
+[source,java]
+----
+OurSymbol cond_sym = table.get(econd);
+int condition = cond_sym.getValue();
+
+if (cond_sym.getType().equals("int")) {
+    if (condition != 0) {
+        ourDrawer.evaluate(thene);
+    }
+    else {
+        ourDrawer.evaluate(elsee);
+    }
+}
+else {
+    throw new Exception("Error! El tipo del resultado de la expresion condicional debe ser entero o booleano.");
+}
+----
+
+.Sentencia de repetición +REPEAT+
+
+----
+sentencia ::= REPEAT PAREN_OPEN expression:econd PAREN_CLOSE TIMES sentencia_dib:rbody
+----
+
+[source,java]
+----
+OurSymbol cond_sym = table.get(econd);
+int i = 0, times = cond_sym.getValue();
+
+if (cond_sym.getType().equals("int")) {
+    for (i = 0; i < times; i++) {
+        ourDrawer.evaluate(rbody);
+    }
+}
+else {
+    throw new Exception("Error! El tipo del resultado de la expresion de repetición debe ser entero.");
+}
+----
+
+.Sentencia de dibujo +DRAW+
+
+----
+sentencia_dib ::= DRAW expression:e
+----
+
+[source,java]
+----
+/*
+draw, int = avazar el cursor ang unidades
+draw, did = reproducir un dibujo almacenado
+*/
+
+/* go see the eval method in the OurDrawer class. */
+OurSymbol res = table.get(e);
+if (res.getType() == "int") {
+    RESULT = "draw," + res.getValue().toString();
+}
+else if (res.getType() == "draw_id") {
+    RESULT = "draw_named," + res.getValue().toString();
+}
+else {
+    throw new Exception("Error! El tipo del argumento de DRAW debe ser o bien entero o bien dibujo.");
+}
+----
+
+.Sentencia de dibujo +MOVE+
+
+----
+sentencia_dib ::= | MOVE expression:e
+----
+
+[source,java]
+----
+/*
+move, int = avanzar el cursor ang unidades sin dibujar
+move, ang = rotar el cursor
+*/
+
+OurSymbol res = table.get(e);
+if (res.getType() == "int") {
+    RESULT = "move," + res.getValue().toString();
+}
+else if (res.getType() == "angle") {
+    RESULT = "rotate," + res.getValue().toString();
+}
+else {
+    throw new Exception("Error! El tipo del argumento de MOVE debe ser o bien entero o bien angulo.");
+}
+----
+
+=== Expresiones
+
+.Suma
+
+Esta acción verifica que los tipos de los dos operandos de una suma sean iguales.
+Para cada subexpresión, se recupera de la tabla de símbolos la variable anonima que contiene su valor, y de ahi se recupera su tipo.
+En caso de que difieran, se levanta una excepción.
+Caso contrario, se inserta el valor de la suma en una variable anonima en la table de simbolos.
+
+----
+expression ::= expression:e1 ADD expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if (e1s.getType() != e2s.getType())
+    throw new Exception("Error: los operandos de una suma deben ser del mismo tipo.");
+
+/* Este chequeo se haca despues porque ahora puedo asegurar que ambos
+ * operandos son del mismo tipo, y puedo fijarme solo en el primero.
+ */
+if (!((e1s.getType() == "int") || (e1s.getType() == "angle")))
+    throw new Exception("Error: los operandos de una suma deben ser o bien de tipo entero o bien de tipo angulo.");
+
+String type = e1s.getType();
+RESULT = table.addAnonymVar(type, e1s.getValue() + e2s.getValue());
+----
+
+.Resta
+
+Esta acción realiza lo mismo para la operación de sustracción.
+
+----
+expression ::= expression:e1 SUB expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if (e1s.getType() != e2s.getType())
+    throw new Exception("Error: los operandos deben ser del mismo tipo.");
+if ((e1s.getType() != "int") && (e1s.getType() != "angle"))
+    throw new Exception(e1s.getType() + " " + e2s.getType() + " Error: los operandos de una resta deben ser o bien de tipo entero o bien de tipo angulo.");
+
+String type = e1s.getType();
+RESULT = table.addAnonymVar(type, e1s.getValue() - e2s.getValue());
+----
+
+.Multiplicación en una expresión
+
+----
+expression ::= expression:e1 MUL expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == e2s.getType()) && e1s.getType() == "angle")
+    throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
+
+String type = "int";
+
+if (e1s.getType() == "angle" || e2s.getType() == "angle")
+    type = "angle";
+
+RESULT = table.addAnonymVar(type, e1s.getValue() * e2s.getValue());
+----
+
+
+.División en una expresión
+
+----
+expression ::= expression:e1 DIV expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == e2s.getType()) && e1s.getType() == "angle")
+   throw new Exception("Error: los operandos no pueden ser ambos de tipo angulo.");
+
+if ((e1s.getType() != e2s.getType()) && e1s.getType() != "angle")
+   throw new Exception("Error: solo el primero de los operandos puede ser de tipo angulo.");
+
+String type = "int";
+
+if (e1s.getType() == "angle")
+   type = "angle";
+
+RESULT = table.addAnonymVar(type, e1s.getValue()/e2s.getValue());
+----
+
+.Comparación por menor en una expresión
+
+----
+expression ::= expression:e1 LT expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+RESULT = table.addAnonymVar("int", (e1s.getValue() < e2s.getValue()) ? 1 : 0);
+----
+
+.Comparación por mayor en una expresión
+
+----
+expression ::= expression:e1 GT expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+RESULT = table.addAnonymVar("int", (e1s.getValue() > e2s.getValue()) ? 1 : 0);
+----
+
+.Comparación por menor o igual en una expresión
+
+----
+expression ::= expression:e1 LT_EQ expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+RESULT = table.addAnonymVar("int", (e1s.getValue() >= e2s.getValue()) ? 1 : 0);
+----
+
+.Comparación por mayor o igual en una expresión
+
+----
+expression ::= expression:e1 GT_EQ expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+RESULT = table.addAnonymVar("int", (e1s.getValue() <= e2s.getValue()) ? 1 : 0);
+----
+
+.Conjunción en una expresión condicional
+
+----
+expression ::= expression:e1 CONDITIONAL_AND expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+if (e1s.getType() != "int")
+   throw new Exception("Error: los operandos no pueden ser de tipo angle.");
+
+int val = 0;
+if ((e1s.getValue().intValue() != 0) && (e2s.getValue().intValue() != 0))
+    val = 1;
+
+RESULT = table.addAnonymVar("int", val);
+----
+
+.Disyunción en una expresión condicional
+
+----
+expression ::= expression:e1 CONDITIONAL_OR expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+if (e1s.getType() != "int")
+   throw new Exception("Error: los operandos no pueden ser de tipo angle.");
+
+int val = 0;
+
+if (e1s.getValue().intValue() != 0 ||
+   e2s.getValue().intValue() != 0)
+    val = 1;
+
+RESULT = table.addAnonymVar("int", val);
+----
+
+.Comparación por igualdad en una expresión
+
+----
+expression ::= expression:e1 EQUALS expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() == e2s.getValue().intValue())?1:0);
+----
+
+.Comparción por desigualdad en una expresión
+
+----
+expression ::= expression:e1 NOT_EQUALS expression:e2
+----
+
+[source,java]
+----
+OurSymbol e1s = table.get(e1);
+OurSymbol e2s = table.get(e2);
+
+if ((e1s.getType() == "draw_id") || (e2s.getType() == "draw_id"))
+   throw new Exception("Error: ninguno de los operandos puede ser de tipo dibujo.");
+if (e1s.getType() != e2s.getType())
+   throw new Exception("Error: los operandos deben ser del mismo tipo.");
+
+RESULT = table.addAnonymVar("int", (e1s.getValue().intValue() != e2s.getValue().intValue()) ? 1 : 0);
+----
+
+.Suma unaria en una expresión
+----
+expression ::= ADD expression:e1
+----
+
+[source,java]
+----
+OurSymbol s = table.get(e1);
+RESULT = table.addAnonymVar(s.getType(), + s.getValue());
+----
+
+.Resta unaria en una expresión
+----
+expression ::= SUB expression:e1
+----
+
+[source,java]
+----
+OurSymbol s = table.get(e1);
+RESULT = table.addAnonymVar(s.getType(), - s.getValue());
+----
+
+.Negación en una expresión
+----
+expression ::= NOT expression:e1
+----
+
+[source,java]
+----
+OurSymbol s = table.get(e1);
+Integer val = s.getValue();
+if (val == 0)
+    RESULT = table.addAnonymVar(s.getType(), 1);
+else
+    RESULT = table.addAnonymVar(s.getType(), 0);
+----
+
+=== Expresiones postfijas
+
+.Identificador
+
+----
+postfix_expression ::= ID:id
+----
+
+[source,java]
+----
+if (table.isDeclared(id))
+    RESULT = id;
+else
+    throw new Exception("Variable no declarada: "+id);
+----
+
+.Literal numerico (angulo)
+
+----
+postfix_expression ::= INT_LITERAL:lit ANGLE
+----
+
+[source,java]
+----
+RESULT = table.addAnonymVar("angle", lit);
+----
+
+.Literal numerico (entero)
+
+----
+postfix_expression ::= INT_LITERAL:lit
+----
+
+[source,java]
+----
+RESULT = table.addAnonymVar("int", lit);
+----
+
+.Sentencia +DEF+
+
+----
+postfix_expression ::= DEF PAREN_OPEN lista_sentencias_dib:list PAREN_CLOSE
+----
+
+[source,java]
+----
+ourDrawer.setNamedDraw(last_draw_id, list);
+RESULT = table.addAnonymVar("draw_id", last_draw_id++);
+----

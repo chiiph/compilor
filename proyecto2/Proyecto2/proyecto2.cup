@@ -7,46 +7,6 @@ import java.lang.Exception;
 action code
 {:
 /*
-    TODO LIST Y COMENTARIOS
-    probar comentarios
-
-    mul abajo del unico throw exceptop
-    agregar chequep que
-    si el tipo e2c es angulo entonces y el del e1s es distinto de angulo
-    tirar error que diga
-    que para que sea sea mixt
-    el primero enteror
-    y el segundo angulo
-
-    tipos¶
-        booleano¶
-        entero¶
-        angulo¶
-        dibujo¶
-        ¶
-    declaracion implicita¶
-    expresion = aritmetica/relacional, o definicion de dibujo¶
-    parentizado¶
-    no defs anidados¶
-    no exprs mixtas¶
-    case insensitive¶
-    setcolor enteros¶
-¶
-chequeos de tipo¶
-    +, - -> entero y entero¶
-            angulo y angulo¶
-    *    -> entero y entero¶
-            entero y angulo¶
-            angulo y entero¶
-    /    -> entero y entero¶
-            angulo y entero¶
-    rel  -> entero y entero¶
-            angulo y angulo¶
-    move -> entero o angulo¶
-    draw -> entero o dibujo¶
-    cond -> bool / entero¶
-    repe -> entero¶
-
 + asignacion incompatible¶
 + 1 grama completa¶
 + 2 ident componentes lexicos¶
@@ -54,6 +14,7 @@ chequeos de tipo¶
 + 4 implementacion¶
   5 desc gral de la aplicacion¶
   explicacion de los metodos y estructuras aux¶
+  tests
  */
 
     private SymbolTable table = new SymbolTable();
