@@ -127,6 +127,12 @@ acción correspondiente en la linea a continuación de la misma.
 
 .Asignación
 
+La acción agrega una variable a la tabla de símbolos. 
+Si el resultado del método +addVar+ es 1, significa que la variable ya habia
+sido asignada, y el tipo es compatible.
+Si el resultado es 2, significa que la variable ya habia sido asignada con un
+valor de otro tipo, y se levanta una excepción.
+
 ----
 sentencia ::= ID:id ASSIGNMENT expression:e
 ----
@@ -147,7 +153,11 @@ else if (res == 2) {
 }
 ----
 
-.Evaluacion de una sentencia de dibujo
+.Evaluación de una sentencia de dibujo
+
+La acción correspondiente a una sentencia de dibujo es llamar al wrapper de la
+clase Drawer, que interpreta la representación interna de una sentencia de
+dibujo y la ejecuta, mediante el metodo +evaluate+ de la clase +OurDrawer+.
 
 ----
 sentencia ::= sentencia_dib:s
@@ -159,6 +169,10 @@ ourDrawer.evaluate(s);
 ----
 
 .Sentencia de dibujo +CLEAR+
+
+La acción llama al método +reset+ de la clase +OurDrawer+, el cual a su vez
+llama a +reset+ de la clase +Drawer+.
+
 ----
 sentencia ::= CLEAR
 ----
@@ -169,6 +183,10 @@ ourDrawer.reset();
 ----
 
 .Sentencia de dibujo +SETCOLOR+
+
+La acción correspondiente a la sentencia +SETCOLOR+ verifica que los tres
+argumentos sean de tipo entero, y si los tres chequeos pasan, llama al método
++setColor+ de la clase +OurDrawer+.
 
 ----
 sentencia ::= SETCOLOR expression:r COMMA expression:g COMMA expression:b
@@ -187,6 +205,13 @@ ourDrawer.setColor(res_r.getValue(), res_g.getValue(), res_b.getValue());
 ----
 
 .Sentencia condicional +IF+
+
+El tipo booleano es manejado internamente por el interprete como de tipo entero, al modo que se hace en C.
+El valor 0 es interpretado como Falso, y cualquier valor no-nulo como Verdadero.
+
+La acción correspondiente a la sentencia condicional verifica que el tipo del
+resultado de la expresion condicional sea de tipo entero, y si es distinto de
+0 evalua el resultado.
 
 ----
 sentencia ::= IF PAREN_OPEN expression:econd PAREN_CLOSE sentencia_dib:thene
@@ -233,6 +258,9 @@ else {
 
 .Sentencia de repetición +REPEAT+
 
+En el caso de la sentencia de repetición, el resultado de la expresión es interpretado como un valor numerico. 
+El cuerpo de la sentencia de repetición se evalua tantas veces como indique el resultado de la expresión.
+
 ----
 sentencia ::= REPEAT PAREN_OPEN expression:econd PAREN_CLOSE TIMES sentencia_dib:rbody
 ----
@@ -253,6 +281,19 @@ else {
 ----
 
 .Sentencia de dibujo +DRAW+
+
+La acción verifica que el tipo del argumento sea o bien entero o bien dibujo,
+y retorna una representación correspondiente a la sentencia a ejecutar.
+Esta representación es luego interpretada por el metodo +evaluate+ cuando se
+parsee la regla que produjo esta sentencia.
+
+Si el tipo del argumento es entero, entonces la representación sera un string de
+la forma +"draw,<argumento>"+, donde +<argumento>+ es el valor del argumento
+parseado, recuperado de la tabla de simbolos.
+
+Si el tipo del argumento es dibujo, entonces la representación sera un string de
+la forma +"draw_named,<identificador dibujo>"+. El valor del identificador se
+recupera tambien de la table de simbolos. 
 
 ----
 sentencia_dib ::= DRAW expression:e
@@ -280,8 +321,11 @@ else {
 
 .Sentencia de dibujo +MOVE+
 
+La acción verifica que el operando sea o bien de tipo entero o bien de tipo
+angulo. 
+
 ----
-sentencia_dib ::= | MOVE expression:e
+sentencia_dib ::= MOVE expression:e
 ----
 
 [source,java]
@@ -593,6 +637,7 @@ RESULT = table.addAnonymVar(s.getType(), - s.getValue());
 ----
 
 .Negación en una expresión
+
 ----
 expression ::= NOT expression:e1
 ----
@@ -625,6 +670,9 @@ else
 
 .Literal numerico (angulo)
 
+Guarda el valor del literal numerico de tipo angulo en una variable anonima en
+la tabla de simbolos.
+
 ----
 postfix_expression ::= INT_LITERAL:lit ANGLE
 ----
@@ -635,6 +683,9 @@ RESULT = table.addAnonymVar("angle", lit);
 ----
 
 .Literal numerico (entero)
+
+Guarda el valor del literal numerico de tipo entero en una variable anonima en
+la tabla de simbolos. 
 
 ----
 postfix_expression ::= INT_LITERAL:lit
