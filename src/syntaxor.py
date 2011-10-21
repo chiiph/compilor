@@ -729,6 +729,7 @@ class Syntaxor(object):
                               "%s no es un identificador valido." % self._current_token.get_lexeme())
 
     def primary(self):
+        # aca va a haber que diferenciar entre todos y NULL y THIS
         if self._current_token.get_type() in [INT_LITERAL, TRUE, FALSE, CHAR_LITERAL, STRING_LITERAL, NULL, THIS]:
             self.update_token()
             self.rest_primary()
@@ -921,7 +922,9 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Se esperaba un identificador valido.")
         elif self.tok(ASSIGNMENT):
-            self.variable_declarators()
+            print "AAAAAAAAAAAAAAAAAAAAAAA", self._current_token
+            self.update_token();
+            self.expression();
             if self.tok(SCOLON):
                 return
             else:

@@ -34,7 +34,15 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                , ClassIdentifier3 variableIdentifier4
                                )
     {
-        int a, b;
+      2.algo();
+      true.algomas();
+
+      this.algo.algo.algo;
+      (a + 4) = 3;
+
+
+
+      int a, b;
         if(hola) {
             hagoAlgo();
             otraClase.llamoAOtroMetodo();

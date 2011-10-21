@@ -1,297 +1,105 @@
+# VER:
+# * Se permiten cosas como:
+# algo;
+# esta bien?
+# * Se pueden hacer cosas como this.algo() = "asd"; // tal vez algo devuelve un string y es una referencia...... o algo asi
+
+# Problemas encontrados:
+# - NOTA(ver mas abajo): antes era <variable declarators>, pero permitia cosas como: algo = 3, algomas = 4;, asi que se "forzo" un camino dentro de la regla
+#
+# - esto permite cosas como algo.alg()();
+#<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>:argList <rest method invocation>:(_type, )
+# Se puede checkear facilmente en la parte semantica. Esta bien eso? o arreglamos la gramatica?
+
 Programas
 <compilation unit>                          ::=   <type declarations>
 
 Declaraciones
-<type declarations>                         ::=   <class declaration>:cl #1 <type declarations>
-#1
-table.addType(cl) // devuelve el nombre de la clase
------------------------------------------------
+<type declarations>                         ::=   <class declaration> <type declarations>
 <type declarations>                         ::=   LAMBDA
-<class declaration>                         ::=   PUBLIC CLASS IDENTIFIER:id #1 <rest class declaration>
-#1
-// rest_class_declaration(id) // se lo pasa como heredado al resto de la decl de la clase
-return id
------------------------------------------------
+<class declaration>                         ::=   PUBLIC CLASS IDENTIFIER <rest class declaration>
 <rest class declaration>                    ::=   <class body>
-<rest class declaration>                    ::=   ENTENDS IDENTIFIER:id_ext #1 <class body>
-#1
-// class_body(id) // el que recibe
-if(table.hasType(id_ext):
-  table.extendType(id, id_ext)
-else:
-  raise Exception() // VER: se puede declarar fuera de orden?
------------------------------------------------
+<rest class declaration>                    ::=   ENTENDS IDENTIFIER <class body>
 <class body>                                ::=   BRACE_OPEN <rest class body>
 <rest class body>                           ::=   BRACE_CLOSE
 <rest class body>                           ::=   <class body declarations> BRACE_CLOSE
 <class body declarations>                   ::=   <class body declaration> <rest class body declarations>
 <rest class body declarations>              ::=   LAMBDA
 <rest class body declarations>              ::=   <class body declarations>
-<class body declaration>                    ::=   <field modifiers>:modif <rest class body declaration>(modif)
-<rest class body declaration>               ::=   <type noident void>:type <declarators>:list_ids #1
-#1
-for (var_id, initializer) in list_ids:
-  if table.alreadyHasVar(class_id, var_id):
-    raise Exception()
-  else:
-    table.addVar(class_id, var_id, initializer, modif)
------------------------------------------------
-<rest class body declaration>               ::=   IDENTIFIER:type_id #1 <rest2 class body declaration>:(is_constructor, list_ids, params) #2
-#1
-if not table.hasType(type_id):
-  raise Exception()
------------------------------------------------
-#2
-if is_constructor:
-  if type_id != class_id:
-    raise Exception()
-  else:
-    table.addFunction(class_id, ret_type=type_id, name=type_id, params=params)
-else:
-  for (var_id, initializer) in list_ids:
-    if table.alreadyHasVar(class_id, var_id):
-      raise Exception()
-    else:
-      table.addVar(class_id, var_id)
-      if initializer != "":
-        table.initialize(class_id, var_id, initializer)
------------------------------------------------
-<rest2 class body declaration>              ::=   <constructor declarator>:params <constructor body> #1
-#1
-return (is_constructor=true, list_ids=[], params=params)
------------------------------------------------
-<rest2 class body declaration>              ::=   <declarators>:list_ids #1
-#1
-return (is_constructor=false, list_ids=list_ids, params=[])
------------------------------------------------
-<constructor declarator>                    ::=   PAREN_OPEN <rest constructor declarator>:params #1
-#1
-return params
------------------------------------------------
-<rest constructor declarator>               ::=   PAREN_CLOSE #1
-#1
-return [] // params
------------------------------------------------
-<rest constructor declarator>               ::=   <formal parameter list>:params PAREN_CLOSE #1
-#1
-return params
------------------------------------------------
-<formal parameter list>                     ::=   <formal parameter>:param <rest formal parameter list>:rest_params #1
-#1
-return [param] + rest_params
------------------------------------------------
-<rest formal parameter list>                ::=   COMMA <formal parameter list>:params #1
-#1
-return params
------------------------------------------------
-<rest formal parameter list>                ::=   LAMBDA #1
-#1
-return []
------------------------------------------------
-<formal parameter>                          ::=   <type>:type IDENTIFIER:param_id #1
-#1
-return (type, param_id)
------------------------------------------------
+<class body declaration>                    ::=   <field modifiers> <rest class body declaration>
+<rest class body declaration>               ::=   <type noident void> <declarators>
+<rest class body declaration>               ::=   IDENTIFIER <rest2 class body declaration>
+<rest2 class body declaration>              ::=   <constructor declarator>:params <constructor body>
+<rest2 class body declaration>              ::=   <declarators>:list_ids
+<constructor declarator>                    ::=   PAREN_OPEN <rest constructor declarator>:params
+<rest constructor declarator>               ::=   PAREN_CLOSE
+<rest constructor declarator>               ::=   <formal parameter list>:params PAREN_CLOSE
+<formal parameter list>                     ::=   <formal parameter>:param <rest formal parameter list>:rest_params
+<rest formal parameter list>                ::=   COMMA <formal parameter list>:params
+<rest formal parameter list>                ::=   LAMBDA
+<formal parameter>                          ::=   <type>:type IDENTIFIER:param_id
 <constructor body>                          ::=   BRACE_OPEN <rest constructor body>
 <rest constructor body>                     ::=   BRACE_CLOSE
 <rest constructor body>                     ::=   <block statements> BRACE_CLOSE
 
-<field modifiers>                           ::=   <field modifier>:modif <rest field modifiers>:rest_modif #1
-#1
-if not modif in (PUBLIC, PROTECTED):
-  raise Exception()
-elif not rest_modif in (STATIC, ""):
-  raise Exception()
-else:
-  return (modif, rest_modif)
------------------------------------------------
-<rest field modifiers>                      ::=   LAMBDA #1
-#1
-return ""
------------------------------------------------
+<field modifiers>                           ::=   <field modifier>:modif <rest field modifiers>:rest_modif
+<rest field modifiers>                      ::=   LAMBDA
 <rest field modifiers>                      ::=   <field modifiers>:modif
-#1
-return modif
------------------------------------------------
-<field modifier>                            ::=   PUBLIC #1
-#1
-return PUBLIC
------------------------------------------------
-<field modifier>                            ::=   PROTECTED #1
-#1
-return PROTECTED
------------------------------------------------
-<field modifier>                            ::=   STATIC #1
-#1
-return STATIC
------------------------------------------------
+<field modifier>                            ::=   PUBLIC
+<field modifier>                            ::=   PROTECTED
+<field modifier>                            ::=   STATIC
 
-<declarators>                               ::=   IDENTIFIER:var_id <rest declarators>(var_id):(is_method_decl, initializer, list_ids) #1
-#1
-if is_method_decl:
-# TODO: terminar con rest_method_declarator (ver mas abajo)
-else:
-  return [(var_id, initializer)] + list_ids
------------------------------------------------
-<rest declarators>                          ::=   COMMA IDENTIFIER:var_id <rest2 declarators>:(initializer, list_ids) #1
-#1
-return [(var_id, initializer)] + list_ids
------------------------------------------------
-<rest declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:list_ids #1
-#1
-return (expr, list_ids)
------------------------------------------------
-<rest declarators>                          ::=   PAREN_OPEN <rest method declarator> <method body>(method_id=var_id) #1
-#1
-# TODO: terminar con rest_method_declarator
-return (is_method_decl=true, initializer="", list_ids=[])
------------------------------------------------
-<rest declarators>                          ::=   SCOLON #1
-#1
-return []
-------------------------------------------------
-<rest2 declarators>                          ::=   COMMA IDENTIFIER:var_id <rest2 declarators>:(initializer, list_ids) #1
-#1
-return [(var_id, initializer)] + list_ids
-------------------------------------------------
-<rest2 declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:list_ids #1
-#1
-return (expr, list_ids)
-------------------------------------------------
-<rest2 declarators>                          ::=   SCOLON #1
-#1
-return []
-------------------------------------------------
+<declarators>                               ::=   IDENTIFIER:var_id <rest declarators>(var_id):(is_method_decl, initializer, list_ids)
+<rest declarators>                          ::=   COMMA IDENTIFIER:var_id <rest2 declarators>:(initializer, list_ids)
+<rest declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:list_ids
+<rest declarators>                          ::=   PAREN_OPEN <rest method declarator> <method body>(method_id=var_id)
+<rest declarators>                          ::=   SCOLON
+<rest2 declarators>                          ::=   COMMA IDENTIFIER:var_id <rest2 declarators>:(initializer, list_ids)
+<rest2 declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:list_ids
+<rest2 declarators>                          ::=   SCOLON
 
-<rest method declarator>                    ::=   PAREN_CLOSE #1
-#1
-return [] # params
------------------------------------------------
-<rest method declarator>                    ::=   <formal parameter list>:params PAREN_CLOSE #1
-#1
-return params
------------------------------------------------
+<rest method declarator>                    ::=   PAREN_CLOSE
+<rest method declarator>                    ::=   <formal parameter list>:params PAREN_CLOSE
 <method body>                               ::=   <block>(method_id)
 
 Tipos
-<type>                                      ::=   <primitive type>:prim_type #1
-#1
-return prim_type
------------------------------------------------
-<type>                                      ::=   IDENTIFIER:type_id #1
-#1
-if table.hasType(type_id):
-  return type_id
-else:
-  raise Exception()
------------------------------------------------
-<type>                                      ::=   VOID_TYPE #1
-#1
-return VOID_TYPE
------------------------------------------------
-<type noident void>                         ::=   <primitive type>:prim_type #1
-#1
-return prim_type
------------------------------------------------
-<type noident void>                         ::=   VOID_TYPE #1
-#1
-return VOID_TYPE
------------------------------------------------
-<primitive type>                            ::=   <numeric type>:num_type #1
-#1
-return num_type
------------------------------------------------
-<primitive type>                            ::=   <boolean type>:bool_type #1
-#1
-return bool_type
------------------------------------------------
-<numeric type>                              ::=   <integral type>:int_type #1
-#1
-return int_type
------------------------------------------------
-<integral type>                             ::=   INT_TYPE #1
-#1
-return INT_TYPE
------------------------------------------------
-<integral type>                             ::=   CHAR_TYPE #1
-#1
-return CHAR_TYPE
------------------------------------------------
-<boolean type>                              ::=   BOOLEAN_TYPE #1
-#1
-return BOOLEAN_TYPE
------------------------------------------------
+<type>                                      ::=   <primitive type>:prim_type
+<type>                                      ::=   IDENTIFIER:type_id
+<type>                                      ::=   VOID_TYPE
+<type noident void>                         ::=   <primitive type>:prim_type
+<type noident void>                         ::=   VOID_TYPE
+<primitive type>                            ::=   <numeric type>:num_type
+<primitive type>                            ::=   <boolean type>:bool_type
+<numeric type>                              ::=   <integral type>:int_type
+<integral type>                             ::=   INT_TYPE
+<integral type>                             ::=   CHAR_TYPE
+<boolean type>                              ::=   BOOLEAN_TYPE
 
 Bloques y Sentencias
-<block>                                     ::=   #1 BRACE_OPEN <rest block>(block_id=method_id)
-#1
-if method_id == "":
-  method_id = table.getRandomBlockID()
------------------------------------------------
+<block>                                     ::=   BRACE_OPEN <rest block>
 <rest block>                                ::=   BRACE_CLOSE
-<rest block>                                ::=   <block statements>(block_id) BRACE_CLOSE
-<block statements>                          ::=   <block statement>(block_id) <rest block statements>(block_id)
+<rest block>                                ::=   <block statements> BRACE_CLOSE
+<block statements>                          ::=   <block statement> <rest block statements>
 <rest block statements>                     ::=   LAMBDA
-<rest block statements>                     ::=   <block statements>(block_id)
+<rest block statements>                     ::=   <block statements>
 
-<block statement>                           ::=   <primitive type>:type <local variable declaration statement>:list_ids #1
-#1
-for (var_id, initializer) in list_ids:
-  if table.alreadyHasLocalVar(class_id, block_id, var_id):
-    raise Exception()
-  else:
-    table.addLocalVar(class_id, block_id, var_id, initializer, modif)
------------------------------------------------
-<block statement>                           ::=   <if start statement>(block_id)
-<block statement>                           ::=   <while statement>(block_id)
-<block statement>                           ::=   <block>(block_id)
+<block statement>                           ::=   <primitive type> <local variable declaration statement>
+<block statement>                           ::=   <if start statement>
+<block statement>                           ::=   <while statement>
+<block statement>                           ::=   <block>
 <block statement>                           ::=   <empty statement>
-<block statement>                           ::=   <return statement>(block_id)
-<block statement>                           ::=   <primary>:func_id <rest method invocation>:params #1
-#1
-tmp_class_id = class_id
-if "." in func_id: # es del estilo clase.algo
-  tmp_class_id = func_id.substring(0, func_id.indexOf(".")) # TODO: puede ser del estilo: algo.algomas.aaalgomas()?
-if table.hasFunction(class_id, func_id):
-  for param in params:
-    # TODO: ver si lo vamos a manejar como con lo de cup o no para los checkeos
-else:
-  raise Exception()
------------------------------------------------
+<block statement>                           ::=   <return statement>
+<block statement>                           ::=   <primary> <rest method invocation>
 
-<local variable declaration statement>      ::=   <local variable declaration>:list_ids SCOLON #1
-#1
-return list_ids
------------------------------------------------
-<local variable declaration>                ::=   IDENTIFIER:var_id <variable declarators>:(initializer, list_ids) #1
-#1
-return [(var_id, initializer)] + list_ids
------------------------------------------------
+<local variable declaration statement>      ::=   <local variable declaration> SCOLON
+<local variable declaration>                ::=   IDENTIFIER <variable declarators>
 
-<variable declarators>                      ::=   <variable declarator>:initializer <rest variable declarators>:list_ids #1
-#1
-return (initializer, lsit_ids)
------------------------------------------------
-<rest variable declarators>                 ::=   LAMBDA #1
-#1
-return []
------------------------------------------------
-<rest variable declarators>                 ::=   COMMA IDENTIFIER:var_id <variable declarators>:list_ids #1
-#1
-return [var_id] + list_ids
------------------------------------------------
-<variable declarator>                       ::=   <rest variable declarator>:initializer #1
-#1
-return initializer
------------------------------------------------
-<rest variable declarator>                  ::=   LAMBDA #1
-#1
-return ""
------------------------------------------------
-<rest variable declarator>                  ::=   ASSIGNMENT <expression>:expr #1
-#1
-return expr
------------------------------------------------
+<variable declarators>                      ::=   <variable declarator> <rest variable declarators>
+<rest variable declarators>                 ::=   LAMBDA
+<rest variable declarators>                 ::=   COMMA IDENTIFIER <variable declarators>
+<variable declarator>                       ::=   <rest variable declarator>
+<rest variable declarator>                  ::=   LAMBDA
+<rest variable declarator>                  ::=   ASSIGNMENT <expression>
 <statement>                                 ::=   <statement without trailing substatement>
 <statement>                                 ::=   <if start statement>
 <statement>                                 ::=   <while statement>
@@ -306,90 +114,33 @@ return expr
 <rest if start statement>                   ::=   LAMBDA
 <rest if start statement>                   ::=   ELSE <statement>
 <while statement>                           ::=   WHILE PAREN_OPEN <expression> PAREN_CLOSE <statement>
-<return statement>                          ::=   RETURN <rest return statement>:expr #1
-#1
-if expr.isEmpty() and block_id.return_type != VOID_TYPE:
-  raise Exception()
-elif expr.isEmpty():
-  raise Exception()
-elif expr.type != block_id.return_type:
-  raise Exception()
-else:
-  # TODO: generacion de codigo
------------------------------------------------
-<rest return statement>                     ::=   SCOLON #1
-#1
-return Expression() # clase custom para esto?
------------------------------------------------
+<return statement>                          ::=   RETURN <rest return statement>
+<rest return statement>                     ::=   SCOLON
 <rest return statement>                     ::=   <expression>:expr SCOLON
-#1
-return expr
------------------------------------------------
 
 Expresiones
 <expression>                                ::=   <assignment expression>
 <assignment expression>                     ::=   <conditional expression>
 
 # se patea el control sintactico a la etapa semantico
-<conditional expression>                    ::=   <conditional or expression>:(is_identifier,) <rest conditional expression>(is_identifier)
+<conditional expression>                    ::=   <conditional or expression> <rest conditional expression>
 <rest conditional expression>               ::=   LAMBDA
-<rest conditional expression>               ::=   ASSIGNMENT <conditional expression> #1
-#1
-if is_identifier:
-  # TODO
-else:
-  raise Exception()
------------------------------------------------
-<conditional or expression>                 ::=   <conditional and expression>:expr <rest conditional or expression>(expr)
-<rest conditional or expression>            ::=   CONDITIONAL_OR <conditional or expression>:expr2 #1
-#1
-if expr.type == BOOLEAN_TYPE and expr2.type == BOOLEAN_TYPE:
-  # TODO
-  pass
-else:
-  raise Exception()
------------------------------------------------
+<rest conditional expression>               ::=   ASSIGNMENT <conditional expression>
+<conditional or expression>                 ::=   <conditional and expression> <rest conditional or expression>
+<rest conditional or expression>            ::=   CONDITIONAL_OR <conditional or expression>:expr2
 <rest conditional or expression>            ::=   LAMBDA
 <conditional and expression>                ::=   <equality expression>:expr <rest conditional and expression>(expr)
 <rest conditional and expression>           ::=   LAMBDA
-<rest conditional and expression>           ::=   CONDITIONAL_AND <conditional and expression>:expr2 #1
-#1
-if expr.type == BOOLEAN_TYPE and expr2.type == BOOLEAN_TYPE:
-  # TODO
-  pass
-else:
-  raise Exception()
------------------------------------------------
+<rest conditional and expression>           ::=   CONDITIONAL_AND <conditional and expression>:expr2
 <equality expression>                       ::=   <relational expression>:expr <rest equality expression>(expr)
-<rest equality expression>                  ::=   EQUALS <equality expression>:expr2 #1
-#1
-if expr.type == expr2.type:
-  # TODO
-  pass
-else:
-  raise Exception()
------------------------------------------------
-<rest equality expression>                  ::=   NOT_EQUALS <equality expression>:expr2 #1
-#1
-if expr.type == expr2.type:
-  # TODO
-  pass
-else:
-  raise Exception()
------------------------------------------------
+<rest equality expression>                  ::=   EQUALS <equality expression>:expr2
+<rest equality expression>                  ::=   NOT_EQUALS <equality expression>:expr2
 <rest equality expression>                  ::=   LAMBDA
 <relational expression>                     ::=   <additive expression>:expr <rest relational expression>(expr)
-<rest relational expression>                ::=   LT <relational expression>:expr2 #1
-#1
-if expr.type == INT_TYPE and expr2.type == INT_TYPE:
-  # TODO
-  pass
-else:
-  raise Exception()
------------------------------------------------
-<rest relational expression>                ::=   GT <relational expression> #idem anterior
-<rest relational expression>                ::=   LT_EQ <relational expression> #idem anterior
-<rest relational expression>                ::=   GT_EQ <relational expression> #idem anterior
+<rest relational expression>                ::=   LT <relational expression>
+<rest relational expression>                ::=   GT <relational expression>
+<rest relational expression>                ::=   LT_EQ <relational expression>
+<rest relational expression>                ::=   GT_EQ <relational expression>
 <rest relational expression>                ::=   LAMBDA
 <additive expression>                       ::=   <multiplicative expression>:expr <rest additive expression>(expr)
 <rest additive expression>                  ::=   ADD <additive expression>
@@ -425,15 +176,6 @@ else:
 <argument list>                             ::=   <expression> <rest argument list>
 <rest argument list>                        ::=   LAMBDA
 <rest argument list>                        ::=   COMMA <argument list>
-# se va, solo se usa en <left hand side>
-#<field access>                              ::=   <literal> ACCESSOR IDENTIFIER <rest field access>
-#<field access>                              ::=   THIS ACCESSOR IDENTIFIER <rest field access>
-#<field access>                              ::=   PAREN_OPEN <expression> PAREN_CLOSE ACCESSOR IDENTIFIER <rest field access>
-#<field access>                              ::=   <class instance creation expression> ACCESSOR IDENTIFIER <rest field access>
-#<field access>                              ::=   SUPER ACCESSOR IDENTIFIER <rest field access>
-#<field access>                              ::=   <method invocation> ACCESSOR IDENTIFIER <rest field access>
-#<rest field access>                         ::=   ACCESSOR IDENTIFIER <rest field access>
-#<rest field access>                         ::=   LAMBDA
 
 <method invocation>                         ::=   IDENTIFIER <rest primary> <rest method invocation>
 
@@ -445,14 +187,96 @@ else:
 <rest super>                                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <rest super>                                ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
 
-<rest method invocation>                    ::=   ACCESSOR IDENTIFIER <rest primary> <rest method invocation>
+# podriamos decir que se usan las siguientes constantes para ver desde donde se viene:
+# 1: primer caso
+# 2: segundo (asignacion)
+# 3: posible method inv, depende
+# 4: lambda
+# y las siguientes para ver que es lo qeu se esta encontrando que es:
+# 1: asignacion
+# 2: method invocation
+# 3: acceso a campo de un obj, o algo asi
+
+<rest method invocation>                    ::=   ACCESSOR IDENTIFIER:id <rest primary>:prim <rest method invocation>(where, _type, expr, first, last) # es lo qeu sea que rest method invocation diga que es
+{
+  if where == 4: # lambda
+    # entonces si prim != None, este es el last, y id el first
+    if prim != None:
+      prim.from = id # enlazamos con el actual (aca hay que usar ref y type de un primary nuevo y enlazar eso
+      return (1, _type, expr, id, prim)
+    else:
+      # sino, id es el first y el last es None
+      return (1, _type, expr, id, None) # o error?
+  elif where == 1:
+    # si prim != None, y last != None
+    # first sabemos que no va a ser None y sabemos que van a estar conectados entre si por el .from
+    if prim != None and last != None:
+      first.from = prim
+      prim.from = id
+      return (1, _type, expr, id, last)
+    elif prim != None and last == None:
+      # first va a ser nuestro last
+      first.from = prim
+      prim.from = id
+      return (1, _type, expr, id, frist)
+    elif prim == None and last != None:
+      first.from = id
+      return (1, _type, expr, id, last)
+    elif prim == None and last == None:
+      first.from = id
+      return (1, _type, expr, id, first)
+  elif where == 2: # asignacion
+    # sabemos que first y last van a ser None
+    # si prim == None, no importa, porque va a manejar despues
+    return (1, _type, expr, id, prim)
+  elif where == 3:
+    # entonces id o prim (depende de si prim es None o no) es el nombre del metodo
+    if prim != None:
+      # prim hasta aca tiene type=id, y ref=>token, ahora ese token es el nombre del metodo
+      # prim tiene type=methodInv, y ref=> a un obj methodinv
+      method = mjMethodInvocation(prim.ref, expr) # expr es argList
+      prim.type = methodinv
+      prim.ref = method
+      if first != None: # significa que el rest method inv que se llamo desde 3 no resulto en lambda
+        # entonces en _type viene el tipo real de lo ultimo que se hizo, esto seria algo asi como:
+        # algo.algo1().algo3, donde algo1 es id aca o prim, el nombre del metodo, y algo3 seria el first, con last=None,
+        # si fuera mas largo: algo.algo1().algo3.algo4, tendriamos last
+        first.from = prim # enlazamos normalmente
+        id.from = prim # aca hay que crear el primary, ponerle el id como ref y recien ahi enlazar,
+                       # pero bueno, despues lo hacemos
+        if last != None:
+          return (1, _type, id, last)
+        else:
+          return (1, _type, id, first)
+      else: # first == None: o sea qeu fue un lambda, se termina aca este primary,
+        if prim != None:
+          prim.from = id
+        return (1, 3, id, prim) # no importa si prim es None, a lo sumo lo es y se maneja despues
+        # si no llega a ser None, solamente nos tenemos qeu fijar que este enlazado bien
+}
 
 # esto viene por block statements
-<rest method invocation>                    ::=   <variable declarators> SCOLON
-<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
-<rest method invocation>                    ::=   LAMBDA
-
+# NOTA: antes era <variable declarators>, pero permitia cosas como: algo = 3, algomas = 4;, asi que se "forzo" un camino dentro de la regla
+<rest method invocation>                    ::=   ASSIGNMENT <expression>:expr SCOLON # asignacion comun
+{ return (2, 1, expr, None, None) }
+<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>:argList <rest method invocation>:(where, _type, expr, first, last) # method inv
+{
+  if where == 4: # nada
+    return (3, 2, argList, first, last) # method invocation, el first y el last del resto
+  elif where == 2: # viene del assignment
+    raise Exception() # TODO!!!
+  elif where == 1:
+    prim.
+    return (3, 2, argList, first, last)
+  elif where == 3:
+    raise Exception() # se hizo una llamada a otro metodo pero sin id! ver arriba
+<rest method invocation>                    ::=   LAMBDA # nada
+{ return (3, None, None, None, None) }
 <rest2 method invocation>                   ::=   PAREN_CLOSE
-<rest2 method invocation>                   ::=   <argument list> PAREN_CLOSE
+{ return [] }
+<rest2 method invocation>                   ::=   <argument list>:argList PAREN_CLOSE
+{ return argList }
 <boolean literal>                           ::=   TRUE
 <boolean literal>                           ::=   FALSE
+
+# FALTA <literal>
