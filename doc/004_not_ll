@@ -158,24 +158,77 @@ Expresiones
 <unary expression not plus minus>           ::=   NOT <unary expression>
 <postfix expression>                        ::=   <primary>
 
-<primary>                                   ::=   <literal> <rest primary>
-<primary>                                   ::=   THIS <rest primary>
-<primary>                                   ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
-<primary>                                   ::=   <class instance creation expression> <rest primary>
-<primary>                                   ::=   SUPER ACCESSOR IDENTIFIER <rest primary>
-<primary>                                   ::=   <method invocation> <rest primary>
-<rest primary>                              ::=   ACCESSOR IDENTIFIER <rest2 primary>
+<primary>                                   ::=   <literal>:lit <rest primary>:prim
+{
+  if prim == None:
+    return lit
+  prim.from = lit
+  return prim
+}
+<primary>                                   ::=   THIS:this <rest primary>:prim
+{
+  if prim == None:
+    return this
+  prim.from = this
+  return prim
+}
+# VER que no se si el type puede ser expr ahora mismo, pero es cuestion de cambiarlo
+<primary>                                   ::=   PAREN_OPEN <expression>:expr PAREN_CLOSE <rest primary>:prim
+{
+  if prim == None:
+    return expr
+  prim.from = expr
+  return prim
+}
+<primary>                                   ::=   <class instance creation expression>:classinst <rest primary>:prim
+{
+  if prim == None:
+    return classinst
+  prim.from = classinst
+  return prim
+}
+<primary>                                   ::=   SUPER:sup ACCESSOR IDENTIFIER:id <rest primary>:prim
+{
+  if prim == None:
+    return id
+  id.from = sup
+  prim.from = id
+  return prim
+}
+<primary>                                   ::=   <method invocation>:methodinv <rest primary>:prim
+{
+  if prim == None:
+    return methodinv
+  prim.from = methodinv
+  return prim
+}
+# DEJE ACA
+<rest primary>                              ::=   ACCESSOR IDENTIFIER:id <rest2 primary>:(
 <rest primary>                              ::=   LAMBDA
+{ return None }
 
-<rest2 primary>                             ::=   PAREN_OPEN <rest2 method invocation> <rest primary>
+# aca se pudre
+<rest2 primary>                             ::=   PAREN_OPEN <rest2 method invocation>: <rest primary>:prim
 <rest2 primary>                             ::=   LAMBDA
 
-<class instance creation expression>        ::=   NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
+<class instance creation expression>        ::=   NEW IDENTIFIER:id PAREN_OPEN <rest class instance creation expression>:argList
+{
+  return mjClassInstanceCreation(id, argList)
+}
 <rest class instance creation expression>   ::=   PAREN_CLOSE
-<rest class instance creation expression>   ::=   <argument list> PAREN_CLOSE
-<argument list>                             ::=   <expression> <rest argument list>
+{ return [] }
+<rest class instance creation expression>   ::=   <argument list>:argList PAREN_CLOSE
+{ return argList }
+<argument list>                             ::=   <expression>:expr <rest argument list>:restList
+{
+  return [expr] + restList
+}
 <rest argument list>                        ::=   LAMBDA
-<rest argument list>                        ::=   COMMA <argument list>
+{ return [] }
+<rest argument list>                        ::=   COMMA <argument list>:argList
+{
+  return argList
+}
 
 <method invocation>                         ::=   IDENTIFIER:id <rest primary>:prim <rest method invocation>(where, _type, expr, first, last)
 {
@@ -291,12 +344,16 @@ Expresiones
 
 }
 
+# estos son iguales al anterior, salvo que cambia la primera parte
 <method invocation>                         ::=   <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   <class instance creation expression> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   SUPER <rest primary> <rest super>
+
+# este es igual al caso 2 de rest method inv salvo que ya se tiene el nombre del primary que es el method inv de aca
 <rest super>                                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+# este es igual al caso 2 de rest method invocation
 <rest super>                                ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
 
 # podriamos decir que se usan las siguientes constantes para ver desde donde se viene:
