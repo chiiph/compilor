@@ -177,7 +177,119 @@ Expresiones
 <rest argument list>                        ::=   LAMBDA
 <rest argument list>                        ::=   COMMA <argument list>
 
-<method invocation>                         ::=   IDENTIFIER <rest primary> <rest method invocation>
+<method invocation>                         ::=   IDENTIFIER:id <rest primary>:prim <rest method invocation>(where, _type, expr, first, last)
+{
+  # aca ya vamos a terminar la cadena del primary,
+  # enlazando id<-prim<-first y devolviendo last, que es el qeu importa en si
+  # el enlazado id<-prim dependera de si prim es None o no
+  if prim != None:
+    prim.from = id
+  # esto si bien se llama method invocation puede ser:
+  # 1: asignacion
+  # 2: method invocation
+  # 3: acceso a campo de un obj, o algo asi
+  # y lo sabemos segun el _type
+
+  # Pero antes tenemos qeu ver si viene algo con first y last
+  # y enlazarlos apropiadamente
+  if first != None:
+    if prim != None:
+      first.from = prim
+    else:
+      first.from = id
+
+# esto es para el where:
+# 1: primer caso (recursivo, accessor id)
+# 2: segundo (asignacion)
+# 3: posible method inv, depende, pero tiene (args)
+# 4: lambda
+
+  # si la posta es que es una asignacion...
+  if _type == 1: # assignment
+    if where == 1:
+      if last == None:
+        # entonces first es nuestro ultimo eslabon
+        return mjAssignment(first, expr)
+      else:
+        return mjAssignment(last, expr)
+    elif where == 2:
+      # entonces la asignacion se hizo aca no mas
+      # first y last son None
+      if prim != None:
+        return mjAssignment(prim, expr)
+      else
+        return mjAssignment(id, expr)
+    elif where == 3:
+      # entonces la asignacion se hizo mas lejos, aca se hizo una llamada a un metodo con prim o id
+      # y first o last o ambos son != None
+      if prim != None:
+        method = mjMethodInvocation(prim.ref, expr) # expr es argList
+        prim.type = methodinv
+        prim.ref = method
+        if first != None:
+          first.from = prim
+      else:
+        method = mjMethodInvocation(id.ref, expr) # expr es argList
+        id.type = methodinv
+        id.ref = method
+        if first != None:
+          first.from = id
+
+      if first != None:
+        if last != None:
+          return mjAssignment(last, expr)
+        else:
+          return mjAssignment(first, expr)
+      else:
+        # ojo aca, esto es: algo.metodo() = 3; por ahi es un error?
+        if prim != None:
+          return mjAssignment(prim, expr)
+        else:
+          return mjAssignment(id, expr)
+    elif where == 4:
+      pass # ES IMPOSIBLE
+  elif _type == 2: # method inv
+    if where == 1:
+      # recursivo accessor id rest
+      # el enlazado ya se hizo, asi que todo esta listo, se retorna el ultimo eslavon
+      if last == None:
+        return last
+      else:
+        return first
+    elif where == 2:
+      # IMPOSIBLE, que venga de un assignment y tenga type method inv.
+      pass
+    elif where == 3:
+      # entonces aca prim o id son un method inv.
+      # y si first y last son None, entonces EL method inv es este y hay qeu retornar eso
+      if first == None and last == None:
+        if prim != None:
+          return mjMethodInvocation(prim, expr)
+        else:
+          return mjMethodInvocation(id, expr)
+      elif first != None and last == None:
+        # aca id y/o prim van a ser eslavones en una cadena arbitrariamente larga de indirecciones
+        return first
+      else:
+        return last
+    elif where == 4:
+      pass # OTRO IMPOSIBLE
+  elif _type == 3:
+    # es simplemente un acceso a campo
+    # asi qeu retornamos el ultimo eslavon
+    # sin importar desde donde se viene
+    if last != None:
+      return last
+    elif first != None:
+      return first
+    elif prim != None:
+      return prim
+    else:
+      return id
+  # lo qeu se va a devolver aca es un primary sobre el cual se puede hacer todo el checkeo
+  # particularmente el de mas a la derecha. *SALVO* que sea una asignacion, en cuyo caso.... NO SE TODAVIA
+
+}
 
 <method invocation>                         ::=   <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
@@ -237,22 +349,22 @@ Expresiones
       method = mjMethodInvocation(prim.ref, expr) # expr es argList
       prim.type = methodinv
       prim.ref = method
+      prim.from = id
       if first != None: # significa que el rest method inv que se llamo desde 3 no resulto en lambda
         # entonces en _type viene el tipo real de lo ultimo que se hizo, esto seria algo asi como:
         # algo.algo1().algo3, donde algo1 es id aca o prim, el nombre del metodo, y algo3 seria el first, con last=None,
         # si fuera mas largo: algo.algo1().algo3.algo4, tendriamos last
         first.from = prim # enlazamos normalmente
-        id.from = prim # aca hay que crear el primary, ponerle el id como ref y recien ahi enlazar,
-                       # pero bueno, despues lo hacemos
+
         if last != None:
           return (1, _type, id, last)
         else:
           return (1, _type, id, first)
       else: # first == None: o sea qeu fue un lambda, se termina aca este primary,
-        if prim != None:
-          prim.from = id
         return (1, 3, id, prim) # no importa si prim es None, a lo sumo lo es y se maneja despues
         # si no llega a ser None, solamente nos tenemos qeu fijar que este enlazado bien
+    else:
+      # TODO: hacer lo mismo pero con id
 }
 
 # esto viene por block statements
@@ -265,9 +377,10 @@ Expresiones
     return (3, 2, argList, first, last) # method invocation, el first y el last del resto
   elif where == 2: # viene del assignment
     raise Exception() # TODO!!!
-  elif where == 1:
-    prim.
-    return (3, 2, argList, first, last)
+  elif where == 1: # aca es algo asi como: algo.algo2().algomas
+    # entonces, a traves del where, se va a saber que lo anterior es un method inv, pero el type en si
+    # es el que viene de las otras invs
+    return (3, _type, argList, first, last)
   elif where == 3:
     raise Exception() # se hizo una llamada a otro metodo pero sin id! ver arriba
 <rest method invocation>                    ::=   LAMBDA # nada
