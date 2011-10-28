@@ -244,8 +244,9 @@ class Syntaxor(object):
 
     def field_modifier(self):
         if self._current_token.get_type() in FIRST_field_modifier:
+            t = self._current_token
             self.update_token()
-            return
+            return t
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -257,9 +258,10 @@ class Syntaxor(object):
             self.update_token()
             (method_decl, init, list_ids, method_body) = self.rest_declarators()
             if method_decl:
-                return (method_decl, id, list_ids, method_body)
+                return (method_decl, t, list_ids, method_body)
             else:
-                return (method_decl, None, [(id, init)] + list_ids, method_body)
+                print type(list_ids)
+                return (method_decl, None, [(t, init)] + list_ids, method_body)
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -272,7 +274,7 @@ class Syntaxor(object):
             if self.tok(IDENTIFIER):
                 t = self._current_token
                 self.update_token()
-                (initializer, list_ids) = self.rest2_declarators()
+                (method_decl, initializer, list_ids, method_body) = self.rest2_declarators()
                 return (False, None, [(t, initializer)] + list_ids, None)
             else:
                 raise SyntaxError(self._current_token.get_line(),
@@ -282,7 +284,7 @@ class Syntaxor(object):
         elif self.tok(ASSIGNMENT):
             self.update_token()
             expr = self.expression()
-            list_ids = self.rest2_declarators()
+            (method_decl, init, list_ids, method_body) = self.rest2_declarators()
             return (False, expr, list_ids, None)
         elif self.tok(PAREN_OPEN):
             self.update_token()
@@ -304,7 +306,7 @@ class Syntaxor(object):
                 t = self._current_token
                 self.update_token()
                 (method_decl, init, list_ids, method_body) = self.rest2_declarators()
-                return (False, None, [(t, initializer)] + list_ids, None)
+                return (False, None, [(t, init)] + list_ids, None)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -863,12 +865,12 @@ class Syntaxor(object):
         if self.tok(NEW):
             self.update_token()
             if self.tok(IDENTIFIER):
-                id = self._current_token
+                t = self._current_token
                 self.update_token()
                 if self.tok(PAREN_OPEN):
                     self.update_token()
                     argList = self.rest_class_instance_creation_expression()
-                    prim_id = mjPrimary(ref=id, type=IDENTIFIER)
+                    prim_id = mjPrimary(ref=t, type=IDENTIFIER)
                     return mjClassInstanceCreation(prim_id, argList)
                 else:
                     raise SyntaxError(self._current_token.get_line(),

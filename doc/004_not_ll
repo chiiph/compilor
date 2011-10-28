@@ -119,9 +119,9 @@ Declaraciones
   else:
     return (method_decl, None, [(id, init)] + list_ids, method_body)
 }
-<rest declarators>                          ::=   COMMA IDENTIFIER:id <rest2 declarators>:(initializer, list_ids)
+<rest declarators>                          ::=   COMMA IDENTIFIER:id <rest2 declarators>:(method_decl, initializer, list_ids, method_body)
 { return (False, None, [(id, initializer)] + list_ids, None) }
-<rest declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:list_ids
+<rest declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:(method_decl, initializer, list_ids, method_body)
 { return (False, expr, list_ids, None) }
 <rest declarators>                          ::=   PAREN_OPEN <rest method declarator>:params <method body>:bl
 { return (True, None, params, bl) }
