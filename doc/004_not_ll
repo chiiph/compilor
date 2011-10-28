@@ -45,9 +45,9 @@ Declaraciones
 {
   if method_decl:
     if init == None: # constructor
-      return mjMethod(modifs = modifs, ret_type = None, id = id, params = list_ids, body = method_body)
+      return mjMethod(modifs = modifs, ret_type = None, name = id, params = list_ids, body = method_body)
     else:
-      return mjMethod(modifs = modifs, ret_type = id, id = init, params = list_ids, body = method_body)
+      return mjMethod(modifs = modifs, ret_type = id, name = init, params = list_ids, body = method_body)
   else:
     # id es el tipo (custom, o primitive)
     return mjClassVariableDecl(modifs, id, list_ids)
@@ -122,7 +122,7 @@ Declaraciones
 <rest declarators>                          ::=   COMMA IDENTIFIER:id <rest2 declarators>:(initializer, list_ids)
 { return (False, None, [(id, initializer)] + list_ids, None) }
 <rest declarators>                          ::=   ASSIGNMENT <expression>:expr <rest2 declarators>:list_ids
-{ return (False, expr, list_ids, None)
+{ return (False, expr, list_ids, None) }
 <rest declarators>                          ::=   PAREN_OPEN <rest method declarator>:params <method body>:bl
 { return (True, None, params, bl) }
 <rest declarators>                          ::=   SCOLON
@@ -172,8 +172,10 @@ Bloques y Sentencias
 { return [] }
 <rest block>                                ::=   <block statements>:blstats BRACE_CLOSE
 { return blstats }
-<block statements>                          ::=   <block statement>:blstat <rest block statements>:rest
-{ return [blstat] + rest }
+<block statements>                          ::=   <block statement>:(giveant, blstat) <rest block statements>:rest
+{
+  return [blstat] + rest
+}
 <rest block statements>                     ::=   LAMBDA
 { return [] }
 <rest block statements>                     ::=   <block statements>:blstats
@@ -191,103 +193,10 @@ Bloques y Sentencias
 { return None }
 <block statement>                           ::=   <return statement>:retstat
 { return retstat }
-<block statement>(anterior)                 ::=   <primary>:prim <rest method invocation>:(where, _type, expr, first, last)
+<block statement>(anterior)                 ::=   <primary>:(prim_first, prim_last) <rest method invocation>:(where, _type, expr, first, last)
 {
-  # es copy paste de <method invocation>, o casi
-
-  # logica para declaracion de variables custom:
-  # si prim es un primary no mas, no es un methodinv:
-  #   entonces el block statement que sigue TAL VEZ sea una declaracion de var custom
-  # sino no
-
-  # si anterior != None:
-  #   si anterior es methodinv:
-  #     raise Exception() # esto es algo como: metodo() algomas...;
-  #   sino:
-  #     si _type == 1: # assignment
-  #       return mjVariableDecl(anterior.ref, last(o el que no sea none), expr)
-  #     sino si _type == 2: # method inv
-  #       raise Exception() # esto es algo como: tipocustom algomas();
-  #     sino si _type == 3:
-  #       return mjVariableDecl(anterior.ref, last)
-
-  # la logica para pasar el anterior es:
-  # si rest method inv.where == 4 (lambda), pasar
-
-  if where == 4:
-    return (True, prim)
-
-  # en cualquier otro caso:
-
-  head = prim
-  if last != None:
-    head = last
-  elif first != None:
-    head = first
-
-  if anterior != None:
-    if isMethodInv(anterior):
-      raise Exception()
-  elif isId(anterior):
-    if _type == 1:
-      return mjVariableDecl(anterior.ref, [(head, expr)])
-    elif _type == 2:
-      raise Exception()
-    elif _type == 3:
-      return mjVariableDecl(anterior.ref, [(head)])
-  ##################################################3
-
-  if first != None:
-    first.from = prim
-
-  if _type == 1: # assignment
-    if where == 1:
-      if last == None:
-        return mjAssignment(first, expr)
-      else:
-        return mjAssignment(last, expr)
-    elif where == 2:
-      return mjAssignment(prim, expr)
-    elif where == 3:
-      method = mjMethodInvocation(prim.ref, expr) # expr es argList
-      prim.type = methodinv
-      prim.ref = method
-      if first != None:
-        first.from = prim
-
-      if first != None:
-        if last != None:
-          return mjAssignment(last, expr)
-        else:
-          return mjAssignment(first, expr)
-      else:
-        return mjAssignment(prim, expr)
-    elif where == 4:
-      pass # ES IMPOSIBLE
-  elif _type == 2:
-    if where == 1:
-      if last == None:
-        return last
-      else:
-        return first
-    elif where == 2:
-      pass
-    elif where == 3:
-      if first == None and last == None:
-        return mjMethodInvocation(prim, expr)
-      elif first != None and last == None:
-        return first
-      else:
-        return last
-    elif where == 4:
-      pass
-  elif _type == 3:
-    if last != None:
-      return last
-    elif first != None:
-      return first
-    else:
-      return prim
+  # Aca se maneja todo en primary, saco el rest?
+  return prim_last
 }
 <local variable declaration statement>      ::=   <local variable declaration>:localvar SCOLON
 { return localvar }
@@ -295,10 +204,10 @@ Bloques y Sentencias
 { return [(id, vardecls)] + rest }
 
 <variable declarators>                      ::=   <variable declarator>:vardecl <rest variable declarators>:rest
-{ return (vardecl, rest)
+{ return (vardecl, rest) }
 <rest variable declarators>                 ::=   LAMBDA
 { return [] }
-<rest variable declarators>                 ::=   COMMA IDENTIFIER <variable declarators>:expr
+<rest variable declarators>                 ::=   COMMA IDENTIFIER:id <variable declarators>:expr
 { return [(id, expr)] }
 <variable declarator>                       ::=   <rest variable declarator>:expr
 { return expr }
@@ -568,6 +477,9 @@ Expresiones
     else:
       return id
 
+  if where == 5:
+    raise Exception() # para testear
+
   # si la posta es que es una asignacion...
   if _type == 1: # assignment
     if where == 1:
@@ -580,9 +492,9 @@ Expresiones
       # entonces la asignacion se hizo aca no mas
       # first y last son None
       if prim_last != None:
-        return mjAssignment(prim_last, expr)
+        return mjAssignment(prim_last, expr) #AAAAAAAAAAAAAAAAAAAAAAAAA expr puede ser tupla
       else
-        return mjAssignment(id, expr)
+        return mjAssignment(id, expr) #AAAAAAAAAAAAAAAAAA expr puede ser (vardecl, rest)
     elif where == 3:
       # entonces la asignacion se hizo mas lejos, aca se hizo una llamada a un metodo con prim o id
       # y first o last o ambos son != None
@@ -653,7 +565,10 @@ Expresiones
       return id
   # lo qeu se va a devolver aca es un primary sobre el cual se puede hacer todo el checkeo
   # particularmente el de mas a la derecha. *SALVO* que sea una asignacion, en cuyo caso.... NO SE TODAVIA
-
+  elif _type == 4:
+    if not isId(prim_ref):
+      raise Exception() # el tipo custom es un methodinv o algo invalido
+    # esto es una decl de tipo custom, en expr esta la lista, y en prim_ref esta el id
 }
 
 # estos son iguales al anterior, salvo que cambia la primera parte
@@ -748,6 +663,8 @@ Expresiones
         # si no llega a ser None, solamente nos tenemos qeu fijar que este enlazado bien
     else:
       # TODO: hacer lo mismo pero con id
+  elif where == 5:
+    raise Exception() # esto puede ser algo.algo1() asd;
 }
 
 # esto viene por block statements
@@ -766,6 +683,10 @@ Expresiones
     return (3, _type, argList, first, last)
   elif where == 3:
     raise Exception() # se hizo una llamada a otro metodo pero sin id! ver arriba
+  elif where == 5:
+    raise Exception() # este caso puede ser: algo() asd;
+<rest method invocation>                    ::=   <local variable declaration>:vardecls SCOLON # declaracion de vars de tipo custom
+{ return (5, 4, vardecls, None, None) }
 <rest method invocation>                    ::=   LAMBDA # nada
 { return (4, None, None, None, None) }
 <rest2 method invocation>                   ::=   PAREN_CLOSE

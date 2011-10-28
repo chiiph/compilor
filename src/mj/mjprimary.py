@@ -54,6 +54,8 @@ class mjMethodInvocation(mjPrimary):
     for a in self.args:
       a.pprint(tabs+1)
     print "  "*tabs + ")))"
+    if not self.goesto is None:
+      self.goesto.pprint(tabs+1)
 
 class mjClassInstanceCreation(mjMethodInvocation):
   def __init__(self, prim, args):
@@ -73,6 +75,8 @@ class mjExpression(mjPrimary):
     if instanceof(self.ref, mjOp):
       self.ref.pprint()
     print "-"*15
+    if not self.goesto is None:
+      self.goesto.pprint(tabs+1)
 
 class mjAssignment(mjPrimary):
   def __init__(self, prim, expr):
@@ -87,6 +91,8 @@ class mjAssignment(mjPrimary):
     print "  "*tabs + s
     print "  "*(tabs+1) + self.ref.get_lexeme()
     self.expr.pprint(tabs+1)
+    if not self.goesto is None:
+      self.goesto.pprint(tabs+1)
 
 class mjOp(object):
   def __init__(self, symbol, operands):
