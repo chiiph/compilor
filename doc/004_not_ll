@@ -11,6 +11,9 @@
 #<rest method invocation>                    ::=   PAREN_OPEN <rest2 method invocation>:argList <rest method invocation>:(_type, )
 # Se puede checkear facilmente en la parte semantica. Esta bien eso? o arreglamos la gramatica?
 
+# TODO: terminar de actualizar primary para devolver (first, last)
+# TODO: ver rest2_primary, en syntaxor rest primary se llamaba en ambos, aca no (igual lo cambie aca)
+
 Programas
 <compilation unit>                          ::=   <type declarations>:decls
 { return decls }
@@ -437,26 +440,26 @@ Expresiones
 { return mjSub(un) }
 <unary expression>                          ::=   <unary expression not plus minus>:un
 { return un }
-<unary expression not plus minus>           ::=   <postfix expression>:prim
-{ return prim }
+<unary expression not plus minus>           ::=   <postfix expression>:prim_last
+{ return prim_last }
 <unary expression not plus minus>           ::=   NOT <unary expression>:expr
 { return mjNot(expr) }
-<postfix expression>                        ::=   <primary>:prim
-{ return prim }
+<postfix expression>                        ::=   <primary>:(prim_first, prim_last)
+{ return prim_last }
 
-<primary>                                   ::=   <literal>:lit <rest primary>:prim
+<primary>                                   ::=   <literal>:lit <rest primary>:(first, last)
 {
-  if prim == None:
+  if first == None:
     return lit
-  prim.from = lit
-  return prim
+  first.from = lit
+  return (list, last)
 }
-<primary>                                   ::=   THIS:this <rest primary>:prim
+<primary>                                   ::=   THIS:this <rest primary>:(first, last)
 {
-  if prim == None:
-    return this
-  prim.from = this
-  return prim
+  if first == None:
+    return (this, this)
+  first.from = this
+  return (this, last)
 }
 # VER que no se si el type puede ser expr ahora mismo, pero es cuestion de cambiarlo
 <primary>                                   ::=   PAREN_OPEN <expression>:expr PAREN_CLOSE <rest primary>:prim
@@ -489,27 +492,28 @@ Expresiones
   return prim
 }
 
-<rest primary>                              ::=   ACCESSOR IDENTIFIER:id <rest2 primary>:(where, argList, prim)
+<rest primary>                              ::=   ACCESSOR IDENTIFIER:id <rest2 primary>:(where, argList, first, last)
 {
   if where == 1:
     # entonces tenemos argList (aun cuando sea vacia), o sea, id es un method inv
     method = mjMethodInvocation(id, argList)
-    if prim != None:
-      prim.from = method
-    return prim
+    if first != None:
+      first.from = method
+      return (method, method)
+    return (method, last)
   elif where == 2:
-    return id
+    return (id, id)
 }
 <rest primary>                              ::=   LAMBDA
-{ return None }
+{ return (None, None) }
 
-<rest2 primary>                             ::=   PAREN_OPEN <rest2 method invocation>:argList <rest primary>:prim
+<rest2 primary>                             ::=   PAREN_OPEN <rest2 method invocation>:argList <rest primary>:(first, last)
 {
-  return (1, argList, prim) # 1: es este caso
+  return (1, argList, first, last) # 1: es este caso
 }
-<rest2 primary>                             ::=   LAMBDA
+<rest2 primary>                             ::=   <rest primary>
 {
-  return (2, [], None) # 2: es este
+  return (2, [], None, None) # 2: es este
 
 <class instance creation expression>        ::=   NEW IDENTIFIER:id PAREN_OPEN <rest class instance creation expression>:argList
 {
@@ -530,13 +534,13 @@ Expresiones
   return argList
 }
 
-<method invocation>                         ::=   IDENTIFIER:id <rest primary>:prim <rest method invocation>(where, _type, expr, first, last)
+<method invocation>                         ::=   IDENTIFIER:id <rest primary>:(prim_first, prim_last) <rest method invocation>(where, _type, expr, first, last)
 {
   # aca ya vamos a terminar la cadena del primary,
   # enlazando id<-prim<-first y devolviendo last, que es el qeu importa en si
   # el enlazado id<-prim dependera de si prim es None o no
-  if prim != None:
-    prim.from = id
+  if prim_first != None:
+    prim_first.from = id
   # esto si bien se llama method invocation puede ser:
   # 1: asignacion
   # 2: method invocation
@@ -546,8 +550,8 @@ Expresiones
   # Pero antes tenemos qeu ver si viene algo con first y last
   # y enlazarlos apropiadamente
   if first != None:
-    if prim != None:
-      first.from = prim
+    if prim_first != None:
+      first.from = prim_last
     else:
       first.from = id
 
@@ -559,8 +563,8 @@ Expresiones
 
   # caso especial, el rest fue lambda, o sea qeu _type no importa
   if where == 4:
-    if prim != None:
-      return prim
+    if prim_first != None:
+      return prim_last
     else:
       return id
 
@@ -575,15 +579,15 @@ Expresiones
     elif where == 2:
       # entonces la asignacion se hizo aca no mas
       # first y last son None
-      if prim != None:
-        return mjAssignment(prim, expr)
+      if prim_last != None:
+        return mjAssignment(prim_last, expr)
       else
         return mjAssignment(id, expr)
     elif where == 3:
       # entonces la asignacion se hizo mas lejos, aca se hizo una llamada a un metodo con prim o id
       # y first o last o ambos son != None
       if prim != None:
-        method = mjMethodInvocation(prim.ref, expr) # expr es argList
+        method = mjMethodInvocation(prim_last.ref, expr) # expr es argList
         prim.type = methodinv
         prim.ref = method
         if first != None:
@@ -622,9 +626,10 @@ Expresiones
     elif where == 3:
       # entonces aca prim o id son un method inv.
       # y si first y last son None, entonces EL method inv es este y hay qeu retornar eso
+      # TODO: cambiar esto con lo qeu esta en syntaxor
       if first == None and last == None:
         if prim != None:
-          return mjMethodInvocation(prim, expr)
+          return mjMethodInvocation(prim_last, expr)
         else:
           return mjMethodInvocation(id, expr)
       elif first != None and last == None:
@@ -660,8 +665,34 @@ Expresiones
 
 # este es igual al caso 2 de rest method inv salvo que ya se tiene el nombre del primary que es el method inv de aca
 <rest super>                                ::=   IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+{
+  method = mjMethodInvocation(prim_id, expr)
+  if not first is None:
+      first.from = method
+  if where == 4:
+      return (1, 2, argList, method, last)
+  elif where == 2:
+      raise Exception()
+  elif where == 1:
+      return (1, _type, argList, method, last)
+  elif where == 3:
+      raise Exception()
+}
 # este es igual al caso 2 de rest method invocation
 <rest super>                                ::=   PAREN_OPEN <rest2 method invocation> <rest method invocation>
+{
+  method = mjMethodInvocation(prim_id, expr)
+  if not first is None:
+      first.from = method
+  if where == 4:
+      return (2, 2, argList, method, last)
+  elif where == 2:
+      raise Exception()
+  elif where == 1:
+      return (2, _type, argList, method, last)
+  elif where == 3:
+      raise Exception()
+}
 
 # podriamos decir que se usan las siguientes constantes para ver desde donde se viene:
 # 1: primer caso
@@ -673,59 +704,47 @@ Expresiones
 # 2: method invocation
 # 3: acceso a campo de un obj, o algo asi
 
-<rest method invocation>                    ::=   ACCESSOR IDENTIFIER:id <rest primary>:prim <rest method invocation>(where, _type, expr, first, last) # es lo qeu sea que rest method invocation diga que es
+<rest method invocation>                    ::=   ACCESSOR IDENTIFIER:id <rest primary>:(prim_first, prim_last) <rest method invocation>(where, _type, expr, first, last) # es lo qeu sea que rest method invocation diga que es
 {
   if where == 4: # lambda
     # entonces si prim != None, este es el last, y id el first
-    if prim != None:
-      prim.from = id # enlazamos con el actual (aca hay que usar ref y type de un primary nuevo y enlazar eso
-      return (1, _type, expr, id, prim)
+    if prim_first != None:
+      prim_first.from = id # enlazamos con el actual (aca hay que usar ref y type de un primary nuevo y enlazar eso
+      return (1, _type, expr, id, prim_last)
     else:
       # sino, id es el first y el last es None
-      return (1, _type, expr, id, None) # o error?
+      return (1, _type, expr, id, id) # o error?
   elif where == 1:
     # si prim != None, y last != None
     # first sabemos que no va a ser None y sabemos que van a estar conectados entre si por el .from
-    if prim != None and last != None:
-      first.from = prim
-      prim.from = id
-      return (1, _type, expr, id, last)
-    elif prim != None and last == None:
-      # first va a ser nuestro last
-      first.from = prim
-      prim.from = id
-      return (1, _type, expr, id, frist)
-    elif prim == None and last != None:
+    if prim_first != None:
+      first.from = prim_last
+      prim_first.from = id
+    else:
       first.from = id
-      return (1, _type, expr, id, last)
-    elif prim == None and last == None:
-      first.from = id
-      return (1, _type, expr, id, first)
+    return (1, _type, expr, id, last)
   elif where == 2: # asignacion
     # sabemos que first y last van a ser None
     # si prim == None, no importa, porque va a manejar despues
-    return (1, _type, expr, id, prim)
+    prim_first.from = id
+    return (1, _type, expr, id, prim_last)
   elif where == 3:
     # entonces id o prim (depende de si prim es None o no) es el nombre del metodo
-    if prim != None:
+    if prim_first != None:
       # prim hasta aca tiene type=id, y ref=>token, ahora ese token es el nombre del metodo
       # prim tiene type=methodInv, y ref=> a un obj methodinv
-      method = mjMethodInvocation(prim.ref, expr) # expr es argList
-      prim.type = methodinv
-      prim.ref = method
-      prim.from = id
+      method = mjMethodInvocation(prim_last, expr) # expr es argList
+      method.from = prim_last.from
+      prim_first.from = id
       if first != None: # significa que el rest method inv que se llamo desde 3 no resulto en lambda
         # entonces en _type viene el tipo real de lo ultimo que se hizo, esto seria algo asi como:
         # algo.algo1().algo3, donde algo1 es id aca o prim, el nombre del metodo, y algo3 seria el first, con last=None,
         # si fuera mas largo: algo.algo1().algo3.algo4, tendriamos last
-        first.from = prim # enlazamos normalmente
+        first.from = method # enlazamos normalmente
 
-        if last != None:
-          return (1, _type, id, last)
-        else:
-          return (1, _type, id, first)
+        return (1, _type, expr, id, last)
       else: # first == None: o sea qeu fue un lambda, se termina aca este primary,
-        return (1, 3, id, prim) # no importa si prim es None, a lo sumo lo es y se maneja despues
+        return (1, _type, expr,  id, prim_last)
         # si no llega a ser None, solamente nos tenemos qeu fijar que este enlazado bien
     else:
       # TODO: hacer lo mismo pero con id
@@ -748,7 +767,7 @@ Expresiones
   elif where == 3:
     raise Exception() # se hizo una llamada a otro metodo pero sin id! ver arriba
 <rest method invocation>                    ::=   LAMBDA # nada
-{ return (3, None, None, None, None) }
+{ return (4, None, None, None, None) }
 <rest2 method invocation>                   ::=   PAREN_CLOSE
 { return [] }
 <rest2 method invocation>                   ::=   <argument list>:argList PAREN_CLOSE

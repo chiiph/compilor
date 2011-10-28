@@ -3,6 +3,8 @@ from constants import *
 from firsts import *
 from errors import SyntaxError
 
+from mj.mjprimary import *
+
 class Syntaxor(object):
     def __init__(self, path):
         self._lexor = Lexor(path)
@@ -14,7 +16,7 @@ class Syntaxor(object):
 
     def update_token(self):
         self._current_token = self._lexor.get_token()
-        #print self._current_token
+        print self._current_token
 
     def tok(self, tokentype):
         return self._current_token.get_type() == tokentype
@@ -602,7 +604,7 @@ class Syntaxor(object):
     def return_statement(self):
         if self.tok(RETURN):
             self.update_token()
-            self.rest_return_statement()
+            expr = self.rest_return_statement()
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -611,12 +613,12 @@ class Syntaxor(object):
     def rest_return_statement(self):
         if self.tok(SCOLON):
             self.update_token()
-            return
+            return None
         elif self._current_token.get_type() in FIRST_expression:
-            self.expression()
+            expr = self.expression()
             if self.tok(SCOLON):
                 self.update_token()
-                return
+                return expr
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -627,87 +629,132 @@ class Syntaxor(object):
                               "Sentencia de return no valida.")
 
     def expression(self):
-        self.assignment_expression()
+        return self.assignment_expression()
 
     def assignment_expression(self):
-        self.conditional_expression()
+        return self.conditional_expression()
 
     def conditional_expression(self):
-        self.conditional_or_expression()
-        self.rest_conditional_expression()
+        coe = self.conditional_or_expression()
+        (op, rce) = self.rest_conditional_expression()
+        if op is None:
+            return coe
+        return op([coe, rce])
 
     def rest_conditional_expression(self):
         if self.tok(ASSIGNMENT):
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.conditional_expression()
+            ce = self.conditional_expression()
+            return (op, ce)
         # sino lambda
+        return (None, None)
 
     def conditional_or_expression(self):
-        self.conditional_and_expression()
-        self.rest_conditional_or_expression()
+        cae = self.conditional_and_expression()
+        (op, rcoe) = self.rest_conditional_or_expression()
+        if op is None:
+            return cae
+        return op([cae, rcoe])
 
     def rest_conditional_or_expression(self):
         if self.tok(CONDITIONAL_OR):
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.conditional_or_expression()
+            coe = self.conditional_or_expression()
+            return (op, coe)
         # sino lambda
+        return (None, None)
 
     def conditional_and_expression(self):
-        self.equality_expression()
-        self.rest_conditional_and_expression()
+        ee = self.equality_expression()
+        (op, rcae) = self.rest_conditional_and_expression()
+        if op is None:
+            return ee
+        return op([ee, rcae])
 
     def rest_conditional_and_expression(self):
         if self.tok(CONDITIONAL_AND):
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.conditional_and_expression()
+            cae = self.conditional_and_expression()
+            return (op, cae)
         # sino lambda
+        return (None, None)
 
     def equality_expression(self):
-        self.relational_expression()
-        self.rest_equality_expression()
+        re = self.relational_expression()
+        (op, ree) = self.rest_equality_expression()
+        if op is None:
+            return re
+        return op([re, ree])
 
     def rest_equality_expression(self):
         if self.tok(EQUALS) or self.tok(NOT_EQUALS):
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.equality_expression()
+            ee = self.equality_expression()
+            return (op, ee)
         # sino lambda
+        return (None, None)
 
     def relational_expression(self):
-        self.additive_expression()
-        self.rest_relational_expression()
+        ae = self.additive_expression()
+        (op, re) = self.rest_relational_expression()
+        if op is None:
+            return ae
+        return op([ae, re])
 
     def rest_relational_expression(self):
         if self._current_token.get_type() in FIRST_rest_relational_expression:
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.relational_expression()
+            (op, re) = self.relational_expression()
+            return (op, re)
         # sino lambda
+        return (None, None)
 
     def additive_expression(self):
-        self.multiplicative_expression()
-        self.rest_additive_expression()
+        me = self.multiplicative_expression()
+        (op, ae) = self.rest_additive_expression()
+        if op is None:
+            return me
+        return op([me, ae])
 
     def rest_additive_expression(self):
         if self._current_token.get_type() in FIRST_rest_additive_expression:
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.additive_expression()
+            ae = self.additive_expression()
+            return (op, ae)
         # sino lambda
+        return (None, None)
 
     def multiplicative_expression(self):
-        self.unary_expression()
-        self.rest_multiplicative_expression()
+        u = self.unary_expression()
+        (op, me) = self.rest_multiplicative_expression()
+        if op is None:
+            return u
+        return op([u, me])
 
     def rest_multiplicative_expression(self):
         if self._current_token.get_type() in FIRST_rest_multiplicative_expression:
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.multiplicative_expression()
+            me = self.multiplicative_expression()
+            return (op, me)
         # sino lambda
+        return (None, None)
 
     def unary_expression(self):
         if self.tok(ADD) or self.tok(SUB):
+            op = ops[self._current_token.get_type()]
             self.update_token()
-            self.unary_expression()
+            ex = self.unary_expression()
+            return op([ex])
         elif self._current_token.get_type() in FIRST_unary_expression_not_plus_minus:
-            self.unary_expression_not_plus_minus()
+            ex = self.unary_expression_not_plus_minus()
+            return ex
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -715,74 +762,111 @@ class Syntaxor(object):
 
     def unary_expression_not_plus_minus(self):
         if self._current_token.get_type() in FIRST_postfix_expression:
-            self.postfix_expression()
+            ex = self.postfix_expression()
+            return ex
         elif self.tok(NOT):
             self.update_token()
-            self.unary_expression()
+            ex = self.unary_expression()
+            return mjNot([ex])
 
     def postfix_expression(self):
         if self._current_token.get_type() in FIRST_primary:
-            self.primary()
+            (prim_first, prim_last) = self.primary()
+            return prim_last
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
                               "%s no es un identificador valido." % self._current_token.get_lexeme())
 
     def primary(self):
+        prim = None
+        first = None
+        last = None
         # aca va a haber que diferenciar entre todos y NULL y THIS
         if self._current_token.get_type() in [INT_LITERAL, TRUE, FALSE, CHAR_LITERAL, STRING_LITERAL, NULL, THIS]:
+            prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
             self.update_token()
-            self.rest_primary()
+            (first, last) = self.rest_primary()
         elif self.tok(PAREN_OPEN):
             self.update_token()
-            self.expression()
+            prim = self.expression()
             if self.tok(PAREN_CLOSE):
                 self.update_token()
-                self.rest_primary()
+                (first, last) = self.rest_primary()
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "Se esperaba un ).")
         elif self.tok(NEW):
-            self.class_instance_creation_expression()
-            self.rest_primary()
+            prim = self.class_instance_creation_expression()
+            (first, last) = self.rest_primary()
         elif self.tok(SUPER):
+            prim = mjPrimary(self._current_token, self._current_token.get_type()._id)
             self.update_token()
-            self.rest_primary()
+            (first, last) = self.rest_primary()
         elif self.tok(IDENTIFIER):
-            self.method_invocation()
-            self.rest_primary()
+            print "UUUUUOOOOOOOOOOO", self._current_token
+            prim = self.method_invocation()
+            (first, last) = self.rest_primary()
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
                               "%s no es un primary valido." % self._current_token.get_lexeme())
+        if first is None:
+            prim.pprint()
+            return (prim, prim)
+        first.goesto = prim
+        last.pprint()
+        return (prim, last)
 
     def rest_primary(self):
         if self.tok(ACCESSOR):
             self.update_token()
             if self.tok(IDENTIFIER):
+                prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
                 self.update_token()
-                self.rest2_primary()
+                (where, argList, first, last) = self.rest2_primary()
+                if where == 1:
+                    method = mjMethodInvocation(prim, argList)
+                    if not first is None:
+                        first.goesto = method
+                        return (method, last)
+                    return (method, method)
+                elif where == 2:
+                    if not first is None:
+                        first.goesto = prim
+                        return (prim, last)
+                    return (prim, prim)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "%s no es un identificador valido." % self._current_token.get_lexeme())
         # sino lambda
+        return (None, None)
 
     def rest2_primary(self):
+        argList = []
+        first = None
+        last = None
+        where = 2
         if self.tok(PAREN_OPEN):
             self.update_token()
-            self.rest2_method_invocation()
-        self.rest_primary()
+            argList = self.rest2_method_invocation()
+            where = 1
+        (first, last) = self.rest_primary()
+        return (where, argList, first, last)
 
     def class_instance_creation_expression(self):
         if self.tok(NEW):
             self.update_token()
             if self.tok(IDENTIFIER):
+                id = self._current_token
                 self.update_token()
                 if self.tok(PAREN_OPEN):
                     self.update_token()
-                    self.rest_class_instance_creation_expression()
+                    argList = self.rest_class_instance_creation_expression()
+                    prim_id = mjPrimary(ref=id, type=IDENTIFIER)
+                    return mjClassInstanceCreation(prim_id, argList)
                 else:
                     raise SyntaxError(self._current_token.get_line(),
                                       self._current_token.get_col(),
@@ -799,12 +883,12 @@ class Syntaxor(object):
     def rest_class_instance_creation_expression(self):
         if self.tok(PAREN_CLOSE):
             self.update_token()
-            return
+            return []
         elif self._current_token.get_type() in FIRST_argument_list:
-            self.argument_list()
+            argList = self.argument_list()
             if self.tok(PAREN_CLOSE):
                 self.update_token()
-                return
+                return argList
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -815,33 +899,51 @@ class Syntaxor(object):
                               "Se esperaba un ) o un argumento valido.")
 
     def argument_list(self):
-        self.expression()
-        self.rest_argument_list()
+        expr = self.expression()
+        rest = self.rest_argument_list()
+        return [expr] + rest
 
     def rest_argument_list(self):
         if self.tok(COMMA):
             self.update_token()
-            self.argument_list()
+            rest = self.argument_list()
+            return rest
         # sino lambda
+        return []
 
     def method_invocation(self):
+        prim_ref = None
+        prim_first = None
+        prim_last = None
+        argList = []
+        where = 0
+        _type = 0
+        expr = None
+        first = None
+        last = None
+        prim_id = None
+
         if self.tok(IDENTIFIER):
+            prim_ref = mjPrimary(ref=self._current_token, type=IDENTIFIER)
             self.update_token()
-            self.rest_primary()
-            if self.tok(PAREN_OPEN):
-                self.update_token()
-                self.rest2_method_invocation()
-            self.rest_method_invocation()
+            (prim_first, prim_last) = self.rest_primary()
+            # if self.tok(PAREN_OPEN):
+            #     self.update_token()
+            #     argList = self.rest2_method_invocation()
+            (where, _type, expr, first, last) = self.rest_method_invocation()
         elif (self._current_token.type() in FIRST_literal) or self.tok(THIS):
+            prim_ref = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
             self.update_token()
-            self.rest_primary()
+            (prim_first, prim_last) = self.rest_primary()
             if self.tok(ACCESSOR):
                 self.update_token()
                 if self.tok(IDENTIFIER):
+                    prim_id = mjPrimary(ref=self._current_token, type=IDENTIFIER)
                     self.update_token()
                     if self.tok(PAREN_OPEN):
-                        self.rest2_method_invocation()
-                        self.rest_method_invocation()
+                        argList = self.rest2_method_invocation()
+                        (where, _type, expr, first, last) = self.rest_method_invocation()
+                        prim_id = mjMethodInvocation(prim_id, argList)
                     else:
                         raise SyntaxError(self._current_token.get_line(),
                                           self._current_token.get_col(),
@@ -856,17 +958,19 @@ class Syntaxor(object):
                                   "Se esperaba un . .")
         elif self.tok(PAREN_OPEN):
             self.update_token()
-            self.expression()
+            prim_ref = self.expression()
             if self.tok(PAREN_CLOSE):
                 self.update_token()
-                self.rest_primary()
+                (prim_first, prim_last) = self.rest_primary()
                 if self.tok(ACCESSOR):
                     self.update_token()
                     if self.tok(IDENTIFIER):
+                        prim_id = mjPrimary(ref=self._current_token, type=IDENTIFIER)
                         self.update_token()
                         if self.tok(PAREN_OPEN):
-                            self.rest2_method_invocation()
-                            self.rest_method_invocation()
+                            argList = self.rest2_method_invocation()
+                            (where, _type, expr, first, last) = self.rest_method_invocation()
+                            prim_id = mjMethodInvocation(prim_id, argList)
                         else:
                             raise SyntaxError(self._current_token.get_line(),
                                               self._current_token.get_col(),
@@ -884,15 +988,17 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Se esperaba un ).")
         elif self.tok(NEW):
-            self.class_instance_creation_expression()
-            self.rest_primary()
+            prim_ref = self.class_instance_creation_expression()
+            (prim_first, prim_last) = self.rest_primary()
             if self.tok(ACCESSOR):
                 self.update_token()
                 if self.tok(IDENTIFIER):
+                    prim_id = mjPrimary(ref=self._current_token, type=IDENTIFIER)
                     self.update_token()
                     if self.tok(PAREN_OPEN):
-                        self.rest2_method_invocation()
-                        self.rest_method_invocation()
+                        argList = self.rest2_method_invocation()
+                        (where, _type, expr, first, last) = self.rest_method_invocation()
+                        prim_id = mjMethodInvocation(prim_id, argList)
                     else:
                         raise SyntaxError(self._current_token.get_line(),
                                           self._current_token.get_col(),
@@ -906,45 +1012,177 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Se esperaba un . .")
         elif self.tok(SUPER):
+            sup = mjPrimary(ref=self._current_token, type=SUPER)
             self.update_token()
-            self.rest_primary()
-            self.rest_super()
+            (prim_first, prim_last) = self.rest_primary()
+            (where, _type, expr, first, last) = self.rest_super()
+            if where == 1:
+                method = mjMethodInvocation(sup, expr)
+                first.goesto = method
+            elif where == 2:
+                first.goesto = sup
+            return last
+
+        if not prim_first is None:
+            prim_first.goesto = prim_ref
+
+        if not first is None:
+            if not prim_id is None:
+                first.goesto = prim_id
+                prim_id.goesto = prim_last
+            else:
+                if not prim_first is None:
+                    first.goesto = prim_last
+                else:
+                    first.goesto = prim_ref
+
+        the_last = None
+        if not last is None:
+            the_last = last
+        elif not prim_id is None:
+            the_last = prim_id
+        elif not prim_last is None:
+            the_last = prim_last
+        else:
+            the_last = prim_ref
+
+        if where == 4:
+            return the_last
+
+        if _type == 1:
+            if where == 3:
+                method = None
+                if not prim_last is None:
+                    method = mjMethodInvocation(prim_last, expr)
+                    method.goesto = prim_last.goesto
+                else:
+                    method = mjMethodInvocation(prim_ref, expr)
+
+                if not first is None:
+                    first.goesto = method
+                else:
+                    if the_last == prim_ref or the_last == prim_last:
+                        the_last = method
+
+            return mjAssignment(the_last, expr)
+        elif _type == 2:
+            if where == 1:
+                return the_last
+            elif where == 3:
+                method = None
+                if not prim_last is None:
+                    method = mjMethodInvocation(prim_last, expr)
+                    method.goesto = prim_last.goesto
+                else:
+                    method = mjMethodInvocation(prim_ref, expr)
+
+                if not first is None:
+                    first.goesto = method
+                else:
+                    if the_last == prim_ref or the_last == prim_last:
+                        the_last = method
+
+                return the_last
+        elif _type == 3:
+            return the_last
 
     def rest_method_invocation(self):
         if self.tok(ACCESSOR):
             self.update_token()
             if self.tok(IDENTIFIER):
+                prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
+
                 self.update_token()
-                self.rest_primary()
-                self.rest_method_invocation()
+                (prim_first, prim_last) = self.rest_primary()
+                (where, _type, expr, first, last) = self.rest_method_invocation()
+
+                if where == 4:
+                    if not prim_first is None:
+                        prim_first.goesto = prim_id
+                        return (1, _type, expr, prim_id, prim_last)
+                    else:
+                        return (1, _type, expr, prim_id, prim_id)
+                elif where == 1:
+                    if not prim_first is None:
+                        first.goesto = prim_last
+                        prim_first.goesto = prim_id
+                    else:
+                        first.goesto = prim_id
+                    return (1, _type, expr, prim_id, last)
+                elif where == 2:
+                    prim_first.goesto = prim_id
+                    return (1, _type, expr, prim_id, prim_last)
+                elif where == 3:
+                    prim_ref = prim_id
+                    if not prim_first is None:
+                        prim_ref = prim_last
+
+                    method = mjMethodInvocation(prim_ref.ref, expr)
+                    method.goesto = prim_ref.goesto
+                    if not prim_first is None: # caso "especial"
+                        prim_first.goesto = prim_id
+                    if not first is None:
+                        first.goesto = method
+                        return (1, _type, expr, prim_id, last)
+                    else:
+                        return (1, _type, expr, prim_id, prim_ref)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "Se esperaba un identificador valido.")
         elif self.tok(ASSIGNMENT):
-            print "AAAAAAAAAAAAAAAAAAAAAAA", self._current_token
             self.update_token();
-            self.expression();
+            expr = self.expression();
             if self.tok(SCOLON):
-                return
+                return (2, 1, expr, None, None)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
                                   "Se esperaba un ;.")
         elif self.tok(PAREN_OPEN):
             self.update_token()
-            self.rest2_method_invocation()
-            self.rest_method_invocation()
+            argList = self.rest2_method_invocation()
+            (where, _type, expr, first, last) = self.rest_method_invocation()
+            if where == 4:
+                return (3, 2, argList, first, last)
+            elif where == 2:
+                raise Exception()
+            elif where == 1:
+                return (3, _type, argList, first, last)
+            elif where == 3:
+                raise Exception()
+
+        return (4, None, None, None, None)
 
     def rest_super(self):
         if self.tok(PAREN_OPEN):
-            self.rest2_method_invocation()
-            self.rest_method_invocation()
+            argList = self.rest2_method_invocation()
+            (where, _type, expr, first, last) = self.rest_method_invocation()
+            if where == 4:
+                return (1, 2, argList, first, last)
+            elif where == 2:
+                raise Exception()
+            elif where == 1:
+                return (1, _type, argList, first, last)
+            elif where == 3:
+                raise Exception()
         elif self.tok(IDENTIFIER):
+            prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
             self.update_token()
             if self.tok(PAREN_OPEN):
-                self.rest2_method_invocation()
-                self.rest_method_invocation()
+                argList = self.rest2_method_invocation()
+                (where, _type, expr, first, last) = self.rest_method_invocation()
+                method = mjMethodInvocation(prim_id, expr)
+                if not first is None:
+                    first.goesto = method
+                if where == 4:
+                    return (2, 2, argList, method, last)
+                elif where == 2:
+                    raise Exception()
+                elif where == 1:
+                    return (2, _type, argList, method, last)
+                elif where == 3:
+                    raise Exception()
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -957,12 +1195,12 @@ class Syntaxor(object):
     def rest2_method_invocation(self):
         if self.tok(PAREN_CLOSE):
             self.update_token()
-            return
+            return []
         elif self._current_token.get_type() in FIRST_argument_list:
-            self.argument_list()
+            argList = self.argument_list()
             if self.tok(PAREN_CLOSE):
                 self.update_token()
-                return
+                return argList
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
