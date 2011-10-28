@@ -40,6 +40,9 @@ class mjPrimary(mjCheckable):
     if not self.goesto is None:
       self.goesto.pprint(tabs+1)
 
+  def get_type(self):
+    raise NotImplemented()
+
 class mjMethodInvocation(mjPrimary):
   def __init__(self, prim, args):
     super(mjMethodInvocation, self).__init__(prim.ref, mjPrimary.MethodInv)
@@ -94,7 +97,7 @@ class mjAssignment(mjPrimary):
     if not self.goesto is None:
       self.goesto.pprint(tabs+1)
 
-class mjOp(object):
+class mjOp(mjCheckable):
   def __init__(self, symbol, operands):
     self.symbol = symbol
     self.operands = operands

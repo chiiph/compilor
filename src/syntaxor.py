@@ -11,27 +11,24 @@ class Syntaxor(object):
         self._lexor = Lexor(path)
         self._current_token = None
 
-    def check_syntax(self):
+    def check_syntax(self, ts):
         self.update_token()
-        self.compilation_unit()
+        return self.compilation_unit(ts)
 
     def update_token(self):
         self._current_token = self._lexor.get_token()
-        print self._current_token
+        #print self._current_token
 
     def tok(self, tokentype):
         return self._current_token.get_type() == tokentype
 
-    def compilation_unit(self):
-        a = self.type_declarations()
-        for b in a:
-            b.pprint()
-        return a
+    def compilation_unit(self, ts):
+        return self.type_declarations(ts)
 
-    def type_declarations(self):
+    def type_declarations(self, ts):
         if self.tok(PUBLIC):
-            class_decl = self.class_declaration()
-            rest = self.type_declarations()
+            class_decl = self.class_declaration(ts)
+            rest = self.type_declarations(ts)
             return [class_decl] + rest
         elif self.tok(EOF):
             return [] # LAMBDA
@@ -40,7 +37,7 @@ class Syntaxor(object):
                               self._current_token.get_col(),
                               "Las declaraciones de clases deben comenzar con el keyword public.")
 
-    def class_declaration(self):
+    def class_declaration(self, ts):
         # si entre aca es porque el current es PUBLIC
         # asi que busco CLASS ahora
         self.update_token()
@@ -50,8 +47,9 @@ class Syntaxor(object):
             if self.tok(IDENTIFIER):
                 t = self._current_token
                 self.update_token()
-                (ext_id, decls) = self.rest_class_declaration()
-                return mjClass(t, ext_id, decls)
+                clts = mjTS()
+                (ext_id, decls) = self.rest_class_declaration(clts)
+                return mjClass(t, ext_id, decls, ts, clts)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -62,15 +60,15 @@ class Syntaxor(object):
                               self._current_token.get_col(),
                               "La palabra clave class debe ser especificada luego de public.")
 
-    def rest_class_declaration(self):
+    def rest_class_declaration(self, ts):
         if self.tok(BRACE_OPEN):
-            return (None, self.class_body())
+            return (None, self.class_body(ts))
         elif self.tok(EXTENDS):
             self.update_token()
             if self.tok(IDENTIFIER):
                 t = self._current_token
                 self.update_token()
-                return (t, self.class_body())
+                return (t, self.class_body(ts))
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -80,21 +78,21 @@ class Syntaxor(object):
                               self._current_token.get_col(),
                               "Se esperaba una { o la palabra clave extends.")
 
-    def class_body(self):
+    def class_body(self, ts):
         if self.tok(BRACE_OPEN):
             self.update_token()
-            return self.rest_class_body()
+            return self.rest_class_body(ts)
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
                               "Se esperaba una {.")
 
-    def rest_class_body(self):
+    def rest_class_body(self, ts):
         if self.tok(BRACE_CLOSE):
             self.update_token()
             return []
         else:
-            decls = self.class_body_declarations()
+            decls = self.class_body_declarations(ts)
             if self.tok(BRACE_CLOSE):
                 self.update_token()
                 return decls
@@ -103,28 +101,28 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Se esperaba una } como cierre de la clase.")
 
-    def class_body_declarations(self):
-        decl = self.class_body_declaration()
-        rest = self.rest_class_body_declarations()
+    def class_body_declarations(self, ts):
+        decl = self.class_body_declaration(ts)
+        rest = self.rest_class_body_declarations(ts)
         return [decl] + rest
 
-    def rest_class_body_declarations(self):
+    def rest_class_body_declarations(self, ts):
         # si hay mas class body declaration
         if self._current_token.get_type() in FIRST_class_body_declaration:
-            return self.class_body_declarations()
+            return self.class_body_declarations(ts)
         # sino, vamos por lambda
         return []
 
-    def class_body_declaration(self):
+    def class_body_declaration(self, ts):
         modifs = self.field_modifiers()
         (method_decl, name, init, list_ids, method_body) = self.rest_class_body_declaration()
         if method_decl:
             if init == None: # constructor
-                return mjMethod(modifs = modifs, ret_type = None, name = name, params = list_ids, body = method_body)
+                return mjMethod(modifs = modifs, ret_type = None, name = name, params = list_ids, body = method_body, ts=ts)
             else:
-                return mjMethod(modifs = modifs, ret_type = name, name = init, params = list_ids, body = method_body)
+                return mjMethod(modifs = modifs, ret_type = name, name = init, params = list_ids, body = method_body, ts=ts)
         else:
-            return mjClassVariableDecl(modifs, name, list_ids)
+            return mjClassVariableDecl(modifs, name, list_ids, ts)
 
     def rest_class_body_declaration(self):
         if self._current_token.get_type() in FIRST_primitive_type:
