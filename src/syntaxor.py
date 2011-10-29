@@ -47,7 +47,7 @@ class Syntaxor(object):
             if self.tok(IDENTIFIER):
                 t = self._current_token
                 self.update_token()
-                clts = mjTS()
+                clts = mjTS(ts)
                 (ext_id, decls) = self.rest_class_declaration(clts)
                 return mjClass(t, ext_id, decls, ts, clts)
             else:

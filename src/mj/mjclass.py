@@ -1,6 +1,7 @@
 from mjts import mjTS
 from lexor import Token
 from constants import IDENTIFIER
+from errors import SemanticError
 
 from mjcheckers import mjCheckable
 from mjts import mjTS
@@ -22,8 +23,6 @@ def isId(obj):
 
 class mjClass(mjCheckable):
   def __init__(self, name, ext_name, decls, ts, localts = None):
-    # self._ts = ts
-    # self._parse_tree = parse_tree
     self.name = name
     self.ext_name = ext_name
     self.decls = decls
@@ -47,8 +46,16 @@ class mjClass(mjCheckable):
     for d in self.decls:
       d.pprint(tabs+1)
 
-  def check(self, ts):
-    pass
+  def gen_code(self):
+    return ""
+
+  def check(self):
+    (redef, other) = self.ts.parent().classExists(self)
+    if redef:
+      raise SemanticError(other.name.get_line(), other.name.get_col(),
+                          "Clase ya definida")
+
+    return (True, self.gen_code())
 
 class mjReturn(mjCheckable):
   def __init__(self, expr = None):
@@ -211,7 +218,7 @@ class mjClassVariableDecl(mjCheckable):
     self.list_ids = list_ids
 
     for v, i in self.list_ids:
-      ts.addVar(mjVariable(self.type, v, i))
+      ts.addVar(mjClassVariable(self.type, v, i, modifs))
 
   def pprint(self, tabs=0):
     ms = ""
@@ -225,3 +232,8 @@ class mjClassVariableDecl(mjCheckable):
       else:
         print "   "*tabs + name.get_lexeme() + " = "
         init.pprint(tabs+1)
+
+class mjClassVariable(mjVariable):
+  def __init__(self, ty, val, init, modifs):
+    super(mjClassVariable, self).__init__(ty, val, init)
+    self.modifs = modifs

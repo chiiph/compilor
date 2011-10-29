@@ -17,4 +17,5 @@ class SyntaxError(Exception):
         return self.message
 
 class SemanticError(LexicalError):
-    pass
+    def __init__(self, line, col, msg = "Error semantico."):
+        super(SemanticError, self).__init__(line,col,msg)

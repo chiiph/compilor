@@ -60,7 +60,7 @@ if __name__ == "__main__":
       for cl in ast:
         cl.pprint()
         cl.pprint_ts()
-        #cl.check()
+        cl.check()
     except SemanticError as se:
       pretty_print_error_message(input_filepath, se)
     except SyntaxError as se:
