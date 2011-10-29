@@ -1,10 +1,13 @@
 from mjts import mjTS
 from lexor import Token
-from constants import IDENTIFIER
+from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED
 from errors import SemanticError
 
 from mjcheckers import mjCheckable
 from mjts import mjTS
+
+def isVariableDecl(obj):
+  return isinstance(obj, mjVariableDecl)
 
 def isBlock(obj):
   return isinstance(obj, mjBlock)
@@ -27,6 +30,7 @@ class mjClass(mjCheckable):
     self.ext_name = ext_name
     self.ext_class = None # no resuelto todavia
     self.decls = decls
+    self.gen_codes = []
 
     ts.addClass(self)
     self.ts = localts
@@ -62,7 +66,12 @@ class mjClass(mjCheckable):
         raise SemanticError(self.ext_name.get_line(), self.ext_name.get_col(),
                             "No existe la clase padre")
 
-    return (True, self.gen_code())
+    for d in self.decls:
+      if not d is None:
+        code = d.check()
+        self.gen_codes.append(code)
+
+    return self.gen_code()
 
 class mjReturn(mjCheckable):
   def __init__(self, expr = None):
@@ -114,6 +123,7 @@ class mjVariableDecl(mjCheckable):
   def __init__(self, ref, args):
     self.ref = ref
     self.args = args
+    self.ts = None
 
   def pprint(self, tabs=0):
     print "  "*tabs + "Decl::" + self.ref.get_lexeme()
@@ -123,6 +133,17 @@ class mjVariableDecl(mjCheckable):
       if not e is None:
         e.pprint(tabs+1)
 
+  def set_ts(self, ts):
+    self.ts = ts
+
+  def check(self):
+    # en este caso, el check agrega la variable a la ts local
+    # a diferencia de classvariable que lo hace en el constructor
+    for v, e in self.args:
+      if not self.ts.addVar(mjVariable(self.ref, v, e)):
+        raise SemanticError(v.get_line(), v.get_col(),
+                            "Variable redefinida")
+
 class mjBlock(mjCheckable):
   def __init__(self, stats = [], ts=None):
     self.stats = stats
@@ -130,6 +151,30 @@ class mjBlock(mjCheckable):
 
   def set_ts(self, ts):
     self.ts = ts
+    for stat in self.stats:
+      if not stat is None:
+        if isBlock(stat):
+          bts = mjTS(ts)
+          stat.set_ts(bts)
+        elif isIf(stat):
+          if not stat.stat is None:
+            # si no es un bloque y es una variabledecl, significa que
+            # es solo esa declaracion y no hay nada mas, asi qeu se
+            # crea el ts, pero no se va a usar para mucho
+            if isBlock(stat.stat) or isVariableDecl(stat.stat):
+              bts = mjTS(ts)
+              stat.stat.set_ts(bts)
+          if not stat.elsestat is None:
+            if isBlock(stat.elsestat) or isVariableDecl(stat.stat):
+              bts = mjTS(ts)
+              stat.elsestat.set_ts(bts)
+        elif isWhile(stat):
+          if not stat.statement is None:
+            if isBlock(stat.statement) or isVariableDecl(stat.stat):
+              bts = mjTS(ts)
+              stat.statement.set_ts(bts)
+        elif isVariableDecl(stat):
+          stat.set_ts(ts)
 
   def pprint(self, tabs=0):
     print "  "*tabs + "{{{"
@@ -154,6 +199,12 @@ class mjBlock(mjCheckable):
         elif isWhile(s):
           if not s.statement is None:
             s.statement.pprint_ts(tabs+1)
+
+  def check(self):
+    print "Checking block..."
+    for s in self.stats:
+      if not s is None:
+        s.check()
 
 class mjVariable(object):
   def __init__(self, typ, name, val=None):
@@ -191,17 +242,6 @@ class mjMethod(mjCheckable):
     if isBlock(stat):
       ts = mjTS(last_ts)
       stat.set_ts(ts)
-      for s in stat.stats:
-        if not s is None:
-          self.create_block_ts(s, ts)
-    elif isIf(stat):
-      if not stat.stat is None:
-        self.create_block_ts(stat.stat, last_ts)
-      if not stat.elsestat is None:
-        self.create_block_ts(stat.elsestat, last_ts)
-    elif isWhile(stat):
-      if not stat.statement is None:
-        self.create_block_ts(stat.statement, last_ts)
 
   def pprint_ts(self, tabs=0):
     print "  "*tabs + "** Method::" + self.name.get_lexeme() + " **"
@@ -218,14 +258,22 @@ class mjMethod(mjCheckable):
   def is_constructor(self):
     return self.ret_type is None
 
+  def check(self):
+    print "Checking method..."
+    self.body.check()
+
 class mjClassVariableDecl(mjCheckable):
   def __init__(self, modifs, t, list_ids, ts):
     self.modifs = modifs
     self.type = t
     self.list_ids = list_ids
+    self.ts = ts
 
+    self.check_modifs()
     for v, i in self.list_ids:
-      ts.addVar(mjClassVariable(self.type, v, i, modifs))
+      if not ts.addVar(mjClassVariable(self.type, v, i, modifs)):
+        raise SemanticError(v.get_line(), v.get_col(),
+                            "Variable redefinida")
 
   def pprint(self, tabs=0):
     ms = ""
@@ -239,6 +287,33 @@ class mjClassVariableDecl(mjCheckable):
       else:
         print "   "*tabs + name.get_lexeme() + " = "
         init.pprint(tabs+1)
+
+  def check_modifs(self):
+    if len(self.modifs) == 1:
+      if self.modifs[0].get_type() == STATIC:
+        raise SemanticError(self.modifs[0].get_line(),
+                            self.modifs[0].get_col(),
+                            "Las variables de instancia no pueden ser solo static,"
+                            "deben ser o public static o protected static.")
+    elif len(self.modifs) == 2:
+      if not (self.modifs[0].get_type() in [STATIC, PUBLIC] and
+              self.modifs[1].get_type() in [STATIC, PUBLIC] and
+              self.modifs[0].get_type() != self.modifs[1].get_type()) \
+      or not (self.modifs[0].get_type() in [STATIC, PROTECTED] and
+              self.modifs[1].get_type() in [STATIC, PROTECTED] and
+              self.modifs[0].get_type() != self.modifs[1].get_type()):
+        raise SemanticError(self.modifs[1].get_line(),
+                            self.modifs[1].get_col(),
+                            "Combinacion invalida de modificadores, las opciones son:\n"
+                            "\tpublic static, static public, o\n"
+                            "\tprotected static, static protected.")
+
+    for m in self.modifs:
+      print m
+    #raise Exception()
+
+  def check(self):
+    return "" # el checkeo se hace en el constructor
 
 class mjClassVariable(mjVariable):
   def __init__(self, ty, val, init, modifs):
