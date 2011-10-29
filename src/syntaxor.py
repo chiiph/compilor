@@ -790,7 +790,7 @@ class Syntaxor(object):
         last = None
         # aca va a haber que diferenciar entre todos y NULL y THIS
         if self._current_token.get_type() in [INT_LITERAL, TRUE, FALSE, CHAR_LITERAL, STRING_LITERAL, NULL, THIS]:
-            prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
+            prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             (first, last) = self.rest_primary()
         elif self.tok(PAREN_OPEN):
@@ -807,7 +807,7 @@ class Syntaxor(object):
             prim = self.class_instance_creation_expression()
             (first, last) = self.rest_primary()
         elif self.tok(SUPER):
-            prim = mjPrimary(self._current_token, self._current_token.get_type()._id)
+            prim = mjPrimary(self._current_token, self._current_token.get_type())
             self.update_token()
             (first, last) = self.rest_primary()
         elif self.tok(IDENTIFIER):
@@ -827,7 +827,7 @@ class Syntaxor(object):
         if self.tok(ACCESSOR):
             self.update_token()
             if self.tok(IDENTIFIER):
-                prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
+                prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
                 self.update_token()
                 (where, argList, first, last) = self.rest2_primary()
                 if where == 1:
@@ -937,7 +937,7 @@ class Syntaxor(object):
             #     argList = self.rest2_method_invocation()
             (where, _type, expr, first, last) = self.rest_method_invocation()
         elif (self._current_token.type() in FIRST_literal) or self.tok(THIS):
-            prim_ref = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
+            prim_ref = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             (prim_first, prim_last) = self.rest_primary()
             if self.tok(ACCESSOR):
@@ -1102,7 +1102,7 @@ class Syntaxor(object):
         if self.tok(ACCESSOR):
             self.update_token()
             if self.tok(IDENTIFIER):
-                prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
+                prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
 
                 self.update_token()
                 (prim_first, prim_last) = self.rest_primary()
@@ -1190,7 +1190,7 @@ class Syntaxor(object):
             elif where == 3:
                 raise Exception()
         elif self.tok(IDENTIFIER):
-            prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type()._id)
+            prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             if self.tok(PAREN_OPEN):
                 argList = self.rest2_method_invocation()

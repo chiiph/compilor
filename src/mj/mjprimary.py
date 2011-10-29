@@ -1,6 +1,16 @@
 from mjcheckers import mjCheckable
 from constants import *
 
+def literalToType(lit):
+  if lit == INT_LITERAL:
+    return INT_TYPE
+  elif lit == CHAR_LITERAL:
+    return CHAR_TYPE
+  elif lit == TRUE or lit == FALSE:
+    return BOOLEAN_TYPE
+  else:
+    return REF_TYPE
+
 # las constantes deben ser negativas, asi se puede usar el id de los tokens transparentemente
 class mjPrimary(mjCheckable):
   # Constantes de tipo de primary
@@ -41,7 +51,16 @@ class mjPrimary(mjCheckable):
       self.goesto.pprint(tabs+1)
 
   def get_type(self):
-    raise NotImplemented()
+    return self.type # las expressions reimplementan esto para resolverse y devolver un INT_TYPE o STRING_TYPE
+
+  def compatibleWith(self, othertype):
+    if self.type > 0: #token
+      if literalToType(self.type) != REF_TYPE:
+        return literalToType(self.type) == othertype.get_type() # othertype siempre va a ser un token
+      else:
+        return False
+    else:
+      return False # cada uno reimplementa esto
 
 class mjMethodInvocation(mjPrimary):
   def __init__(self, prim, args):
@@ -97,7 +116,7 @@ class mjAssignment(mjPrimary):
     if not self.goesto is None:
       self.goesto.pprint(tabs+1)
 
-class mjOp(mjCheckable):
+class mjOp(mjPrimary):
   def __init__(self, symbol, operands):
     self.symbol = symbol
     self.operands = operands

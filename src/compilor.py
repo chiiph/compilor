@@ -55,6 +55,9 @@ if __name__ == "__main__":
 
     try:
       ts = mjTS()
+      s = Token()
+      s._lexeme = "String"
+      mjClass(s, None, [], ts)
       ast = syntaxor.check_syntax(ts)
       ts.pprint()
       for cl in ast:

@@ -60,6 +60,7 @@ MOD             = TT(41, "<MOD>")
 NOT             = TT(42, "<NOT>")
 ACCESSOR        = TT(43, "<ACCESSOR>")
 EOF             = TT(44, "<EOF>")
+REF_TYPE        = TT(45, "<REF_TYPE>")
 
 reserved_words = { "class"      : CLASS
                  , "extends"    : EXTENDS

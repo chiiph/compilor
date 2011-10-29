@@ -2,6 +2,7 @@ from mjts import mjTS
 from lexor import Token
 from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED
 from errors import SemanticError
+from firsts import FIRST_primitive_type
 
 from mjcheckers import mjCheckable
 from mjts import mjTS
@@ -269,8 +270,13 @@ class mjClassVariableDecl(mjCheckable):
     self.list_ids = list_ids
     self.ts = ts
 
+    self.check_type()
     self.check_modifs()
     for v, i in self.list_ids:
+      if not i is None:
+        if not i.compatibleWith(self.type):
+          raise SemanticError(v.get_line(), v.get_col(),
+                              "Inicializacion de tipo incompatible")
       if not ts.addVar(mjClassVariable(self.type, v, i, modifs)):
         raise SemanticError(v.get_line(), v.get_col(),
                             "Variable redefinida")
@@ -287,6 +293,15 @@ class mjClassVariableDecl(mjCheckable):
       else:
         print "   "*tabs + name.get_lexeme() + " = "
         init.pprint(tabs+1)
+
+  def check_type(self):
+    if self.type.get_type() in FIRST_primitive_type:
+      return
+    if not self.ts.parent().typeExists(self.type.get_lexeme()):
+      raise SemanticError(self.type.get_line(),
+                          self.type.get_col(),
+                          "No existe ninguna clase llamada %s"
+                          % self.type.get_lexeme())
 
   def check_modifs(self):
     if len(self.modifs) == 1:
