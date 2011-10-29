@@ -25,6 +25,7 @@ class mjClass(mjCheckable):
   def __init__(self, name, ext_name, decls, ts, localts = None):
     self.name = name
     self.ext_name = ext_name
+    self.ext_class = None # no resuelto todavia
     self.decls = decls
 
     ts.addClass(self)
@@ -54,6 +55,12 @@ class mjClass(mjCheckable):
     if redef:
       raise SemanticError(other.name.get_line(), other.name.get_col(),
                           "Clase ya definida")
+
+    if not self.ext_name is None:
+      (valid, self.ext_class) = self.ts.parent().validExtend(self.ext_name)
+      if not valid:
+        raise SemanticError(self.ext_name.get_line(), self.ext_name.get_col(),
+                            "No existe la clase padre")
 
     return (True, self.gen_code())
 
