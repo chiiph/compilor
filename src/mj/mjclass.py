@@ -195,7 +195,7 @@ class mjMethod(mjCheckable):
     self.body.pprint_ts(tabs+1)
 
   def pprint(self, tabs=0):
-    if not self.ret_type is None:
+    if not self.is_constructor():
       print "  "*tabs + "Method::" + self.name.get_lexeme() + " : " + self.ret_type.get_lexeme()
     else:
       print "  "*tabs + "Constructor::" + self.name.get_lexeme()

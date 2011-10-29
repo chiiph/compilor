@@ -58,6 +58,7 @@ if __name__ == "__main__":
       ast = syntaxor.check_syntax(ts)
       ts.pprint()
       for cl in ast:
+        cl.pprint()
         cl.pprint_ts()
         #cl.check()
     except SemanticError as se:

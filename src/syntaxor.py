@@ -130,7 +130,8 @@ class Syntaxor(object):
             (method_decl, init, list_ids, method_body) = self.declarators()
             return (method_decl, _type, init, list_ids, method_body)
         elif self.tok(VOID_TYPE):
-            _type = self.update_token()
+            _type = self._current_token
+            self.update_token()
             (method_decl, init, list_ids, method_body) = self.declarators()
             return (method_decl, _type, init, list_ids, method_body)
         elif self.tok(IDENTIFIER):
@@ -138,7 +139,7 @@ class Syntaxor(object):
             self.update_token()
             (method_decl, init, list_ids, method_body) = self.rest2_class_body_declaration()
             if method_decl:
-                return (method_decl, t, None, list_ids, method_body)
+                return (method_decl, t, init, list_ids, method_body)
             else:
                 return (method_decl, t, None, list_ids, None)
 
