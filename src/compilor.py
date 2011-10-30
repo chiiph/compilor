@@ -59,12 +59,15 @@ if __name__ == "__main__":
       s._lexeme = "String"
       mjClass(s, None, [], ts)
       ast = syntaxor.check_syntax(ts)
-      print ts
+      print ts, "=================="
       ts.pprint()
+      print "==================="
+
       for cl in ast:
         cl.pprint()
         cl.pprint_ts()
         cl.check()
+
     except SemanticError as se:
       pretty_print_error_message(input_filepath, se)
     except SyntaxError as se:

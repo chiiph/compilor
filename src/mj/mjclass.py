@@ -12,6 +12,9 @@ def isVariable(obj):
 def isClass(obj):
   return isinstance(obj, mjClass)
 
+def isMethod(obj):
+  return isinstance(obj, mjMethod)
+
 def isVariableDecl(obj):
   return isinstance(obj, mjVariableDecl)
 
@@ -40,6 +43,8 @@ class mjClass(mjCheckable):
     if localts is None:
       self.ts = mjTS(ts)
 
+    self.ts.set_owner(self)
+
   def pprint_ts(self, tabs=0):
     print "  "*tabs + "** Class::" + self.name.get_lexeme() + " **"
     self.ts.pprint(tabs)
@@ -54,8 +59,20 @@ class mjClass(mjCheckable):
     for d in self.decls:
       d.pprint(tabs+1)
 
+  def hasVarAtAll(self, v):
+    if self.ts.varExists(v):
+      return (True, self.ts.getVar(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasVarAtAll(v)
+    else:
+      return (False, None)
+
   def gen_code(self):
     return ""
+
+  def pre_check(self):
+    for d in self.decls:
+      d.pre_check()
 
   def check(self):
     (redef, other) = self.ts.parent().classExists(self)
@@ -145,11 +162,16 @@ class mjVariableDecl(mjCheckable):
 
   def set_ts(self, ts):
     self.ts = ts
+    for (v, e) in self.args:
+      if not e is None:
+        e.set_ts(ts)
 
   def check(self):
-    # en este caso, el check agrega la variable a la ts local
-    # a diferencia de classvariable que lo hace en el constructor
     for v, e in self.args:
+      if not e is None:
+        if not e.compatibleWith(self.ref):
+          raise SemanticError(v.get_line(), v.get_col(),
+                              "Inicializacion de tipo incompatible")
       if not self.ts.addVar(mjVariable(self.ref, v, e, self.ts)):
         raise SemanticError(v.get_line(), v.get_col(),
                             "Variable redefinida")
@@ -220,6 +242,8 @@ class mjBlock(mjCheckable):
 
 class mjVariable(object):
   def __init__(self, typ, name, val=None, ts=None):
+    super(mjVariable, self).__init__()
+
     self.type = typ
     self.name = name
     self.val = val
@@ -239,17 +263,41 @@ class mjMethod(mjCheckable):
     self.processed_params = []
     self.body = body
 
-    ts.addMethod(self)
+    # hack
+    self._modifiable = mjModifiable()
+    self._modifiable.modifs = self.modifs
+    self.isStatic = self._modifiable.isStatic
+    self.isPublic = self._modifiable.isPublic
+    self.isProtected = self._modifiable.isProtected
+
+    if not ts.addMethod(self):
+      raise SemanticError(self.name.get_line(), self.name.get_col(),
+                          "Redefinicion de metodo.")
+
     self.ts = localts
     if localts is None:
       self.ts = mjTS(ts)
 
-    for (t, v) in params:
+    self.ts.set_owner(self)
+
+    for (t, v) in self.params:
       var = mjVariable(t, v, ts=self.ts)
       self.processed_params.append(var)
-      self.ts.addVar(var)
+      if not self.ts.addVar(var):
+        raise SemanticError(v.get_line(), v.get_col(),
+                            "%s ya esta definido como parametro"
+                            % v.get_lexeme())
 
     self.create_block_ts()
+
+  def check_type(self, t):
+    if t.get_type() in FIRST_primitive_type:
+      return
+    if not self.ts.parent().parent().typeExists(t.get_lexeme()):
+      raise SemanticError(t.get_line(),
+                          t.get_col(),
+                          "No existe ninguna clase llamada %s"
+                          % t.get_lexeme())
 
   def get_signature(self):
     param_str = []
@@ -285,6 +333,9 @@ class mjMethod(mjCheckable):
 
   def check(self):
     print "Checking method..."
+    for (t, v) in self.params:
+      self.check_type(t)
+
     self.body.check()
 
 class mjClassVariableDecl(mjCheckable):
@@ -294,14 +345,12 @@ class mjClassVariableDecl(mjCheckable):
     self.list_ids = list_ids
     self.ts = ts
 
-    self.check_type()
-    self.check_modifs()
     for v, i in self.list_ids:
       if not i is None:
-        if not i.compatibleWith(self.type):
-          raise SemanticError(v.get_line(), v.get_col(),
-                              "Inicializacion de tipo incompatible")
-      if not ts.addVar(mjClassVariable(self.type, v, i, modifs, self.ts)):
+        i.set_ts(ts)
+
+    for v, i in self.list_ids:
+      if not self.ts.addVar(mjClassVariable(self.type, v, i, self.modifs, self.ts)):
         raise SemanticError(v.get_line(), v.get_col(),
                             "Variable redefinida")
 
@@ -317,6 +366,15 @@ class mjClassVariableDecl(mjCheckable):
       else:
         print "   "*tabs + name.get_lexeme() + " = "
         init.pprint(tabs+1)
+
+  def check(self):
+    self.check_type()
+    self.check_modifs()
+    for v, i in self.list_ids:
+      if not i is None:
+        if not i.compatibleWith(self.type):
+          raise SemanticError(v.get_line(), v.get_col(),
+                              "Inicializacion de tipo incompatible")
 
   def check_type(self):
     if self.type.get_type() in FIRST_primitive_type:
@@ -347,17 +405,23 @@ class mjClassVariableDecl(mjCheckable):
                             "\tpublic static, static public, o\n"
                             "\tprotected static, static protected.")
 
-    for m in self.modifs:
-      print m
-    #raise Exception()
-
-  def check(self):
-    return "" # el checkeo se hace en el constructor
-
 class mjClassVariable(mjVariable):
   def __init__(self, ty, val, init, modifs, ts=None):
     super(mjClassVariable, self).__init__(ty, val, init, ts)
     self.modifs = modifs
+
+    # hack
+    self._modifiable = mjModifiable()
+    self._modifiable.modifs = self.modifs
+    self.isStatic = self._modifiable.isStatic
+    self.isPublic = self._modifiable.isPublic
+    self.isProtected = self._modifiable.isProtected
+
+    self.modifs = modifs
+
+class mjModifiable(object):
+  def __init__(self):
+    super(mjModifiable, self).__init__()
 
   def isStatic(self):
     for m in self.modifs:
