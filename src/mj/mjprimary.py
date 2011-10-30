@@ -266,37 +266,34 @@ class mjMethodInvocation(mjPrimary):
 
   def inmediate_resolve(self):
     if self.ref.get_type() == THIS:
-      # caso especial: this.loquesea o this
-      # hay qeu devolver una variable del tipo actual, para que sea consistente con el resto de los checkeos
-      # pero este this puede estar en bloques anidados, asi que hay qeu buscar la primer ts parent que isClassTs() == True
+      # caso especial: this()
       cts = self.find_class_ts()
       if cts is None: # grave problema
         raise Exception("No existe ts de clase!!")
 
       cl = cts.owner()
-      name = Token()
-      name._lexeme = "@this"
-      return mjVariable(cl.name, name, self.ref, ts=cts)
+      # llama a otro constructor
+      raise NotImplementedError()
     elif self.ref.get_type() == SUPER:
+      # llama a constructor de la clase padre
       raise NotImplementedError()
 
-    tmpts = self.ts
-    found = False
-    possible_static_var = False
-    while (not tmpts is None) and (not found):
-      found = tmpts.methodExists(self.call_signature())
-      if not found:
-        tmpts = tmpts.parent()
+    cts = self.find_class_ts()
+    if cts is None: # grave problema
+      raise Exception("No existe ts de clase!!")
 
-    if not found:
+    cl = cts.owner()
+
+    (hasmethod, method) = cl.hasMethodAtAll(self.call_signature())
+    if hasmethod:
+      # aca no se checkea por visibilidad porque es la misma clase
+      return method
+    else:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "Referencia a metodo desconocido: %s"
                           % self.call_signature())
-    else:
-      return tmpts.getMethod(self.call_signature())
 
   def _resolve_class(self, val):
-    print "DESDE METHODINV"
     # Este es el caso de acceso a un metodo estatico
     if val.ts.methodExists(self.call_signature()):
       method = val.ts.getMethod(self.call_signature())
@@ -317,18 +314,41 @@ class mjMethodInvocation(mjPrimary):
                           % (self.ref.get_lexeme(), val.name.get_lexeme()))
 
   def _resolve_method(self, val):
-    print "DESDE METHODINV2"
-    raise NotImplementedError()
+    if val.ret_type.get_type() in FIRST_primitive_type:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "%s no puede ser dereferenciado."
+                          % val.ret_type.get_lexeme())
+
+    # sino
+    t = self.ts.recFindType(val.ret_type.get_lexeme())
+    (hasvar, var) = t.hasMethodAtAll(self.ref.get_lexeme())
+    if hasvar:
+      return var
+    else:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "La clase %s no posee ningun miembro llamado %s"
+                          % (t.name.get_lexeme(), self.ref.get_lexeme()))
 
   def _resolve_var(self, val):
-    print "DESDE METHODINV3"
-    if val.type.get_type() in FIRST_primitive_type:
+    if isToken(val.type) and val.type.get_type() in FIRST_primitive_type:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "Los tipos primitivos no no pueden ser dereferenciados")
-    t = val.ts.recFindType(val.type.get_lexeme())
-    t.pprint()
-    raise NotImplementedError()
 
+    t = val.ts.recFindType(val.type.get_lexeme())
+    (hasmethod, method) = t.hasMethodAtAll(self.call_signature())
+    if not hasmethod:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "La clase %s no posee ningun metodo %s"
+                          % (t.name.get_lexeme(), self.call_signature()))
+
+    # a menos que sea un caso del estilo this.variable
+    if val.name.get_lexeme() != "@this" and \
+       val.name.get_lexeme() != "@super":
+      if not method.isPublic():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Se esta tratando de acceder a un miembro protegido de la clase %s"
+                            % t.name.get_lexeme())
+    return method
 
   def to_string(self):
     return "[" + self.type_to_str() + "::" + self.ref.get_lexeme() + "]"

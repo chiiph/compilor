@@ -67,6 +67,14 @@ class mjClass(mjCheckable):
     else:
       return (False, None)
 
+  def hasMethodAtAll(self, v):
+    if self.ts.methodExists(v):
+      return (True, self.ts.getMethod(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasMethodAtAll(v)
+    else:
+      return (False, None)
+
   def gen_code(self):
     return ""
 
