@@ -644,10 +644,11 @@ class Syntaxor(object):
 
     def conditional_expression(self):
         coe = self.conditional_or_expression()
+        sym = self._current_token
         (op, rce) = self.rest_conditional_expression()
         if op is None:
             return coe
-        return op([coe, rce])
+        return op(sym, [coe, rce])
 
     def rest_conditional_expression(self):
         if self.tok(ASSIGNMENT):
@@ -660,10 +661,11 @@ class Syntaxor(object):
 
     def conditional_or_expression(self):
         cae = self.conditional_and_expression()
+        sym = self._current_token
         (op, rcoe) = self.rest_conditional_or_expression()
         if op is None:
             return cae
-        return op([cae, rcoe])
+        return op(sym, [cae, rcoe])
 
     def rest_conditional_or_expression(self):
         if self.tok(CONDITIONAL_OR):
@@ -676,10 +678,11 @@ class Syntaxor(object):
 
     def conditional_and_expression(self):
         ee = self.equality_expression()
+        sym = self._current_token
         (op, rcae) = self.rest_conditional_and_expression()
         if op is None:
             return ee
-        return op([ee, rcae])
+        return op(sym, [ee, rcae])
 
     def rest_conditional_and_expression(self):
         if self.tok(CONDITIONAL_AND):
@@ -692,10 +695,11 @@ class Syntaxor(object):
 
     def equality_expression(self):
         re = self.relational_expression()
+        sym = self._current_token
         (op, ree) = self.rest_equality_expression()
         if op is None:
             return re
-        return op([re, ree])
+        return op(sym, [re, ree])
 
     def rest_equality_expression(self):
         if self.tok(EQUALS) or self.tok(NOT_EQUALS):
@@ -708,10 +712,11 @@ class Syntaxor(object):
 
     def relational_expression(self):
         ae = self.additive_expression()
+        sym = self._current_token
         (op, re) = self.rest_relational_expression()
         if op is None:
             return ae
-        return op([ae, re])
+        return op(sym, [ae, re])
 
     def rest_relational_expression(self):
         if self._current_token.get_type() in FIRST_rest_relational_expression:
@@ -724,10 +729,11 @@ class Syntaxor(object):
 
     def additive_expression(self):
         me = self.multiplicative_expression()
+        sym = self._current_token
         (op, ae) = self.rest_additive_expression()
         if op is None:
             return me
-        return op([me, ae])
+        return op(sym, [me, ae])
 
     def rest_additive_expression(self):
         if self._current_token.get_type() in FIRST_rest_additive_expression:
@@ -740,10 +746,11 @@ class Syntaxor(object):
 
     def multiplicative_expression(self):
         u = self.unary_expression()
+        sym = self._current_token
         (op, me) = self.rest_multiplicative_expression()
         if op is None:
             return u
-        return op([u, me])
+        return op(sym, [u, me])
 
     def rest_multiplicative_expression(self):
         if self._current_token.get_type() in FIRST_rest_multiplicative_expression:
@@ -756,10 +763,11 @@ class Syntaxor(object):
 
     def unary_expression(self):
         if self.tok(ADD) or self.tok(SUB):
+            sym = self._current_token
             op = ops[self._current_token.get_type()]
             self.update_token()
             ex = self.unary_expression()
-            return op([ex])
+            return op(sym, [ex])
         elif self._current_token.get_type() in FIRST_unary_expression_not_plus_minus:
             ex = self.unary_expression_not_plus_minus()
             return ex

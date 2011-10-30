@@ -213,8 +213,6 @@ class mjBlock(mjCheckable):
             if isBlock(stat.statement) or isVariableDecl(stat.stat):
               bts = mjTS(ts)
               stat.statement.set_ts(bts)
-        elif isVariableDecl(stat):
-          stat.set_ts(ts)
         else:
           stat.set_ts(ts)
 
@@ -245,6 +243,7 @@ class mjBlock(mjCheckable):
   def check(self):
     print "Checking block..."
     for s in self.stats:
+      print s
       if not s is None:
         s.check()
 

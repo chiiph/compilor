@@ -238,17 +238,17 @@ class mjPrimary(mjCheckable):
         return tmpts.getType(self.ref.get_lexeme())
 
   def compatibleWith(self, othertype):
-    if self.type > 0: #token
-      if literalToType(self.type) != REF_TYPE:
-        return literalToType(self.type) == othertype.get_type() # othertype siempre va a ser un token
-      else:
-        # en este caso es un IDENTIFIER, asi qeu hay qeu resolverlo
-        self.pprint()
-        t = self.resolve()
-        # si sale bien, me deberia dar una var
-        return t.type.get_lexeme() == othertype.get_lexeme()
+    if literalToType(self.type) != REF_TYPE:
+      return literalToType(self.type) == othertype.get_type() # othertype siempre va a ser un token
     else:
-      return False # cada uno reimplementa esto
+      # en este caso es un IDENTIFIER, asi qeu hay qeu resolverlo
+      self.pprint()
+      t = self.resolve()
+      # si sale bien, me deberia dar una var
+      return t.type.get_lexeme() == othertype.get_lexeme()
+
+  def check(self):
+    self.resolve()
 
 class mjMethodInvocation(mjPrimary):
   def __init__(self, prim, args):
@@ -377,16 +377,16 @@ class mjMethodInvocation(mjPrimary):
 
   def compatibleWith(self, othertype):
     m = self.resolve()
-    if m.ret_type > 0: #token
-      if literalToType(m.ret_type.get_type()) != REF_TYPE:
-        return literalToType(m.ret_type.get_type()) == othertype.get_type() # othertype siempre va a ser un token
-      else:
-        # en este caso es un IDENTIFIER, asi qeu hay qeu resolverlo
-        t = self.resolve()
-        # si sale bien, me deberia dar un method
-        return t.ret_type.get_lexeme() == othertype.get_lexeme()
+    if literalToType(m.ret_type.get_type()) != REF_TYPE:
+      return literalToType(m.ret_type.get_type()) == othertype.get_type() # othertype siempre va a ser un token
     else:
-      return False
+      # en este caso es un IDENTIFIER, asi qeu hay qeu resolverlo
+      t = self.resolve()
+      # si sale bien, me deberia dar un method
+      return t.ret_type.get_lexeme() == othertype.get_lexeme()
+
+  def check(self):
+    self.resolve()
 
 class mjClassInstanceCreation(mjMethodInvocation):
   def __init__(self, prim, args):
@@ -394,13 +394,6 @@ class mjClassInstanceCreation(mjMethodInvocation):
     self.type = mjPrimary.ClassInstCreat
 
   def compatibleWith(self, othertype):
-    if self.type > 0:
-      if literalToType(self.type) != REF_TYPE:
-        return False
-      else:
-        raise Exception()
-        return False
-    else:
       t = self.resolve()
       return t.type.get_lexeme() == othertype.get_lexeme()
 
@@ -486,6 +479,13 @@ class mjAssignment(mjPrimary):
     super(mjAssignment, self).__init__(prim.ref, mjPrimary.Assignment)
     self.goesto = prim.goesto
     self.expr = expr
+    self.ts = None
+
+  def set_ts(self, ts):
+    self.ts = ts
+    self.expr.set_ts(ts)
+    if not self.goesto is None:
+      self.goesto.set_ts(ts)
 
   def to_string(self):
     return "[" + self.type_to_str() + "]"
@@ -535,67 +535,118 @@ class mjOp(mjPrimary):
   def __init__(self, symbol, operands):
     self.symbol = symbol
     self.operands = operands
+    self.ts = None
+
+  def set_ts(self, ts):
+    self.ts = ts
+    for o in self.operands:
+      o.set_ts(ts)
 
   def pprint(self, tabs=0):
-    print "  "*tabs + self.symbol
+    print "  "*tabs + self.symbol.get_lexeme()
     for o in self.operands:
       o.pprint(tabs+1)
 
+  def resolve(self):
+    types = []
+    for o in self.operands:
+      r = o.resolve()
+      if isToken(r):
+        types.append(typeToStr(literalToType(r.get_type())))
+      else:
+        types.append(r.type.get_lexeme())
+
+    diffs = len(set(types))
+    if diffs != 1:
+      raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
+                          "Suma de tipos incompatibles.")
+
+    name = Token()
+    name._lexeme = "@" + ("".join(random.choice(string.letters + string.digits) for i in xrange(10)))
+    t = Token()
+    t._lexeme = types[0]
+    t._line = self.symbol.get_line()
+    t._col = self.symbol.get_col()
+    if isToken(r):
+      t._type = literalToType(r.get_type())
+      print "IIII", t._type
+    else:
+      t._type = r.type.get_type()
+    print t
+    var = mjVariable(t, name, ts=self.ts)
+    return var
+
+  def compatibleWith(self, othertype):
+    m = self.resolve()
+    if m.type.get_type() > 0: #token
+      if literalToType(m.type.get_type()) != REF_TYPE:
+        return literalToType(m.type.get_type()) == othertype.get_type() # othertype siempre va a ser un token
+      else:
+        t = self.resolve()
+        # si sale bien, me deberia dar un method
+        return t.type.get_lexeme() == othertype.get_lexeme()
+    else:
+      return False
+
+  def check(self):
+    print "FROMOP"
+    raise Exception()
+
 class mjOr(mjOp):
-  def __init__(self, operands):
-    super(mjOr, self).__init__("||", operands)
+  def __init__(self, symbol, operands):
+    super(mjOr, self).__init__(symbol, operands)
 
 class mjAnd(mjOp):
-  def __init__(self, operands):
-    super(mjAnd, self).__init__("&&", operands)
+  def __init__(self, symbol, operands):
+    super(mjAnd, self).__init__(symbol, operands)
 
 class mjEq(mjOp):
-  def __init__(self, operands):
-    super(mjEq, self).__init__("==", operands)
+  def __init__(self, symbol, operands):
+    super(mjEq, self).__init__(symbol, operands)
 
 class mjNotEq(mjOp):
-  def __init__(self, operands):
-    super(mjNotEq, self).__init__("!=", operands)
+  def __init__(self, symbol, operands):
+    super(mjNotEq, self).__init__(symbol, operands)
 
 class mjLt(mjOp):
-  def __init__(self, operands):
-    super(mjLt, self).__init__("<", operands)
+  def __init__(self, symbol, operands):
+    super(mjLt, self).__init__(symbol, operands)
 
 class mjGt(mjOp):
-  def __init__(self, operands):
-    super(mjGt, self).__init__(">", operands)
+  def __init__(self, symbol, operands):
+    super(mjGt, self).__init__(symbol, operands)
 
 class mjLtEq(mjOp):
-  def __init__(self, operands):
-    super(mjLtEq, self).__init__("<=", operands)
+  def __init__(self, symbol, operands):
+    super(mjLtEq, self).__init__(symbol, operands)
 
 class mjGtEq(mjOp):
-  def __init__(self, operands):
-    super(mjGtEq, self).__init__(">=", operands)
+  def __init__(self, symbol, operands):
+    super(mjGtEq, self).__init__(symbol, operands)
 
 class mjAdd(mjOp):
-  def __init__(self, operands):
-    super(mjAdd, self).__init__("+", operands)
+  def __init__(self, symbol, operands):
+    super(mjAdd, self).__init__(symbol, operands)
 
 class mjSub(mjOp):
-  def __init__(self, operands):
-    super(mjSub, self).__init__("-", operands)
+  def __init__(self, symbol, operands):
+    super(mjSub, self).__init__(symbol, operands)
 
 class mjMul(mjOp):
-  def __init__(self, operands):
-    super(mjMul, self).__init__("*", operands)
+  def __init__(self, symbol, operands):
+    super(mjMul, self).__init__(symbol, operands)
 
 class mjDiv(mjOp):
-  def __init__(self, operands):
-    super(mjDiv, self).__init__("/", operands)
+  def __init__(self, symbol, operands):
+    super(mjDiv, self).__init__(symbol, operands)
 
 class mjMod(mjOp):
-  def __init__(self, operands):
-    super(mjMod, self).__init__("%", operands)
+  def __init__(self, symbol, operands):
+    super(mjMod, self).__init__(symbol, operands)
 
 class mjNot(mjOp):
-  def __init__(self, operands):
-    super(mjNot, self).__init__("!", operands)
+  def __init__(self, symbol, operands):
+    super(mjNot, self).__init__(symbol, operands)
 
 ops = {ADD             : mjAdd,
        SUB             : mjSub,
