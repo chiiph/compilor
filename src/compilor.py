@@ -59,6 +59,7 @@ if __name__ == "__main__":
       s._lexeme = "String"
       mjClass(s, None, [], ts)
       ast = syntaxor.check_syntax(ts)
+      print ts
       ts.pprint()
       for cl in ast:
         cl.pprint()

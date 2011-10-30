@@ -17,7 +17,7 @@ class Syntaxor(object):
 
     def update_token(self):
         self._current_token = self._lexor.get_token()
-        #print self._current_token
+        print self._current_token
 
     def tok(self, tokentype):
         return self._current_token.get_type() == tokentype
@@ -443,8 +443,10 @@ class Syntaxor(object):
             return self.return_statement()
         elif self._current_token.get_type() in FIRST_primary:
             (prim_first, prim_last) = self.primary()
-            # aca siempre se devuelve where == 4, o sea lambda, ver de sacar
             (where, _type, expr, first, last) = self.rest_method_invocation()
+            if where == 2:
+                if _type == 1:
+                    return mjAssignment(prim_last, expr)
             return prim_last
         else:
             raise SyntaxError(self._current_token.get_line(),
@@ -1051,6 +1053,8 @@ class Syntaxor(object):
         else:
             the_last = prim_ref
 
+        the_last.pprint()
+        print where, _type
         if where == 4:
             return the_last
 

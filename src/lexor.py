@@ -4,6 +4,9 @@ from errors import *
 
 import os, re
 
+def isToken(obj):
+    return isinstance(obj, Token)
+
 class Token(object):
     def __init__(self):
         self._lexeme = ""
