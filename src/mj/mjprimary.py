@@ -598,14 +598,14 @@ class mjAssignment(mjPrimary):
                           "Lado izquierdo de la asignacion no valido")
     super(mjAssignment, self).__init__(prim.ref, mjPrimary.Assignment)
     self.goesto = prim.goesto
+    self.left = prim
     self.expr = expr
     self.ts = None
 
   def set_ts(self, ts):
     self.ts = ts
+    self.left.set_ts(ts)
     self.expr.set_ts(ts)
-    if not self.goesto is None:
-      self.goesto.set_ts(ts)
 
   def to_string(self):
     return "[" + self.type_to_str() + "]"
@@ -619,7 +619,7 @@ class mjAssignment(mjPrimary):
     self.expr.pprint(tabs+1)
 
   def check(self):
-    left = self.resolve()
+    left = self.left.resolve()
     right = self.expr.resolve()
 
     if isToken(left): # los stringlits se devuelven como mjvars
@@ -628,6 +628,14 @@ class mjAssignment(mjPrimary):
     elif left.type.get_lexeme() == "String" and left.name.get_lexeme().startswith("@"):
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "No se puede realizar una asignacion hacia un literal")
+
+    if not isVariable(left):
+      raise SemanticError(left.name.get_line(), left.name.get_col(),
+                          "El lado izquierdo de la asignacion es invalido")
+    elif left.name.get_lexeme().startswith("@"):
+      raise SemanticError(left.name.get_line(), left.name.get_col(),
+                          "El lado izquierdo de la asignacion es invalido")
+
     if isToken(right):
       t = literalToType(right.get_type())
       if t == REF_TYPE:
@@ -658,6 +666,10 @@ class mjAssignment(mjPrimary):
                               "Tipos incompatibles en asignacion, no se puede asignar"
                               "un %s a un %s."
                               % (right.type.get_lexeme(), left.type.get_lexeme()))
+
+  def resolve(self):
+    raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                        "La asignacion debe estar en un statement individual")
 
 class mjOp(mjPrimary):
   def __init__(self, symbol, operands):
