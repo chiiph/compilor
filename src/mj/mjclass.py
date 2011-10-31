@@ -1,6 +1,6 @@
 from mjts import mjTS
 from lexor import Token
-from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED
+from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED, VOID_TYPE
 from errors import SemanticError
 from firsts import FIRST_primitive_type
 
@@ -300,11 +300,39 @@ class mjMethod(mjCheckable):
   def check_type(self, t):
     if t.get_type() in FIRST_primitive_type:
       return
+    if t.get_type() == VOID_TYPE:
+      return
     if not self.ts.parent().parent().typeExists(t.get_lexeme()):
       raise SemanticError(t.get_line(),
                           t.get_col(),
                           "No existe ninguna clase llamada %s"
                           % t.get_lexeme())
+
+  def check_modifs(self):
+    if len(self.modifs) == 1:
+      if self.modifs[0].get_type() == STATIC:
+        raise SemanticError(self.modifs[0].get_line(),
+                            self.modifs[0].get_col(),
+                            "Las metodos no pueden ser solo static,"
+                            "deben ser o public static o protected static.")
+    elif len(self.modifs) == 2:
+      if not (self.modifs[0].get_type() in [STATIC, PUBLIC] and
+              self.modifs[1].get_type() in [STATIC, PUBLIC] and
+              self.modifs[0].get_type() != self.modifs[1].get_type()) \
+      and not (self.modifs[0].get_type() in [STATIC, PROTECTED] and
+              self.modifs[1].get_type() in [STATIC, PROTECTED] and
+              self.modifs[0].get_type() != self.modifs[1].get_type()):
+        raise SemanticError(self.modifs[1].get_line(),
+                            self.modifs[1].get_col(),
+                            "Combinacion invalida de modificadores, las opciones son:\n"
+                            "\tpublic static, static public, o\n"
+                            "\tprotected static, static protected.")
+
+    if self.is_constructor():
+      if self.isStatic():
+        raise SemanticError(self.name.get_line(),
+                            self.name.get_col(),
+                            "Los constructores no pueden ser static.")
 
   def get_signature(self):
     param_str = []
@@ -342,6 +370,21 @@ class mjMethod(mjCheckable):
     print "Checking method..."
     for (t, v) in self.params:
       self.check_type(t)
+
+    if not self.ret_type is None:
+      self.check_type(self.ret_type)
+
+    self.check_modifs()
+
+    cl = self.ts.parent().owner()
+    if not self.is_constructor():
+      if cl.name.get_lexeme() == self.name.get_lexeme():
+        raise SemanticError(self.name.get_line(), self.name.get_col(),
+                            "No se puede definir un metodo con el mismo nombre que la clase.")
+    else:
+      if cl.name.get_lexeme() != self.name.get_lexeme():
+        raise SemanticError(self.name.get_line(), self.name.get_col(),
+                            "Los constructores de clase deben llamarse igual que su clase.")
 
     self.body.check()
 

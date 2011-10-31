@@ -429,7 +429,12 @@ class mjClassInstanceCreation(mjMethodInvocation):
     else:
       cl = tmpts.getType(self.ref.get_lexeme())
       if cl.ts.methodExists(self.call_signature()):
-        return cl.ts.getMethod(self.call_signature())
+        m = cl.ts.getMethod(self.call_signature())
+        if m.isProtected():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "%s es un constructor protegido."
+                              % self.call_signature())
+        return m
       else:
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "No existe ningun constructor con el signature %s"
@@ -442,6 +447,7 @@ class mjClassInstanceCreation(mjMethodInvocation):
     if self.goesto is None:
       # resolvemos el metodo
       t = self.inmediate_resolve()
+      print self.ref
       # si no es un constructor
       if not t.is_constructor():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
@@ -523,8 +529,8 @@ class mjAssignment(mjPrimary):
           raise SemanticError(right.get_line(), right.get_col(),
                               "Tipos incompatibles en asignacion")
     else:
-      print left.type
-      print right.type
+      print "BB", left.type
+      print "BB", right.type
       if left.type.get_lexeme() != right.type.get_lexeme():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Tipos incompatibles en asignacion, no se puede asignar"
@@ -533,6 +539,7 @@ class mjAssignment(mjPrimary):
 
 class mjOp(mjPrimary):
   def __init__(self, symbol, operands):
+    super(mjOp, self).__init__(symbol)
     self.symbol = symbol
     self.operands = operands
     self.ts = None
@@ -547,8 +554,15 @@ class mjOp(mjPrimary):
     for o in self.operands:
       o.pprint(tabs+1)
 
+  def _var_type(self, r, types):
+    if isToken(r):
+      return (literalToType(r.get_type()), types[0])
+    else:
+      return (r.type.get_type(), types[0])
+
   def resolve(self):
     types = []
+    r = None
     for o in self.operands:
       r = o.resolve()
       if isToken(r):
@@ -556,23 +570,24 @@ class mjOp(mjPrimary):
       else:
         types.append(r.type.get_lexeme())
 
-    diffs = len(set(types))
+    s = list(set(types))
+    diffs = len(s)
     if diffs != 1:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
-                          "Suma de tipos incompatibles.")
+                          "Operacion entre tipos incompatibles.")
+
+    if not s[0] in ["String", "int", "boolean"]:
+      raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
+                          "Operacion con tipos no validos, solo pueden ser int, boolean o String.")
 
     name = Token()
     name._lexeme = "@" + ("".join(random.choice(string.letters + string.digits) for i in xrange(10)))
     t = Token()
-    t._lexeme = types[0]
+    (rt, name_type) = self._var_type(r, types)
+    t._lexeme = name_type
     t._line = self.symbol.get_line()
     t._col = self.symbol.get_col()
-    if isToken(r):
-      t._type = literalToType(r.get_type())
-      print "IIII", t._type
-    else:
-      t._type = r.type.get_type()
-    print t
+    t._type = rt
     var = mjVariable(t, name, ts=self.ts)
     return var
 
@@ -592,35 +607,78 @@ class mjOp(mjPrimary):
     print "FROMOP"
     raise Exception()
 
-class mjOr(mjOp):
+class mjArithOp(mjOp):
+  def __init__(self, symbol, operands):
+    super(mjArithOp, self).__init__(symbol, operands)
+
+  def _var_type(self, r, types):
+    if types[0] != "int":
+      raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
+                         "No se puede realizar esta operacion sobre otro tipo que no sea int.")
+    return (INT_TYPE, "int")
+
+class mjBoolOp(mjOp):
+  def __init__(self, symbol, operands):
+    super(mjBoolOp, self).__init__(symbol, operands)
+
+  def _var_type(self, r, types):
+    if "boolean" in types or "int" in types:
+      return (BOOLEAN_TYPE, "boolean")
+    else:
+      raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
+                          "Operandos de tipo invalido, las operaciones booleanas solo aceptan int o boolean.")
+
+class mjStrictIntBoolOp(mjOp):
+  def __init__(self, symbol, operands):
+    super(mjStrictIntBoolOp, self).__init__(symbol, operands)
+
+  def _var_type(self, r, types):
+    if "int" in types:
+      return (BOOLEAN_TYPE, "boolean")
+    else:
+      raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
+                          "Operandos de tipo invalido, las operaciones booleanas solo aceptan int o boolean.")
+
+class mjStrictBoolOp(mjOp):
+  def __init__(self, symbol, operands):
+    super(mjStrictBoolOp, self).__init__(symbol, operands)
+
+  def _var_type(self, r, types):
+    if "boolean" in types:
+      return (BOOLEAN_TYPE, "boolean")
+    else:
+      raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
+                          "Operandos de tipo invalido, las operaciones booleanas solo aceptan int o boolean.")
+
+class mjOr(mjStrictBoolOp):
   def __init__(self, symbol, operands):
     super(mjOr, self).__init__(symbol, operands)
 
-class mjAnd(mjOp):
+class mjAnd(mjStrictBoolOp):
   def __init__(self, symbol, operands):
     super(mjAnd, self).__init__(symbol, operands)
 
-class mjEq(mjOp):
+class mjEq(mjBoolOp):
   def __init__(self, symbol, operands):
     super(mjEq, self).__init__(symbol, operands)
 
-class mjNotEq(mjOp):
+class mjNotEq(mjBoolOp):
   def __init__(self, symbol, operands):
     super(mjNotEq, self).__init__(symbol, operands)
 
-class mjLt(mjOp):
+class mjLt(mjStrictIntBoolOp):
   def __init__(self, symbol, operands):
     super(mjLt, self).__init__(symbol, operands)
 
-class mjGt(mjOp):
+class mjGt(mjStrictIntBoolOp):
   def __init__(self, symbol, operands):
     super(mjGt, self).__init__(symbol, operands)
 
-class mjLtEq(mjOp):
+class mjLtEq(mjStrictIntBoolOp):
   def __init__(self, symbol, operands):
     super(mjLtEq, self).__init__(symbol, operands)
 
-class mjGtEq(mjOp):
+class mjGtEq(mjStrictIntBoolOp):
   def __init__(self, symbol, operands):
     super(mjGtEq, self).__init__(symbol, operands)
 
@@ -628,23 +686,23 @@ class mjAdd(mjOp):
   def __init__(self, symbol, operands):
     super(mjAdd, self).__init__(symbol, operands)
 
-class mjSub(mjOp):
+class mjSub(mjArithOp):
   def __init__(self, symbol, operands):
     super(mjSub, self).__init__(symbol, operands)
 
-class mjMul(mjOp):
+class mjMul(mjArithOp):
   def __init__(self, symbol, operands):
     super(mjMul, self).__init__(symbol, operands)
 
-class mjDiv(mjOp):
+class mjDiv(mjArithOp):
   def __init__(self, symbol, operands):
     super(mjDiv, self).__init__(symbol, operands)
 
-class mjMod(mjOp):
+class mjMod(mjArithOp):
   def __init__(self, symbol, operands):
     super(mjMod, self).__init__(symbol, operands)
 
-class mjNot(mjOp):
+class mjNot(mjStrictBoolOp):
   def __init__(self, symbol, operands):
     super(mjNot, self).__init__(symbol, operands)
 
