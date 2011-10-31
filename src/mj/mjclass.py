@@ -1,6 +1,6 @@
 from mjts import mjTS
 from lexor import Token
-from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED, VOID_TYPE
+from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED, VOID_TYPE, BOOLEAN_TYPE
 from errors import SemanticError
 from firsts import FIRST_primitive_type
 
@@ -173,6 +173,26 @@ class mjWhile(mjCheckable):
       self.statement.pprint(tabs+1)
     print "  "*tabs + "}}}"
 
+  def check(self):
+    print "Checking while..."
+    e = self.expr.resolve()
+    if mjp.isToken(e):
+      if mjp.literalToType(e.get_type()) != BOOLEAN_TYPE:
+        raise SemanticError(e.get_line(), e.get_col(),
+                            "La expresion debe ser de tipo boolean")
+    elif isVariable(e):
+      if e.type.get_type() != BOOLEAN_TYPE:
+        raise SemanticError(e.name.get_line(), e.name.get_col(),
+                            "La expresion debe ser de tipo boolean")
+    elif isMethod(e):
+      if e.is_constructor() or e.ret_type.get_type() != BOOLEAN_TYPE:
+        raise SemanticError(self.expr.ref.get_line(), self.expr.ref.get_col(),
+                            "La expresion debe ser de tipo boolean")
+    else:
+      raise Exception()
+
+    self.statement.check()
+
 class mjIf(mjCheckable):
   def __init__(self, expr, stat, elsestat=None):
     self.expr = expr
@@ -192,6 +212,28 @@ class mjIf(mjCheckable):
       print "  "*tabs + "{{{"
       self.elsestat.pprint(tabs+1)
       print "  "*tabs + "}}}"
+
+  def check(self):
+    print "Checking if..."
+    e = self.expr.resolve()
+    if mjp.isToken(e):
+      if mjp.literalToType(e.get_type()) != BOOLEAN_TYPE:
+        raise SemanticError(e.get_line(), e.get_col(),
+                            "La expresion debe ser de tipo boolean")
+    elif isVariable(e):
+      if e.type.get_type() != BOOLEAN_TYPE:
+        raise SemanticError(e.name.get_line(), e.name.get_col(),
+                            "La expresion debe ser de tipo boolean")
+    elif isMethod(e):
+      if e.is_constructor() or e.ret_type.get_type() != BOOLEAN_TYPE:
+        raise SemanticError(self.expr.ref.get_line(), self.expr.ref.get_col(),
+                            "La expresion debe ser de tipo boolean")
+    else:
+      raise Exception()
+
+    self.stat.check()
+    if not self.elsestat is None:
+      self.elsestat.check()
 
 class mjVariableDecl(mjCheckable):
   def __init__(self, ref, args):
@@ -236,22 +278,18 @@ class mjBlock(mjCheckable):
           bts = mjTS(ts)
           stat.set_ts(bts)
         elif isIf(stat):
+          stat.expr.set_ts(ts)
           if not stat.stat is None:
-            # si no es un bloque y es una variabledecl, significa que
-            # es solo esa declaracion y no hay nada mas, asi qeu se
-            # crea el ts, pero no se va a usar para mucho
-            if isBlock(stat.stat) or isVariableDecl(stat.stat):
-              bts = mjTS(ts)
-              stat.stat.set_ts(bts)
+            bts = mjTS(ts)
+            stat.stat.set_ts(bts)
           if not stat.elsestat is None:
-            if isBlock(stat.elsestat) or isVariableDecl(stat.stat):
-              bts = mjTS(ts)
-              stat.elsestat.set_ts(bts)
+            bts = mjTS(ts)
+            stat.elsestat.set_ts(bts)
         elif isWhile(stat):
+          stat.expr.set_ts(ts)
           if not stat.statement is None:
-            if isBlock(stat.statement) or isVariableDecl(stat.stat):
-              bts = mjTS(ts)
-              stat.statement.set_ts(bts)
+            bts = mjTS(ts)
+            stat.statement.set_ts(bts)
         else:
           stat.set_ts(ts)
 
@@ -310,6 +348,35 @@ class mjBlock(mjCheckable):
               stat.method = m
         elif isReturn(stat):
           stat.method = m
+
+  def has_reachable_ret(self):
+    # hay return alcanzable si
+    for s in self.stats:
+      # 1: hay un return en el bloque
+      if isReturn(s):
+        return True
+
+    # hay que ciclar por todas las statements en cada caso
+    for s in self.stats:
+      # 2: si hay un block, tiene un reachable return
+      if isBlock(s):
+        return s.has_reachable_ret()
+
+    for s in self.stats:
+      # 3: si hay un if
+      # si llegamos aca, significa que no hay ningun return antes o despues
+      # de este if, entonces,
+      if isIf(s):
+        # si tiene else, tiene que tener reachable rets en ambos statements
+        has_ret_then = (isBlock(s.stat) and s.stat.has_reachable_ret()) or isReturn(s.stat)
+        has_ret_else = False
+        if not s.elsestat is None:
+          has_ret_else = (isBlock(s.elsestat) and s.elsestat.has_reachable_ret()) or isReturn(s.elsestat)
+
+        return has_ret_then and has_ret_else
+
+    # por default...
+    return False
 
 class mjVariable(object):
   def __init__(self, typ, name, val=None, ts=None):
@@ -433,6 +500,7 @@ class mjMethod(mjCheckable):
 
   def check(self):
     print "Checking method..."
+
     for (t, v) in self.params:
       self.check_type(t)
 
@@ -453,6 +521,11 @@ class mjMethod(mjCheckable):
 
     self.body.check()
 
+    if not self.is_constructor() and self.ret_type.get_type() != VOID_TYPE:
+      if not self.body.has_reachable_ret():
+        raise SemanticError(self.name.get_line(), self.name.get_col(),
+                            "El metodo puede no retornar el tipo especificado.")
+
 class mjClassVariableDecl(mjCheckable):
   def __init__(self, modifs, t, list_ids, ts):
     self.modifs = modifs
@@ -461,11 +534,11 @@ class mjClassVariableDecl(mjCheckable):
     self.ts = ts
 
     for v, i in self.list_ids:
+      var = mjClassVariable(self.type, v, i, self.modifs, self.ts)
       if not i is None:
         i.set_ts(ts)
-
-    for v, i in self.list_ids:
-      if not self.ts.addVar(mjClassVariable(self.type, v, i, self.modifs, self.ts)):
+        i.set_var(var)
+      if not self.ts.addVar(var):
         raise SemanticError(v.get_line(), v.get_col(),
                             "Variable redefinida")
 

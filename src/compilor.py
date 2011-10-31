@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
       for cl in ast:
         cl.pprint()
-        cl.pprint_ts()
+        #cl.pprint_ts()
         cl.check()
 
     except SemanticError as se:

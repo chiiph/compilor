@@ -14,6 +14,8 @@
 # TODO: terminar de actualizar primary para devolver (first, last)
 # TODO: ver rest2_primary, en syntaxor rest primary se llamaba en ambos, aca no (igual lo cambie aca)
 
+# NOTA: el SUPER en primary ahora entra en method invocation directamente
+
 Programas
 <compilation unit>                          ::=   <type declarations>:decls
 { return decls }
@@ -385,14 +387,6 @@ Expresiones
   prim.from = classinst
   return prim
 }
-<primary>                                   ::=   SUPER:sup ACCESSOR IDENTIFIER:id <rest primary>:prim
-{
-  if prim == None:
-    return id
-  id.from = sup
-  prim.from = id
-  return prim
-}
 <primary>                                   ::=   <method invocation>:methodinv <rest primary>:prim
 {
   if prim == None:
@@ -573,7 +567,7 @@ Expresiones
 
 # estos son iguales al anterior, salvo que cambia la primera parte
 <method invocation>                         ::=   <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
-<method invocation>                         ::=   THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation>                         ::=   THIS <rest primary> <rest method invocation>
 <method invocation>                         ::=   PAREN_OPEN <expression> PAREN_CLOSE <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   <class instance creation expression> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
 <method invocation>                         ::=   SUPER <rest primary> <rest super>
@@ -608,6 +602,8 @@ Expresiones
   elif where == 3:
       raise Exception()
 }
+
+<rest super>                                ::= LAMBDA
 
 # podriamos decir que se usan las siguientes constantes para ver desde donde se viene:
 # 1: primer caso

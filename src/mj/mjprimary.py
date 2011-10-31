@@ -48,6 +48,7 @@ class mjPrimary(mjCheckable):
     self.type = type
     self.ts = None
     self.goesto = None
+    self.var = None
 
   def set_ts(self,ts):
     self.ts = ts
@@ -138,6 +139,10 @@ class mjPrimary(mjCheckable):
     # Hay que ver que tipo devuelve el metodo para ver si un objeto de ese tipo
     # tiene un miembro publico no estatico llamado como self.ref.get_lexeme()
 
+    if val.is_constructor():
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "No se puede dereferenciar la llamada a un constructor")
+
     # si es un tipo primitivo, es un error
     if val.ret_type.get_type() in FIRST_primitive_type:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
@@ -207,6 +212,11 @@ class mjPrimary(mjCheckable):
       return self.find_method_ts(ts.parent())
     return None
 
+  def set_var(self, v):
+    self.var = v
+    if not self.goesto is None:
+      self.goesto.set_var(v)
+
   def inmediate_resolve(self):
     cts = self.find_class_ts()
     if cts is None: # grave problema
@@ -214,10 +224,22 @@ class mjPrimary(mjCheckable):
 
     cl = cts.owner()
 
-    mts = self.find_method_ts()
-    if mts is None:
-      raise Exception("No existe ts de metodo!!!")
-    mt = mts.owner()
+    mts = None
+    mt = None
+    # caso especial!
+    # o estamos adentro de un metodo, o en un initializer de una var de clase
+    # en el segundo caso, el parent del parent de la ts actual es None, porque el parent
+    # es el ts global
+    if self.ts.parent().parent() is None:
+      # esto significa que es un llamado _*FUERA*_ de un metodo!
+      # entonces los checkeos de metodo (en mt) ahora en realidad se tienen
+      # que hacer sobre la variable hacia la cual se le asigna esto
+      mt = self.var
+    else:
+      mts = self.find_method_ts()
+      if mts is None:
+        raise Exception("No existe ts de metodo!!!")
+      mt = mts.owner()
 
     if self.ref.get_type() == THIS:
       # caso especial: this.loquesea o this
@@ -298,23 +320,57 @@ class mjMethodInvocation(mjPrimary):
       self.goesto.set_ts(ts)
 
   def inmediate_resolve(self):
-    mts = self.find_method_ts()
-    if mts is None:
-      raise Exception("No existe ts de metodo!!!")
-    mt = mts.owner()
+    mts = None
+    mt = None
+    # caso especial!
+    # o estamos adentro de un metodo, o en un initializer de una var de clase
+    # en el segundo caso, el parent del parent de la ts actual es None, porque el parent
+    # es el ts global
+    if self.ts.parent().parent() is None:
+      # esto significa que es un llamado _*FUERA*_ de un metodo!
+      # entonces los checkeos de metodo (en mt) ahora en realidad se tienen
+      # que hacer sobre la variable hacia la cual se le asigna esto
+      mt = self.var
+    else:
+      mts = self.find_method_ts()
+      if mts is None:
+        raise Exception("No existe ts de metodo!!!")
+      mt = mts.owner()
 
+    cts = self.find_class_ts()
+    if cts is None: # grave problema
+      raise Exception("No existe ts de clase!!")
+
+    cl = cts.owner()
     if self.ref.get_type() == THIS:
       # caso especial: this()
-      cts = self.find_class_ts()
-      if cts is None: # grave problema
-        raise Exception("No existe ts de clase!!")
-
-      cl = cts.owner()
+      if not isMethod(mt) or not mt.is_constructor():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Las llamadas explicitas a constructores solo pueden realizarse dentro de otros constructores.")
       # llama a otro constructor
-      raise NotImplementedError()
+      call = self.call_signature().replace("this", cl.name.get_lexeme())
+      if cl.ts.methodExists(call):
+        return cl.ts.getMethod(call)
+      else:
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Referencia a constructor desconocido: %s"
+                            % call)
     elif self.ref.get_type() == SUPER:
       # llama a constructor de la clase padre
-      raise NotImplementedError()
+      if not isMethod(mt) or not mt.is_constructor():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Las llamadas explicitas a constructores solo pueden realizarse dentro de otros constructores.")
+
+      if cl.ext_class is None:
+        raise Exception("Extends no resuelto!")
+
+      call = self.call_signature().replace("super", cl.ext_name.get_lexeme())
+      if cl.ext_class.ts.methodExists(call):
+        return cl.ext_class.ts.getMethod(call)
+      else:
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Referencia a constructor desconocido: %s"
+                            % call)
 
     cts = self.find_class_ts()
     if cts is None: # grave problema
@@ -327,6 +383,10 @@ class mjMethodInvocation(mjPrimary):
       if mt.isStatic() and not method.isStatic():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a metodo no static desde uno static")
+      # se llama al constructor como si fuera un metodo cualquiera
+      if method.is_constructor():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "No se puede realizar una llamada a un constructor de esta forma.")
       # aca no se checkea por visibilidad porque es la misma clase
       return method
     else:
@@ -409,6 +469,13 @@ class mjMethodInvocation(mjPrimary):
       res = a.resolve()
       if isToken(res) and literalToType(res.get_type()) != REF_TYPE:
         param_str.append(typeToStr(literalToType(res.get_type())))
+      elif isMethod(res):
+        # si la llamada es this() o super()
+        if res.is_constructor():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "No se puede llamar a un constructor como un parametro para otra funcion.")
+        else:
+          param_str.append(res.ret_type.get_lexeme())
       elif isToken(res.type):
         param_str.append(res.type.get_lexeme())
       else: # es un mjClass
@@ -418,6 +485,10 @@ class mjMethodInvocation(mjPrimary):
 
   def compatibleWith(self, othertype):
     m = self.resolve()
+    if m.is_constructor():
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "La llamada a un constructor debe realizarse con una sentencia new o como una sentencia individual.")
+
     if literalToType(m.ret_type.get_type()) != REF_TYPE:
       return literalToType(m.ret_type.get_type()) == othertype.get_type() # othertype siempre va a ser un token
     else:
@@ -496,6 +567,8 @@ class mjClassInstanceCreation(mjMethodInvocation):
                             % self.ref.get_lexeme())
       name = Token()
       name._lexeme = "@" + ("".join(random.choice(string.letters + string.digits) for i in xrange(10)))
+      name._line = self.ref.get_line()
+      name._col = self.ref.get_col()
       return mjVariable(t.name, name, ts=self.ts)
     else:
       # esto se levanta en la etapa sintactica, pero por las dudas...
@@ -570,13 +643,21 @@ class mjAssignment(mjPrimary):
           raise SemanticError(right.get_line(), right.get_col(),
                               "Tipos incompatibles en asignacion")
     else:
-      print "BB", left.type
-      print "BB", right.type
-      if left.type.get_lexeme() != right.type.get_lexeme():
-        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                            "Tipos incompatibles en asignacion, no se puede asignar"
-                            "un %s a un %s."
-                            % (right.type.get_lexeme(), left.type.get_lexeme()))
+      if isMethod(right):
+        if right.is_constructor():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "No se puede realizar una asignacion con un constructor, debe utilizar la sentencia new.")
+        if left.type.get_lexeme() != right.ret_type.get_lexeme():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Tipos incompatibles en asignacion, no se puede asignar"
+                              "un %s a un %s."
+                              % (right.type.get_lexeme(), left.type.get_lexeme()))
+      else:
+        if left.type.get_lexeme() != right.type.get_lexeme():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Tipos incompatibles en asignacion, no se puede asignar"
+                              "un %s a un %s."
+                              % (right.type.get_lexeme(), left.type.get_lexeme()))
 
 class mjOp(mjPrimary):
   def __init__(self, symbol, operands):
@@ -623,6 +704,8 @@ class mjOp(mjPrimary):
 
     name = Token()
     name._lexeme = "@" + ("".join(random.choice(string.letters + string.digits) for i in xrange(10)))
+    name._line = self.symbol.get_line()
+    name._col = self.symbol.get_col()
     t = Token()
     (rt, name_type) = self._var_type(r, types)
     t._lexeme = name_type
