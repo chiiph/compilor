@@ -1,7 +1,7 @@
 from mjcheckers import mjCheckable
 from constants import *
 from errors import SemanticError
-from mjclass import isClass, mjVariable, isVariable, isMethod
+from mjclass import isClass, mjVariable, isVariable, isMethod, isClassVariable
 from firsts import FIRST_literal, FIRST_primitive_type
 from lexor import Token, isToken
 
@@ -198,21 +198,50 @@ class mjPrimary(mjCheckable):
       return self.find_class_ts(ts.parent())
     return None
 
+  def find_method_ts(self, ts=None):
+    if ts is None:
+      ts = self.ts
+    if isMethod(ts.owner()):
+      return ts
+    elif not ts.parent() is None:
+      return self.find_method_ts(ts.parent())
+    return None
+
   def inmediate_resolve(self):
+    cts = self.find_class_ts()
+    if cts is None: # grave problema
+      raise Exception("No existe ts de clase!!")
+
+    cl = cts.owner()
+
+    mts = self.find_method_ts()
+    if mts is None:
+      raise Exception("No existe ts de metodo!!!")
+    mt = mts.owner()
+
     if self.ref.get_type() == THIS:
       # caso especial: this.loquesea o this
+      # si el metodo donde se lo llama es estatico es un error
+      if mt.isStatic():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "No se puede usar this en un metodo static.")
+
       # hay qeu devolver una variable del tipo actual, para que sea consistente con el resto de los checkeos
       # pero este this puede estar en bloques anidados, asi que hay qeu buscar la primer ts parent que isClassTs() == True
-      cts = self.find_class_ts()
-      if cts is None: # grave problema
-        raise Exception("No existe ts de clase!!")
-
-      cl = cts.owner()
       name = Token()
       name._lexeme = "@this"
       return mjVariable(cl.name, name, self.ref, ts=cts)
     elif self.ref.get_type() == SUPER:
-      raise NotImplementedError()
+      if mt.isStatic():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "No se puede usar super en un metodo static.")
+
+      if cl.ext_class is None:
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "No se encontro la clase padre.")
+      name = Token()
+      name._lexeme = "@super"
+      return mjVariable(cl.name, name, self.ref, ts=cts)
 
     tmpts = self.ts
     found = False
@@ -233,7 +262,11 @@ class mjPrimary(mjCheckable):
                           % self.ref.get_lexeme())
     else:
       if not possible_static_var:
-        return tmpts.getVar(self.ref.get_lexeme())
+        v = tmpts.getVar(self.ref.get_lexeme())
+        if mt.isStatic() and isClassVariable(v) and not v.isStatic():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Referencia a identificador no static desde un metodo static")
+        return v
       else:
         return tmpts.getType(self.ref.get_lexeme())
 
@@ -265,6 +298,11 @@ class mjMethodInvocation(mjPrimary):
       self.goesto.set_ts(ts)
 
   def inmediate_resolve(self):
+    mts = self.find_method_ts()
+    if mts is None:
+      raise Exception("No existe ts de metodo!!!")
+    mt = mts.owner()
+
     if self.ref.get_type() == THIS:
       # caso especial: this()
       cts = self.find_class_ts()
@@ -286,6 +324,9 @@ class mjMethodInvocation(mjPrimary):
 
     (hasmethod, method) = cl.hasMethodAtAll(self.call_signature())
     if hasmethod:
+      if mt.isStatic() and not method.isStatic():
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Referencia a metodo no static desde uno static")
       # aca no se checkea por visibilidad porque es la misma clase
       return method
     else:

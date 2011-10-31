@@ -1,8 +1,10 @@
 import sys
-from syntaxor  import *
+from syntaxor import Syntaxor
+from lexor import Token
 from constants import *
 from errors    import LexicalError, SemanticError, SyntaxError
 
+from mj.mjclass import mjClass
 from mj.mjts import mjTS
 
 def pretty_print_error_message(input_filepath, exc):

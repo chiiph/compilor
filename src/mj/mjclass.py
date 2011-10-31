@@ -5,15 +5,22 @@ from errors import SemanticError
 from firsts import FIRST_primitive_type
 
 from mjcheckers import mjCheckable
+import mjprimary as mjp
 
 def isVariable(obj):
   return isinstance(obj, mjVariable)
+
+def isClassVariable(obj):
+  return isinstance(obj, mjClassVariable)
 
 def isClass(obj):
   return isinstance(obj, mjClass)
 
 def isMethod(obj):
   return isinstance(obj, mjMethod)
+
+def isReturn(obj):
+  return isinstance(obj, mjReturn)
 
 def isVariableDecl(obj):
   return isinstance(obj, mjVariableDecl)
@@ -102,8 +109,11 @@ class mjClass(mjCheckable):
     return self.gen_code()
 
 class mjReturn(mjCheckable):
-  def __init__(self, expr = None):
+  def __init__(self, ret = None, expr = None, method = None):
     self.expr = expr
+    self.method = method
+    self.ts = None
+    self.ret = ret
 
   def pprint(self, tabs=0):
     if not self.expr is None:
@@ -113,11 +123,40 @@ class mjReturn(mjCheckable):
       print "  "*tabs + "return;"
 
   def set_ts(self, ts):
+    self.ts = ts
     if not self.expr is None:
       self.expr.set_ts(ts)
 
   def check(self):
     print "Checking return..."
+    print self.method
+    self.method.pprint()
+    print self.method.ret_type
+    if self.method.is_constructor():
+      if not self.expr is None:
+        raise SemanticError(self.ret.get_line(), self.ret.get_col(),
+                            "Los return en constructores no deben retornar valores")
+      else:
+        return
+
+    if self.expr is None:
+      if self.method.ret_type.get_type() != VOID_TYPE:
+        raise SemanticError(self.ret.get_line(), self.ret.get_col(),
+                            "La sentencia return debe contener una expresion de tipo %s"
+                            % self.method.ret_type.get_lexeme())
+    else:
+      t = self.expr.resolve()
+      if mjp.isToken(t):
+        rt = mjp.literalToType(t.get_type())
+        if rt != self.method.ret_type.get_type():
+          raise SemanticError(self.ret.get_line(), self.ret.get_col(),
+                              "Se esta retornando %s en un metodo de tipo %s"
+                              % (mjp.typeToStr(rt), self.method.ret_type.get_lexeme()))
+      else:
+        if t.type.get_lexeme() != self.method.ret_type.get_lexeme():
+          raise SemanticError(self.ret.get_line(), self.ret.get_col(),
+                              "Se esta retornando %s en un metodo de tipo %s"
+                              % (t.type.get_lexeme(), self.method.ret_type.get_lexeme()))
 
 class mjWhile(mjCheckable):
   def __init__(self, expr, statement):
@@ -247,6 +286,31 @@ class mjBlock(mjCheckable):
       if not s is None:
         s.check()
 
+  def set_owning_method(self, m):
+    for stat in self.stats:
+      if not stat is None:
+        if isBlock(stat):
+          stat.set_owning_method(m)
+        elif isIf(stat):
+          if not stat.stat is None:
+            if isBlock(stat.stat):
+              stat.stat.set_owning_method(m)
+            elif isReturn(stat):
+              stat.method = m
+          if not stat.elsestat is None:
+            if isBlock(stat.elsestat):
+              stat.elsestat.set_owning_method(m)
+            elif isReturn(stat):
+              stat.method = m
+        elif isWhile(stat):
+          if not stat.statement is None:
+            if isBlock(stat.statement):
+              stat.statement.set_owning_method(m)
+            elif isReturn(stat):
+              stat.method = m
+        elif isReturn(stat):
+          stat.method = m
+
 class mjVariable(object):
   def __init__(self, typ, name, val=None, ts=None):
     super(mjVariable, self).__init__()
@@ -296,6 +360,7 @@ class mjMethod(mjCheckable):
                             % v.get_lexeme())
 
     self.create_block_ts()
+    self.body.set_owning_method(self)
 
   def check_type(self, t):
     if t.get_type() in FIRST_primitive_type:

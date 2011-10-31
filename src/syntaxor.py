@@ -3,8 +3,9 @@ from constants import *
 from firsts import *
 from errors import SyntaxError
 
-from mj.mjprimary import *
-from mj.mjclass import *
+import mj.mjprimary as mjp
+import mj.mjclass as mjc
+from mj.mjts import mjTS
 
 class Syntaxor(object):
     def __init__(self, path):
@@ -49,7 +50,7 @@ class Syntaxor(object):
                 self.update_token()
                 clts = mjTS(ts)
                 (ext_id, decls) = self.rest_class_declaration(clts)
-                return mjClass(t, ext_id, decls, ts, clts)
+                return mjc.mjClass(t, ext_id, decls, ts, clts)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -118,11 +119,11 @@ class Syntaxor(object):
         (method_decl, name, init, list_ids, method_body) = self.rest_class_body_declaration()
         if method_decl:
             if init == None: # constructor
-                return mjMethod(modifs = modifs, ret_type = None, name = name, params = list_ids, body = method_body, ts=ts)
+                return mjc.mjMethod(modifs = modifs, ret_type = None, name = name, params = list_ids, body = method_body, ts=ts)
             else:
-                return mjMethod(modifs = modifs, ret_type = name, name = init, params = list_ids, body = method_body, ts=ts)
+                return mjc.mjMethod(modifs = modifs, ret_type = name, name = init, params = list_ids, body = method_body, ts=ts)
         else:
-            return mjClassVariableDecl(modifs, name, list_ids, ts)
+            return mjc.mjClassVariableDecl(modifs, name, list_ids, ts)
 
     def rest_class_body_declaration(self):
         if self._current_token.get_type() in FIRST_primitive_type:
@@ -215,12 +216,12 @@ class Syntaxor(object):
     def rest_constructor_body(self):
         if self.tok(BRACE_CLOSE):
             self.update_token()
-            return mjBlock()
+            return mjc.mjBlock()
         elif self._current_token.get_type() in FIRST_block_statements:
             bstats = self.block_statements()
             if self.tok(BRACE_CLOSE):
                 self.update_token()
-                return mjBlock(bstats)
+                return mjc.mjBlock(bstats)
             else:
                 raise SyntaxError(self._current_token.get_line(),
                                   self._current_token.get_col(),
@@ -395,7 +396,7 @@ class Syntaxor(object):
         if self.tok(BRACE_OPEN):
             self.update_token()
             blstats = self.rest_block()
-            return mjBlock(blstats)
+            return mjc.mjBlock(blstats)
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -430,7 +431,7 @@ class Syntaxor(object):
         if self._current_token.get_type() in FIRST_primitive_type:
             prim_type = self.primitive_type()
             vardecl = self.local_variable_declaration_statement()
-            return mjVariableDecl(prim_type, vardecl)
+            return mjc.mjVariableDecl(prim_type, vardecl)
         elif self.tok(IF):
             return self.if_start_statement()
         elif self.tok(WHILE):
@@ -446,7 +447,7 @@ class Syntaxor(object):
             (where, _type, expr, first, last) = self.rest_method_invocation()
             if where == 2:
                 if _type == 1:
-                    return mjAssignment(prim_last, expr)
+                    return mjp.mjAssignment(prim_last, expr)
             return prim_last
         else:
             raise SyntaxError(self._current_token.get_line(),
@@ -610,9 +611,10 @@ class Syntaxor(object):
 
     def return_statement(self):
         if self.tok(RETURN):
+            r = self._current_token
             self.update_token()
             expr = self.rest_return_statement()
-            return mjReturn(expr)
+            return mjc.mjReturn(r, expr)
         else:
             raise SyntaxError(self._current_token.get_line(),
                               self._current_token.get_col(),
@@ -652,7 +654,7 @@ class Syntaxor(object):
 
     def rest_conditional_expression(self):
         if self.tok(ASSIGNMENT):
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             ce = self.conditional_expression()
             return (op, ce)
@@ -669,7 +671,7 @@ class Syntaxor(object):
 
     def rest_conditional_or_expression(self):
         if self.tok(CONDITIONAL_OR):
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             coe = self.conditional_or_expression()
             return (op, coe)
@@ -686,7 +688,7 @@ class Syntaxor(object):
 
     def rest_conditional_and_expression(self):
         if self.tok(CONDITIONAL_AND):
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             cae = self.conditional_and_expression()
             return (op, cae)
@@ -703,7 +705,7 @@ class Syntaxor(object):
 
     def rest_equality_expression(self):
         if self.tok(EQUALS) or self.tok(NOT_EQUALS):
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             ee = self.equality_expression()
             return (op, ee)
@@ -720,7 +722,7 @@ class Syntaxor(object):
 
     def rest_relational_expression(self):
         if self._current_token.get_type() in FIRST_rest_relational_expression:
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             re = self.relational_expression()
             return (op, re)
@@ -737,7 +739,7 @@ class Syntaxor(object):
 
     def rest_additive_expression(self):
         if self._current_token.get_type() in FIRST_rest_additive_expression:
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             ae = self.additive_expression()
             return (op, ae)
@@ -754,7 +756,7 @@ class Syntaxor(object):
 
     def rest_multiplicative_expression(self):
         if self._current_token.get_type() in FIRST_rest_multiplicative_expression:
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             me = self.multiplicative_expression()
             return (op, me)
@@ -764,7 +766,7 @@ class Syntaxor(object):
     def unary_expression(self):
         if self.tok(ADD) or self.tok(SUB):
             sym = self._current_token
-            op = ops[self._current_token.get_type()]
+            op = mjp.ops[self._current_token.get_type()]
             self.update_token()
             ex = self.unary_expression()
             return op(sym, [ex])
@@ -800,7 +802,7 @@ class Syntaxor(object):
         last = None
         # aca va a haber que diferenciar entre todos y NULL y THIS
         if self._current_token.get_type() in [INT_LITERAL, TRUE, FALSE, CHAR_LITERAL, STRING_LITERAL, NULL, THIS]:
-            prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
+            prim = mjp.mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             (first, last) = self.rest_primary()
         elif self.tok(PAREN_OPEN):
@@ -817,7 +819,7 @@ class Syntaxor(object):
             prim = self.class_instance_creation_expression()
             (first, last) = self.rest_primary()
         elif self.tok(SUPER):
-            prim = mjPrimary(self._current_token, self._current_token.get_type())
+            prim = mjp.mjPrimary(self._current_token, self._current_token.get_type())
             self.update_token()
             (first, last) = self.rest_primary()
         elif self.tok(IDENTIFIER):
@@ -837,11 +839,11 @@ class Syntaxor(object):
         if self.tok(ACCESSOR):
             self.update_token()
             if self.tok(IDENTIFIER):
-                prim = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
+                prim = mjp.mjPrimary(ref=self._current_token, type=self._current_token.get_type())
                 self.update_token()
                 (where, argList, first, last) = self.rest2_primary()
                 if where == 1:
-                    method = mjMethodInvocation(prim, argList)
+                    method = mjp.mjMethodInvocation(prim, argList)
                     if not first is None:
                         first.goesto = method
                         return (method, last)
@@ -879,8 +881,8 @@ class Syntaxor(object):
                 if self.tok(PAREN_OPEN):
                     self.update_token()
                     argList = self.rest_class_instance_creation_expression()
-                    prim_id = mjPrimary(ref=t, type=IDENTIFIER)
-                    return mjClassInstanceCreation(prim_id, argList)
+                    prim_id = mjp.mjPrimary(ref=t, type=IDENTIFIER)
+                    return mjp.mjClassInstanceCreation(prim_id, argList)
                 else:
                     raise SyntaxError(self._current_token.get_line(),
                                       self._current_token.get_col(),
@@ -939,7 +941,7 @@ class Syntaxor(object):
 
         if self.tok(IDENTIFIER):
             print "POR ACA", self._current_token
-            prim_ref = mjPrimary(ref=self._current_token, type=IDENTIFIER)
+            prim_ref = mjp.mjPrimary(ref=self._current_token, type=IDENTIFIER)
             self.update_token()
             (prim_first, prim_last) = self.rest_primary()
             # if self.tok(PAREN_OPEN):
@@ -947,18 +949,18 @@ class Syntaxor(object):
             #     argList = self.rest2_method_invocation()
             (where, _type, expr, first, last) = self.rest_method_invocation()
         elif (self._current_token.type() in FIRST_literal) or self.tok(THIS):
-            prim_ref = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
+            prim_ref = mjp.mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             (prim_first, prim_last) = self.rest_primary()
             if self.tok(ACCESSOR):
                 self.update_token()
                 if self.tok(IDENTIFIER):
-                    prim_id = mjPrimary(ref=self._current_token, type=IDENTIFIER)
+                    prim_id = mjp.mjPrimary(ref=self._current_token, type=IDENTIFIER)
                     self.update_token()
                     if self.tok(PAREN_OPEN):
                         argList = self.rest2_method_invocation()
                         (where, _type, expr, first, last) = self.rest_method_invocation()
-                        prim_id = mjMethodInvocation(prim_id, argList)
+                        prim_id = mjp.mjMethodInvocation(prim_id, argList)
                     else:
                         raise SyntaxError(self._current_token.get_line(),
                                           self._current_token.get_col(),
@@ -980,12 +982,12 @@ class Syntaxor(object):
                 if self.tok(ACCESSOR):
                     self.update_token()
                     if self.tok(IDENTIFIER):
-                        prim_id = mjPrimary(ref=self._current_token, type=IDENTIFIER)
+                        prim_id = mjp.mjPrimary(ref=self._current_token, type=IDENTIFIER)
                         self.update_token()
                         if self.tok(PAREN_OPEN):
                             argList = self.rest2_method_invocation()
                             (where, _type, expr, first, last) = self.rest_method_invocation()
-                            prim_id = mjMethodInvocation(prim_id, argList)
+                            prim_id = mjp.mjMethodInvocation(prim_id, argList)
                         else:
                             raise SyntaxError(self._current_token.get_line(),
                                               self._current_token.get_col(),
@@ -1008,12 +1010,12 @@ class Syntaxor(object):
             if self.tok(ACCESSOR):
                 self.update_token()
                 if self.tok(IDENTIFIER):
-                    prim_id = mjPrimary(ref=self._current_token, type=IDENTIFIER)
+                    prim_id = mjp.mjPrimary(ref=self._current_token, type=IDENTIFIER)
                     self.update_token()
                     if self.tok(PAREN_OPEN):
                         argList = self.rest2_method_invocation()
                         (where, _type, expr, first, last) = self.rest_method_invocation()
-                        prim_id = mjMethodInvocation(prim_id, argList)
+                        prim_id = mjp.mjMethodInvocation(prim_id, argList)
                     else:
                         raise SyntaxError(self._current_token.get_line(),
                                           self._current_token.get_col(),
@@ -1027,12 +1029,12 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Se esperaba un . .")
         elif self.tok(SUPER):
-            sup = mjPrimary(ref=self._current_token, type=SUPER)
+            sup = mjp.mjPrimary(ref=self._current_token, type=SUPER)
             self.update_token()
             (prim_first, prim_last) = self.rest_primary()
             (where, _type, expr, first, last) = self.rest_super()
             if where == 1:
-                method = mjMethodInvocation(sup, expr)
+                method = mjp.mjMethodInvocation(sup, expr)
                 first.goesto = method
             elif where == 2:
                 first.goesto = sup
@@ -1070,10 +1072,10 @@ class Syntaxor(object):
             if where == 3:
                 method = None
                 if not prim_last is None:
-                    method = mjMethodInvocation(prim_last, expr)
+                    method = mjp.mjMethodInvocation(prim_last, expr)
                     method.goesto = prim_last.goesto
                 else:
-                    method = mjMethodInvocation(prim_ref, expr)
+                    method = mjp.mjMethodInvocation(prim_ref, expr)
 
                 if not first is None:
                     first.goesto = method
@@ -1082,17 +1084,17 @@ class Syntaxor(object):
                         the_last = method
 
             print "YYYYYYYYYYYY", expr
-            return mjAssignment(the_last, expr)
+            return mjp.mjAssignment(the_last, expr)
         elif _type == 2:
             if where == 1:
                 return the_last
             elif where == 3:
                 method = None
                 if not prim_last is None:
-                    method = mjMethodInvocation(prim_last, expr)
+                    method = mjp.mjMethodInvocation(prim_last, expr)
                     method.goesto = prim_last.goesto
                 else:
-                    method = mjMethodInvocation(prim_ref, expr)
+                    method = mjp.mjMethodInvocation(prim_ref, expr)
 
                 if not first is None:
                     first.goesto = method
@@ -1105,16 +1107,16 @@ class Syntaxor(object):
             return the_last
         elif _type == 4:
             prim_ref.pprint()
-            if not isId(prim_ref):
+            if not mjc.isId(prim_ref):
                 raise Exception("AA")
             print "TYPE ES 4444444444444444", expr
-            return mjVariableDecl(prim_ref.ref, expr)
+            return mjc.mjVariableDecl(prim_ref.ref, expr)
 
     def rest_method_invocation(self):
         if self.tok(ACCESSOR):
             self.update_token()
             if self.tok(IDENTIFIER):
-                prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
+                prim_id = mjp.mjPrimary(ref=self._current_token, type=self._current_token.get_type())
 
                 self.update_token()
                 (prim_first, prim_last) = self.rest_primary()
@@ -1141,7 +1143,7 @@ class Syntaxor(object):
                     if not prim_first is None:
                         prim_ref = prim_last
 
-                    method = mjMethodInvocation(prim_ref.ref, expr)
+                    method = mjp.mjMethodInvocation(prim_ref.ref, expr)
                     method.goesto = prim_ref.goesto
                     if not prim_first is None: # caso "especial"
                         prim_first.goesto = prim_id
@@ -1202,12 +1204,12 @@ class Syntaxor(object):
             elif where == 3:
                 raise Exception()
         elif self.tok(IDENTIFIER):
-            prim_id = mjPrimary(ref=self._current_token, type=self._current_token.get_type())
+            prim_id = mjp.mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             if self.tok(PAREN_OPEN):
                 argList = self.rest2_method_invocation()
                 (where, _type, expr, first, last) = self.rest_method_invocation()
-                method = mjMethodInvocation(prim_id, expr)
+                method = mjp.mjMethodInvocation(prim_id, expr)
                 if not first is None:
                     first.goesto = method
                 if where == 4:
