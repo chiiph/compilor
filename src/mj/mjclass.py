@@ -37,6 +37,23 @@ def isWhile(obj):
 def isId(obj):
   return (isinstance(obj.ref, Token) and obj.ref.get_type() == IDENTIFIER)
 
+def hasMain(ts):
+  mains = []
+  for clstr in ts._sections["classes"]:
+    cl = ts.getType(clstr)
+    if cl.ts.methodExists("main()"):
+      m = cl.ts.getMethod("main()")
+      if m.isStatic() and m.isPublic():
+        mains.append(m)
+
+  if len(mains) == 0:
+    raise SemanticError(0,0,
+                        "No existe ningun metodo static void main()")
+
+  if len(mains) > 1:
+    raise SemanticError(0,0,
+                        "Existen mas de un metodo static void main()")
+
 class mjClass(mjCheckable):
   def __init__(self, name, ext_name, decls, ts, localts = None):
     self.name = name

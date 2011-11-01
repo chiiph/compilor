@@ -4,7 +4,7 @@ from lexor import Token
 from constants import *
 from errors    import LexicalError, SemanticError, SyntaxError
 
-from mj.mjclass import mjClass
+from mj.mjclass import mjClass, hasMain
 from mj.mjts import mjTS
 
 def pretty_print_error_message(input_filepath, exc):
@@ -61,14 +61,13 @@ if __name__ == "__main__":
       s._lexeme = "String"
       mjClass(s, None, [], ts)
       ast = syntaxor.check_syntax(ts)
-      print ts, "=================="
-      ts.pprint()
-      print "==================="
 
       for cl in ast:
         cl.pprint()
         #cl.pprint_ts()
         cl.check()
+
+      hasMain(ts)
 
     except SemanticError as se:
       pretty_print_error_message(input_filepath, se)
