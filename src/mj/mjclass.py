@@ -35,7 +35,7 @@ def isWhile(obj):
   return isinstance(obj, mjWhile)
 
 def isId(obj):
-  return (isinstance(obj.ref, Token) and obj.ref.get_type() == IDENTIFIER)
+  return obj.type >= 0
 
 def hasMain(ts):
   mains = []
@@ -163,6 +163,7 @@ class mjReturn(mjCheckable):
                             % self.method.ret_type.get_lexeme())
     else:
       t = self.expr.resolve()
+      raise Exception("Checkear compatibilidad de herencia tambien!")
       if mjp.isToken(t):
         rt = mjp.literalToType(t.get_type())
         if rt != self.method.ret_type.get_type():
@@ -542,6 +543,8 @@ class mjMethod(mjCheckable):
       if not self.body.has_reachable_ret():
         raise SemanticError(self.name.get_line(), self.name.get_col(),
                             "El metodo puede no retornar el tipo especificado.")
+
+    raise Exception("Check codigo inaccesible")
 
 class mjClassVariableDecl(mjCheckable):
   def __init__(self, modifs, t, list_ids, ts):

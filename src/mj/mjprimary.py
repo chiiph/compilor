@@ -733,15 +733,12 @@ class mjOp(mjPrimary):
       if literalToType(m.type.get_type()) != REF_TYPE:
         return literalToType(m.type.get_type()) == othertype.get_type() # othertype siempre va a ser un token
       else:
-        t = self.resolve()
-        # si sale bien, me deberia dar un method
-        return t.type.get_lexeme() == othertype.get_lexeme()
+        return m.type.get_lexeme() == othertype.get_lexeme()
     else:
       return False
 
   def check(self):
-    print "FROMOP"
-    raise Exception()
+    self.resolve()
 
 class mjArithOp(mjOp):
   def __init__(self, symbol, operands):

@@ -1,7 +1,7 @@
 from lexor import Lexor
 from constants import *
 from firsts import *
-from errors import SyntaxError
+from errors import SyntaxError, SemanticError
 
 import mj.mjprimary as mjp
 import mj.mjclass as mjc
@@ -818,7 +818,6 @@ class Syntaxor(object):
             prim = self.class_instance_creation_expression()
             (first, last) = self.rest_primary()
         elif self.tok(IDENTIFIER) or self.tok(SUPER) or self.tok(THIS):
-            print "UUUUUOOOOOOOOOOO", self._current_token
             prim = self.method_invocation()
             if not prim is None:
                 prim.pprint()
@@ -937,7 +936,6 @@ class Syntaxor(object):
         prim_id = None
 
         if self.tok(IDENTIFIER) or self.tok(THIS) or self.tok(SUPER):
-            print "POR ACA", self._current_token
             prim_ref = mjp.mjPrimary(ref=self._current_token, type=self._current_token.get_type())
             self.update_token()
             (prim_first, prim_last) = self.rest_primary()
@@ -1071,21 +1069,14 @@ class Syntaxor(object):
         else:
             the_last = prim_ref
 
-        if prim_ref.ref.get_type() == THIS:
-            if not expr is None:
-                print "expr:"
-                print expr
-            if not first is None:
-                print "first:"
-                first.pprint()
-            if not last is None:
-                print "last:"
-                last.pprint()
-
         the_last.pprint()
         print where, _type
         if where == 4:
             return the_last
+
+        if mjp.isMethodInv(prim_last) and where == 3:
+            raise SemanticError(prim_last.ref.get_line(), prim_last.ref.get_col(),
+                                "Llamada a metodo invalida.")
 
         if _type == 1:
             method = None
@@ -1136,11 +1127,11 @@ class Syntaxor(object):
 
             return the_last
         elif _type == 4:
-            prim_ref.pprint()
-            if not mjc.isId(prim_ref):
-                raise Exception("AA")
-            print "TYPE ES 4444444444444444", expr
-            return mjc.mjVariableDecl(prim_ref.ref, expr)
+            if not mjc.isId(the_last):
+                raise SemanticError(the_last.ref.get_line(), the_last.ref.get_col(),
+                                    "Identificador de tipo invalido")
+
+            return mjc.mjVariableDecl(the_last.ref, expr)
 
     def rest_method_invocation(self):
         if self.tok(ACCESSOR):
@@ -1151,7 +1142,6 @@ class Syntaxor(object):
                 self.update_token()
                 (prim_first, prim_last) = self.rest_primary()
                 (where, _type, expr, first, last) = self.rest_method_invocation()
-
                 if where == 4:
                     if not prim_first is None:
                         prim_first.goesto = prim_id
@@ -1198,7 +1188,6 @@ class Syntaxor(object):
                                   self._current_token.get_col(),
                                   "Se esperaba un ;.")
         elif self.tok(IDENTIFIER):
-            print "AAAAAAAAAAA"
             expr = self.local_variable_declaration()
             if self.tok(SCOLON):
                 return (5, 4, expr, None, None)
@@ -1213,11 +1202,19 @@ class Syntaxor(object):
             if where == 4:
                 return (3, 2, argList, first, last)
             elif where == 2:
-                raise Exception()
+                raise SemanticError(self._current_token.get_line(),
+                                    self._current_token.get_col(),
+                                    "Asignacion invalida.")
             elif where == 1:
                 return (3, _type, argList, first, last)
             elif where == 3:
-                raise Exception()
+                raise SemanticError(self._current_token.get_line(),
+                                    self._current_token.get_col(),
+                                    "Llamada a metodo invalida.")
+            elif where == 5:
+                raise SemanticError(self._current_token.get_line(),
+                                    self._current_token.get_col(),
+                                    "Declaracion de variable invalida.")
 
         return (4, None, None, None, None)
 
