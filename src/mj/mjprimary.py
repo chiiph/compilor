@@ -649,30 +649,28 @@ class mjAssignment(mjPrimary):
           raise SemanticError(right.get_line(), right.get_col(),
                               "Tipos incompatibles en asignacion")
     else:
+      t = None
       if isMethod(right):
         if right.is_constructor():
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "No se puede realizar una asignacion con un constructor, debe utilizar la sentencia new.")
-        if left.type.get_lexeme() != right.ret_type.get_lexeme():
+        t = right.ret_type
+      else:
+        t = right.type
+      right_type = self.ts.recFindType(t.get_lexeme())
+      if right_type is None:
+        # entonces es un tipo primitivo
+        if left.type.get_lexeme() != t.get_lexeme():
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "Tipos incompatibles en asignacion, no se puede asignar"
                               "un %s a un %s."
-                              % (right.type.get_lexeme(), left.type.get_lexeme()))
+                              % (t.get_lexeme(), left.type.get_lexeme()))
       else:
-        right_type = self.ts.recFindType(right.type.get_lexeme())
-        if right_type is None:
-          # entonces es un tipo primitivo
-          if left.type.get_lexeme() != right.type.get_lexeme():
-            raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                                "Tipos incompatibles en asignacion, no se puede asignar"
-                                "un %s a un %s."
-                                % (right.type.get_lexeme(), left.type.get_lexeme()))
-        else:
-          if not right_type.inheritsFrom(left.type.get_lexeme()):
-                        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                                            "Tipos incompatibles en asignacion, no se puede asignar"
-                                            "un %s a un %s."
-                                            % (right.type.get_lexeme(), left.type.get_lexeme()))
+        if not right_type.inheritsFrom(left.type.get_lexeme()):
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Tipos incompatibles en asignacion, no se puede asignar"
+                              "un %s a un %s."
+                              % (t.get_lexeme(), left.type.get_lexeme()))
 
   def resolve(self):
     raise SemanticError(self.ref.get_line(), self.ref.get_col(),
