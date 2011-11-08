@@ -1,3 +1,5 @@
+from errors import SemanticError
+
 class mjTS(object):
   def __init__(self, parent=None, owner=None):
     # Pueden ser classes, variables, methods
@@ -97,3 +99,27 @@ class mjTS(object):
       for j in self._sections[k].keys():
         print "  "*tabs + " " + j
     print "  "*tabs + "-"*30
+
+  def check(self):
+    for t in self._sections["classes"]:
+      self._sections["classes"][t].check()
+    self.hasMain()
+
+  def hasMain(self):
+    mains = []
+    for clstr in self._sections["classes"]:
+      cl = self.getType(clstr)
+      if cl.ts.methodExists("main()"):
+        m = cl.ts.getMethod("main()")
+        if m.isStatic() and m.isPublic():
+          mains.append(m)
+
+    if len(mains) == 0:
+      raise SemanticError(0,0,
+                          "No existe ningun metodo static void main()")
+
+    if len(mains) > 1:
+      raise SemanticError(0,0,
+                          "Existen mas de un metodo static void main()")
+
+

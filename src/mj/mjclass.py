@@ -37,23 +37,6 @@ def isWhile(obj):
 def isId(obj):
   return obj.type >= 0
 
-def hasMain(ts):
-  mains = []
-  for clstr in ts._sections["classes"]:
-    cl = ts.getType(clstr)
-    if cl.ts.methodExists("main()"):
-      m = cl.ts.getMethod("main()")
-      if m.isStatic() and m.isPublic():
-        mains.append(m)
-
-  if len(mains) == 0:
-    raise SemanticError(0,0,
-                        "No existe ningun metodo static void main()")
-
-  if len(mains) > 1:
-    raise SemanticError(0,0,
-                        "Existen mas de un metodo static void main()")
-
 class mjClass(mjCheckable):
   def __init__(self, name, ext_name, decls, ts, localts = None):
     self.name = name
@@ -163,7 +146,7 @@ class mjReturn(mjCheckable):
                             % self.method.ret_type.get_lexeme())
     else:
       t = self.expr.resolve()
-      raise Exception("Checkear compatibilidad de herencia tambien!")
+      #raise Exception("Checkear compatibilidad de herencia tambien!")
       if mjp.isToken(t):
         rt = mjp.literalToType(t.get_type())
         if rt != self.method.ret_type.get_type():
@@ -426,15 +409,15 @@ class mjMethod(mjCheckable):
     self.isPublic = self._modifiable.isPublic
     self.isProtected = self._modifiable.isProtected
 
-    if not ts.addMethod(self):
-      raise SemanticError(self.name.get_line(), self.name.get_col(),
-                          "Redefinicion de metodo.")
-
     self.ts = localts
     if localts is None:
       self.ts = mjTS(ts)
 
     self.ts.set_owner(self)
+
+    if not ts.addMethod(self):
+      raise SemanticError(self.name.get_line(), self.name.get_col(),
+                          "Redefinicion de metodo.")
 
     for (t, v) in self.params:
       var = mjVariable(t, v, ts=self.ts)
@@ -537,6 +520,18 @@ class mjMethod(mjCheckable):
         raise SemanticError(self.name.get_line(), self.name.get_col(),
                             "Los constructores de clase deben llamarse igual que su clase.")
 
+    print "BBBBBBBBBBBBBBBB", cl.ext_class, cl.name.get_lexeme()
+    if not cl.ext_class is None:
+      # nos fijamos si es una redefinicion de metodo
+      print "AaAAAAAAAAAAAAAAAAAA", self.get_signature()
+      (has, method) = cl.ext_class.hasMethodAtAll(self.get_signature())
+      print has, method
+      if has:
+        # si lo es, no tiene que ser uno static y el otro no
+        if method.isStatic() != self.isStatic():
+          raise SemanticError(self.name.get_line(), self.name.get_col(),
+                              "Redefinicion de metodo que cambia la visibilidad static del que redefine.")
+
     self.body.check()
 
     if not self.is_constructor() and self.ret_type.get_type() != VOID_TYPE:
@@ -544,7 +539,7 @@ class mjMethod(mjCheckable):
         raise SemanticError(self.name.get_line(), self.name.get_col(),
                             "El metodo puede no retornar el tipo especificado.")
 
-    raise Exception("Check codigo inaccesible")
+    #raise Exception("Check codigo inaccesible")
 
 class mjClassVariableDecl(mjCheckable):
   def __init__(self, modifs, t, list_ids, ts):
