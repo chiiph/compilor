@@ -613,9 +613,7 @@ class mjAssignment(mjPrimary):
   def pprint(self, tabs=0):
     s = self.to_string()
     print "  "*tabs + s
-    print "  "*(tabs+1) + self.ref.get_lexeme()
-    if not self.goesto is None:
-      self.goesto.pprint(tabs+1)
+    self.left.pprint(tabs+1)
     self.expr.pprint(tabs+1)
 
   def check(self):
@@ -710,7 +708,7 @@ class mjOp(mjPrimary):
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
                           "Operacion entre tipos incompatibles.")
 
-    if not s[0] in ["String", "int", "boolean"]:
+    if not s[0] in ["String", "int", "boolean", "char"]:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
                           "Operacion con tipos no validos, solo pueden ser int, boolean o String.")
 
@@ -745,7 +743,7 @@ class mjArithOp(mjOp):
     super(mjArithOp, self).__init__(symbol, operands)
 
   def _var_type(self, r, types):
-    if types[0] != "int":
+    if not (types[0] in ["int", "char"]):
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
                          "No se puede realizar esta operacion sobre otro tipo que no sea int.")
     return (INT_TYPE, "int")
@@ -755,7 +753,7 @@ class mjBoolOp(mjOp):
     super(mjBoolOp, self).__init__(symbol, operands)
 
   def _var_type(self, r, types):
-    if "boolean" in types or "int" in types:
+    if "boolean" in types or "int" in types or "char" in types:
       return (BOOLEAN_TYPE, "boolean")
     else:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
@@ -766,7 +764,7 @@ class mjStrictIntBoolOp(mjOp):
     super(mjStrictIntBoolOp, self).__init__(symbol, operands)
 
   def _var_type(self, r, types):
-    if "int" in types:
+    if "int" in types or "char" in types:
       return (BOOLEAN_TYPE, "boolean")
     else:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
