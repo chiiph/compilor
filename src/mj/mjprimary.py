@@ -293,14 +293,39 @@ class mjPrimary(mjCheckable):
         return tmpts.getType(self.ref.get_lexeme())
 
   def compatibleWith(self, othertype):
-    if literalToType(self.type) != REF_TYPE:
-      return literalToType(self.type) == othertype.get_type() # othertype siempre va a ser un token
+    # othertype siempre es un tipo, este se llama para casos como
+    # declaracion de variables, y en othertype esta el tipo de la decl
+
+    right = ""
+    left = ""
+
+    right_t = literalToType(self.ref.get_type())
+    if right_t == REF_TYPE:
+      # aca hay que hacer resolve
+      if right_t == STRING_LITERAL:
+        right = "String"
+      else:
+        right = self.resolve()
+        if isToken(right):
+          right = typeToStr(literalToType(right.get_type()))
+        else:
+          if isMethod(right):
+            right = right.ret_type.get_lexeme()
+          else:
+            right = right.type.get_lexeme()
     else:
-      # en este caso es un IDENTIFIER, asi qeu hay qeu resolverlo
-      self.pprint()
-      t = self.resolve()
-      # si sale bien, me deberia dar una var
-      return t.type.get_lexeme() == othertype.get_lexeme()
+      right = typeToStr(right_t)
+
+    left_t = othertype.get_lexeme()
+    if not left_t in ["int", "char", "boolean", "String"]:
+      left = othertype.get_lexeme()
+    else:
+      left = left_t
+
+    mjType.compatible(left, right, self.ts,
+                      self.ref.get_line(), self.ref.get_col())
+
+    return True
 
   def check(self):
     self.resolve()
@@ -489,13 +514,7 @@ class mjMethodInvocation(mjPrimary):
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "La llamada a un constructor debe realizarse con una sentencia new o como una sentencia individual.")
 
-    if literalToType(m.ret_type.get_type()) != REF_TYPE:
-      return literalToType(m.ret_type.get_type()) == othertype.get_type() # othertype siempre va a ser un token
-    else:
-      # en este caso es un IDENTIFIER, asi qeu hay qeu resolverlo
-      t = self.resolve()
-      # si sale bien, me deberia dar un method
-      return t.ret_type.get_lexeme() == othertype.get_lexeme()
+    mjType.compatible(self, othertype)
 
   def check(self):
     self.resolve()
@@ -506,8 +525,39 @@ class mjClassInstanceCreation(mjMethodInvocation):
     self.type = mjPrimary.ClassInstCreat
 
   def compatibleWith(self, othertype):
-      t = self.resolve()
-      return t.type.get_lexeme() == othertype.get_lexeme()
+    # othertype siempre es un tipo, este se llama para casos como
+    # declaracion de variables, y en othertype esta el tipo de la decl
+    return mjPrimary.compatibleWith(self, othertype)
+  #   right = ""
+  #   left = ""
+
+  #   print self.ref
+  #   print othertype
+
+  #   raise Exception()
+  #   right_t = literalToType(self.ref.get_type())
+  #   if right_t == REF_TYPE:
+  #     # aca hay que hacer resolve
+  #     if self.ref.get_type() == STRING_LITERAL:
+  #       right = "String"
+  #     else:
+  #       raise Exception()
+  #   else:
+  #     right = typeToStr(right_t)
+
+  #   left_t = othertype.get_lexeme()
+  #   if not left_t in ["int", "char", "boolean", "String"]:
+  #     print "KKK",othertype.get_lexeme()
+  #     print othertype
+  #     raise Exception()
+  #   else:
+  #     left = left_t
+
+  #   print left, right
+  #   mjType.compatible(left, right, self.ts,
+  #                     self.ref.get_line(), self.ref.get_col())
+
+  #   return True
 
   def inmediate_resolve(self):
     if self.ref.get_type() == THIS:
@@ -618,6 +668,8 @@ class mjAssignment(mjPrimary):
 
   def check(self):
     left = self.left.resolve()
+    print "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
+    self.pprint()
     right = self.expr.resolve()
 
     if isToken(left): # los stringlits se devuelven como mjvars
@@ -634,47 +686,21 @@ class mjAssignment(mjPrimary):
       raise SemanticError(left.name.get_line(), left.name.get_col(),
                           "El lado izquierdo de la asignacion es invalido")
 
+    right_str = ""
     if isToken(right):
-      t = literalToType(right.get_type())
-      if t == REF_TYPE:
-        if right.get_type() != STRING_LITERAL:
-          raise Exception("Error interno, token no resuelto")
-        else:
-          raise NotImplementedError()
-      else:
-        if left.type.get_type() == t:
-          # entonces los tipos son compatibles
-          print "YEAH"
-        else:
-          raise SemanticError(right.get_line(), right.get_col(),
-                              "Tipos incompatibles en asignacion")
+      right_str = typeToStr(literalToType(right.get_type()))
     else:
-      t = None
       if isMethod(right):
-        if right.is_constructor():
-          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                              "No se puede realizar una asignacion con un constructor, debe utilizar la sentencia new.")
-        t = right.ret_type
+        right_str = right.ret_type.get_lexeme()
       else:
-        t = right.type
-      right_type = self.ts.recFindType(t.get_lexeme())
-      if right_type is None:
-        # entonces es un tipo primitivo
-        if left.type.get_lexeme() != t.get_lexeme():
-          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                              "Tipos incompatibles en asignacion, no se puede asignar"
-                              "un %s a un %s."
-                              % (t.get_lexeme(), left.type.get_lexeme()))
-      else:
-        if not right_type.inheritsFrom(left.type.get_lexeme()):
-          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                              "Tipos incompatibles en asignacion, no se puede asignar"
-                              "un %s a un %s."
-                              % (t.get_lexeme(), left.type.get_lexeme()))
+        right_str = right.type.get_lexeme()
+
+    print left.type.get_lexeme(), right_str
+    mjType.compatible(left.type.get_lexeme(), right_str,
+                      self.ts, self.ref.get_line(), self.ref.get_col())
 
   def resolve(self):
-    raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                        "La asignacion debe estar en un statement individual")
+    return self.expr.resolve()
 
 class mjOp(mjPrimary):
   def __init__(self, symbol, operands):
@@ -743,6 +769,8 @@ class mjOp(mjPrimary):
       return False
 
   def check(self):
+    for o in self.operands:
+      o.check()
     self.resolve()
 
 class mjArithOp(mjOp):
@@ -843,6 +871,32 @@ class mjMod(mjArithOp):
 class mjNot(mjStrictBoolOp):
   def __init__(self, symbol, operands):
     super(mjNot, self).__init__(symbol, operands)
+
+class mjType(object):
+  @staticmethod
+  def compatible(left, right, ts, line, col):
+    if left in ["int", "char", "boolean", "String"] or \
+           right in ["int", "char", "boolean", "String"]:
+      if left != right:
+        raise SemanticError(line, col,
+                            "Tipos incompatibles")
+      return
+
+    # Aca sabemos que no son tipos primitivos
+    left_type = ts.recFindType(left)
+    right_type = ts.recFindType(right)
+
+    if left_type is None:
+      raise SemanticError(line, col,
+                      "No existe el tipo %s" % left)
+
+    if right_type is None:
+      raise SemanticError(line, col,
+                      "No existe el tipo %s" % right)
+
+    if not right_type.inheritsFrom(left_type.name.get_lexeme()):
+      raise SemanticError(line, col,
+                          "Tipos incompatibles")
 
 ops = {ADD             : mjAdd,
        SUB             : mjSub,

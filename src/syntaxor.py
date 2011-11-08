@@ -1181,7 +1181,7 @@ class Syntaxor(object):
         elif self.tok(ASSIGNMENT):
             self.update_token()
             expr = self.expression()
-            if self.tok(SCOLON):
+            if self.tok(SCOLON) or self.tok(PAREN_CLOSE):
                 return (2, 1, expr, None, None)
             else:
                 raise SyntaxError(self._current_token.get_line(),

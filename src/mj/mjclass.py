@@ -83,6 +83,9 @@ class mjClass(mjCheckable):
       return (False, None)
 
   def inheritsFrom(self, cl):
+    if self.name.get_lexeme() == cl:
+      return True
+
     if self.ext_class is None:
       return False
 
@@ -268,6 +271,7 @@ class mjVariableDecl(mjCheckable):
   def check(self):
     for v, e in self.args:
       if not e is None:
+        e.check()
         if not e.compatibleWith(self.ref):
           raise SemanticError(v.get_line(), v.get_col(),
                               "Inicializacion de tipo incompatible")
@@ -581,6 +585,7 @@ class mjClassVariableDecl(mjCheckable):
     self.check_modifs()
     for v, i in self.list_ids:
       if not i is None:
+        i.check()
         if not i.compatibleWith(self.type):
           raise SemanticError(v.get_line(), v.get_col(),
                               "Inicializacion de tipo incompatible")
