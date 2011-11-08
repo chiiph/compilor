@@ -659,11 +659,20 @@ class mjAssignment(mjPrimary):
                               "un %s a un %s."
                               % (right.type.get_lexeme(), left.type.get_lexeme()))
       else:
-        if left.type.get_lexeme() != right.type.get_lexeme():
-          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                              "Tipos incompatibles en asignacion, no se puede asignar"
-                              "un %s a un %s."
-                              % (right.type.get_lexeme(), left.type.get_lexeme()))
+        right_type = self.ts.recFindType(right.type.get_lexeme())
+        if right_type is None:
+          # entonces es un tipo primitivo
+          if left.type.get_lexeme() != right.type.get_lexeme():
+            raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                                "Tipos incompatibles en asignacion, no se puede asignar"
+                                "un %s a un %s."
+                                % (right.type.get_lexeme(), left.type.get_lexeme()))
+        else:
+          if not right_type.inheritsFrom(left.type.get_lexeme()):
+                        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                                            "Tipos incompatibles en asignacion, no se puede asignar"
+                                            "un %s a un %s."
+                                            % (right.type.get_lexeme(), left.type.get_lexeme()))
 
   def resolve(self):
     raise SemanticError(self.ref.get_line(), self.ref.get_col(),

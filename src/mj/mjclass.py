@@ -82,6 +82,15 @@ class mjClass(mjCheckable):
     else:
       return (False, None)
 
+  def inheritsFrom(self, cl):
+    if self.ext_class is None:
+      return False
+
+    if self.ext_class.name.get_lexeme() == cl:
+      return True
+
+    return self.ext_class.inheritsFrom(cl)
+
   def gen_code(self):
     return ""
 
@@ -520,12 +529,9 @@ class mjMethod(mjCheckable):
         raise SemanticError(self.name.get_line(), self.name.get_col(),
                             "Los constructores de clase deben llamarse igual que su clase.")
 
-    print "BBBBBBBBBBBBBBBB", cl.ext_class, cl.name.get_lexeme()
     if not cl.ext_class is None:
       # nos fijamos si es una redefinicion de metodo
-      print "AaAAAAAAAAAAAAAAAAAA", self.get_signature()
       (has, method) = cl.ext_class.hasMethodAtAll(self.get_signature())
-      print has, method
       if has:
         # si lo es, no tiene que ser uno static y el otro no
         if method.isStatic() != self.isStatic():
