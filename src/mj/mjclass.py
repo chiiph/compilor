@@ -45,6 +45,11 @@ class mjClass(mjCheckable):
     self.decls = decls
     self.gen_codes = []
 
+    (redef, other) = ts.classExists(self)
+    if redef:
+      raise SemanticError(other.name.get_line(), other.name.get_col(),
+                          "Clase ya definida")
+
     ts.addClass(self)
     self.ts = localts
     if localts is None:
@@ -110,11 +115,6 @@ class mjClass(mjCheckable):
       d.pre_check()
 
   def check(self):
-    (redef, other) = self.ts.parent().classExists(self)
-    if redef:
-      raise SemanticError(other.name.get_line(), other.name.get_col(),
-                          "Clase ya definida")
-
     if not self.ext_name is None:
       (valid, self.ext_class) = self.ts.parent().validExtend(self.ext_name)
       if not valid:
@@ -135,14 +135,13 @@ class mjClass(mjCheckable):
       if isMethod(d) and d.is_constructor():
         return
 
-    # #def __init__(self, modifs, ret_type, name, params, body, ts, localts=None):
-    # p = Token()
-    # p._lexeme("public")
-    # p._type = PUBLIC
-    # modifs = [p]
+    p = Token()
+    p._lexeme("public")
+    p._type = PUBLIC
+    modifs = [p]
 
-    # m = mjMethod(modifs, None, name...)
-    # self.decls.append()
+    m = mjMethod(modifs, None, self.name, [], mjBlock(), self.ts)
+    self.decls.append(m)
 
 class mjReturn(mjCheckable):
   def __init__(self, ret = None, expr = None, method = None):
@@ -191,6 +190,7 @@ class mjReturn(mjCheckable):
                               % (mjp.typeToStr(rt), self.method.ret_type.get_lexeme()))
       else:
         if t.type.get_lexeme() != self.method.ret_type.get_lexeme():
+          # ACAAAA
           raise SemanticError(self.ret.get_line(), self.ret.get_col(),
                               "Se esta retornando %s en un metodo de tipo %s"
                               % (t.type.get_lexeme(), self.method.ret_type.get_lexeme()))
