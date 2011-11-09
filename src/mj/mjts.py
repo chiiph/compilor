@@ -35,9 +35,12 @@ class mjTS(object):
     self._sections["classes"][c.name.get_lexeme()] = c
 
   def addMethod(self, m):
-    if self.methodExists(m.get_signature()):
+    if self.methodExists(m):
       return False
-    self._sections["methods"][m.get_signature()] = m
+    if m.name.get_lexeme() in self._sections["methods"].keys():
+      self._sections["methods"][m.name.get_lexeme()].append(m)
+    else:
+      self._sections["methods"][m.name.get_lexeme()] = [m]
     return True
 
   def typeExists(self, t):
@@ -72,8 +75,57 @@ class mjTS(object):
   def varExists(self, v):
     return v in self._sections["variables"].keys()
 
+  def methodInvExists(self, m):
+    if not (m.ref.get_lexeme() in self._sections["methods"].keys()):
+      return False
+
+    # un metodo existe, si hay un metodo declarado con los mismos parametros
+    # un parametro es el mismo que otro si tiene el mismo tipo
+    for method in self._sections["methods"][m.ref.get_lexeme()]:
+      if self._compParams(m.args, method.params):
+        return True
+    return False
+
+  def _compParams(self, params1, params2):
+    if len(params1) != len(params2):
+      return False
+    i = 0
+    for i in range(0, len(params1)):
+      try:
+        if not params1[i].compatibleWith(params2[i][0]):
+          return False
+      except SemanticError, e:
+        return False
+    return True
+
   def methodExists(self, m):
-    return m in self._sections["methods"].keys()
+    if not (m.name.get_lexeme() in self._sections["methods"].keys()):
+      return False
+
+    # un metodo existe, si hay un metodo declarado con los mismos parametros
+    # un parametro es el mismo que otro si tiene el mismo tipo
+    for method in self._sections["methods"][m.name.get_lexeme()]:
+      if self._sameParams(m.params, method.params):
+        return True
+    return False
+
+  def getExactMethod(self, m):
+    if not (m.name.get_lexeme() in self._sections["methods"].keys()):
+      return None
+
+    for method in self._sections["methods"][m.name.get_lexeme()]:
+      if self._sameParams(m.params, method.params):
+        return method
+    return None
+
+  def _sameParams(self, params1, params2):
+    if len(params1) != len(params2):
+      return False
+    i = 0
+    for i in range(0, len(params1)):
+      if params1[i][0].get_lexeme() != params2[i][0].get_lexeme():
+        return False
+    return True
 
   def getVar(self, v):
     return self._sections["variables"][v]
@@ -82,7 +134,7 @@ class mjTS(object):
     return self._sections["classes"][v]
 
   def getMethod(self, m):
-    return self._sections["methods"][m]
+    return self._sections["methods"][m.ref.get_lexeme()]
 
   def recFindType(self, t):
     if self.typeExists(t):
@@ -109,10 +161,13 @@ class mjTS(object):
     mains = []
     for clstr in self._sections["classes"]:
       cl = self.getType(clstr)
-      if cl.ts.methodExists("main()"):
-        m = cl.ts.getMethod("main()")
-        if m.isStatic() and m.isPublic():
-          mains.append(m)
+      if "main" in cl.ts._sections["methods"].keys():
+        ms = cl.ts._sections["methods"]["main"]
+        for m in ms:
+          if len(m.params) == 0 and \
+             m.isStatic() and \
+             m.isPublic():
+            mains.append(m)
 
     if len(mains) == 0:
       raise SemanticError(0,0,

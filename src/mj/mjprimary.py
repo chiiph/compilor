@@ -344,6 +344,67 @@ class mjMethodInvocation(mjPrimary):
     if not self.goesto is None:
       self.goesto.set_ts(ts)
 
+  def compatible_args(self, params):
+    if len(self.args) != len(params):
+      return False
+
+    for i in range(0, len(self.args)):
+      try:
+        if not self.args[i].compatibleWith(params[i][0]):
+          return False
+      except SemanticError, e:
+        return False
+    return True
+
+  def get_compatible_methods(self, method_list):
+    ret = []
+    for m in method_list:
+      if self.compatible_args(m.params):
+        ret.append(m)
+    return ret
+
+  def get_call_distance(self, method):
+    nums = []
+    for i in range(0, len(self.args)):
+      if method.params[i][0].get_type() == IDENTIFIER:
+        nums.append(mjType.distance(method.params[i][0].get_lexeme(),
+                                    self.args[i].resolve().type.get_lexeme(),
+                                    self.ts)
+                    )
+    if len(nums) == 0:
+      return 0
+    return float(sum(nums)) / float(len(nums))
+
+  def get_most_specific_call(self, method_list):
+    comp = self.get_compatible_methods(method_list)
+    min_dst = 99999999999
+    cur_dst = 0.0
+    min_meth = None
+    ret_list = []
+    for m in comp:
+      cur_dst = self.get_call_distance(m)
+      if cur_dst <= min_dst:
+        min_meth = m
+        min_dst = cur_dst
+    for m in comp:
+      if self.get_call_distance(m) == min_dst:
+        ret_list.append(m)
+    return ret_list
+
+  def get_THE_method(self, methods, line, col):
+    specific = self.get_most_specific_call(methods)
+    if len(specific) > 1:
+      candidates = ""
+      for m in specific:
+        candidates += "  " + m.get_signature() + "\n"
+      raise SemanticError(line, col,
+                          "Llamada ambigua, los candidatos son:\n"
+                          "%s" % candidates)
+    elif len(specific) < 1:
+      raise SemanticError(line, col,
+                          "No existe metodo")
+    return specific[0]
+
   def inmediate_resolve(self):
     mts = None
     mt = None
@@ -374,8 +435,12 @@ class mjMethodInvocation(mjPrimary):
                             "Las llamadas explicitas a constructores solo pueden realizarse dentro de otros constructores.")
       # llama a otro constructor
       call = self.call_signature().replace("this", cl.name.get_lexeme())
-      if cl.ts.methodExists(call):
-        return cl.ts.getMethod(call)
+      # cambiamos el "super" por el nombre de la clase para buscar el constructor
+      self.ref._lexeme = cl.name.get_lexeme()
+      if cl.ts.methodInvExists(self):
+        methods = cl.ts.getMethod(self)
+        self.ref._lexeme = "this"
+        return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
       else:
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a constructor desconocido: %s"
@@ -384,14 +449,20 @@ class mjMethodInvocation(mjPrimary):
       # llama a constructor de la clase padre
       if not isMethod(mt) or not mt.is_constructor():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                            "Las llamadas explicitas a constructores solo pueden realizarse dentro de otros constructores.")
+                            "Las llamadas explicitas a constructores solo pueden "
+                            "realizarse dentro de otros constructores.")
 
       if cl.ext_class is None:
-        raise Exception("Extends no resuelto!")
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Referencia a constructor de super clase desconocido.")
 
-      call = self.call_signature().replace("super", cl.ext_name.get_lexeme())
-      if cl.ext_class.ts.methodExists(call):
-        return cl.ext_class.ts.getMethod(call)
+      call = self.call_signature().replace("super", cl.name.get_lexeme())
+      # cambiamos el "super" por el nombre de la clase para buscar el constructor
+      self.ref._lexeme = cl.ext_name.get_lexeme()
+      if cl.ext_class.ts.methodInvExists(self):
+        methods = cl.ext_class.ts.getMethod(self)
+        self.ref._lexeme = "super"
+        return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
       else:
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a constructor desconocido: %s"
@@ -403,8 +474,10 @@ class mjMethodInvocation(mjPrimary):
 
     cl = cts.owner()
 
-    (hasmethod, method) = cl.hasMethodAtAll(self.call_signature())
+    (hasmethod, methods) = cl.hasMethodInvAtAll(self)
+
     if hasmethod:
+      method = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
       if mt.isStatic() and not method.isStatic():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a metodo no static desde uno static")
@@ -421,8 +494,9 @@ class mjMethodInvocation(mjPrimary):
 
   def _resolve_class(self, val):
     # Este es el caso de acceso a un metodo estatico
-    if val.ts.methodExists(self.call_signature()):
-      method = val.ts.getMethod(self.call_signature())
+    if val.ts.methodInvExists(self):
+      methods = val.ts.getMethod(self)
+      method = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
       if method.isPublic() and method.isStatic():
         return method
       else:
@@ -447,34 +521,34 @@ class mjMethodInvocation(mjPrimary):
 
     # sino
     t = self.ts.recFindType(val.ret_type.get_lexeme())
-    (hasvar, var) = t.hasMethodAtAll(self.ref.get_lexeme())
-    if hasvar:
-      return var
+    (hasmethod, methods) = t.hasMethodInvAtAll(self)
+    if hasmethod:
+      return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
     else:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                          "La clase %s no posee ningun miembro llamado %s"
-                          % (t.name.get_lexeme(), self.ref.get_lexeme()))
+                          "La clase %s no posee ningun metodo %s"
+                          % (t.name.get_lexeme(), self.call_signature()))
 
   def _resolve_var(self, val):
     if isToken(val.type) and val.type.get_type() in FIRST_primitive_type:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                          "Los tipos primitivos no no pueden ser dereferenciados")
+                          "Los tipos primitivos no pueden ser dereferenciados")
 
     t = val.ts.recFindType(val.type.get_lexeme())
-    (hasmethod, method) = t.hasMethodAtAll(self.call_signature())
+    (hasmethod, methods) = t.hasMethodInvAtAll(self)
     if not hasmethod:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "La clase %s no posee ningun metodo %s"
                           % (t.name.get_lexeme(), self.call_signature()))
 
-    # a menos que sea un caso del estilo this.variable
+    # a menos que sea un caso del estilo this.metodo()
     if val.name.get_lexeme() != "@this" and \
        val.name.get_lexeme() != "@super":
       if not method.isPublic():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Se esta tratando de acceder a un miembro protegido de la clase %s"
                             % t.name.get_lexeme())
-    return method
+    return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
 
   def to_string(self):
     return "[" + self.type_to_str() + "::" + self.ref.get_lexeme() + "]"
@@ -528,36 +602,6 @@ class mjClassInstanceCreation(mjMethodInvocation):
     # othertype siempre es un tipo, este se llama para casos como
     # declaracion de variables, y en othertype esta el tipo de la decl
     return mjPrimary.compatibleWith(self, othertype)
-  #   right = ""
-  #   left = ""
-
-  #   print self.ref
-  #   print othertype
-
-  #   raise Exception()
-  #   right_t = literalToType(self.ref.get_type())
-  #   if right_t == REF_TYPE:
-  #     # aca hay que hacer resolve
-  #     if self.ref.get_type() == STRING_LITERAL:
-  #       right = "String"
-  #     else:
-  #       raise Exception()
-  #   else:
-  #     right = typeToStr(right_t)
-
-  #   left_t = othertype.get_lexeme()
-  #   if not left_t in ["int", "char", "boolean", "String"]:
-  #     print "KKK",othertype.get_lexeme()
-  #     print othertype
-  #     raise Exception()
-  #   else:
-  #     left = left_t
-
-  #   print left, right
-  #   mjType.compatible(left, right, self.ts,
-  #                     self.ref.get_line(), self.ref.get_col())
-
-  #   return True
 
   def inmediate_resolve(self):
     if self.ref.get_type() == THIS:
@@ -590,8 +634,10 @@ class mjClassInstanceCreation(mjMethodInvocation):
                           % self.call_signature())
     else:
       cl = tmpts.getType(self.ref.get_lexeme())
-      if cl.ts.methodExists(self.call_signature()):
-        m = cl.ts.getMethod(self.call_signature())
+      if cl.ts.methodInvExists(self):
+        methods = cl.ts.getMethod(self)
+        m = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+
         if m.isProtected():
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "%s es un constructor protegido."
@@ -609,7 +655,6 @@ class mjClassInstanceCreation(mjMethodInvocation):
     if self.goesto is None:
       # resolvemos el metodo
       t = self.inmediate_resolve()
-      print self.ref
       # si no es un constructor
       if not t.is_constructor():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
@@ -668,8 +713,6 @@ class mjAssignment(mjPrimary):
 
   def check(self):
     left = self.left.resolve()
-    print "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
-    self.pprint()
     right = self.expr.resolve()
 
     if isToken(left): # los stringlits se devuelven como mjvars
@@ -695,7 +738,6 @@ class mjAssignment(mjPrimary):
       else:
         right_str = right.type.get_lexeme()
 
-    print left.type.get_lexeme(), right_str
     mjType.compatible(left.type.get_lexeme(), right_str,
                       self.ts, self.ref.get_line(), self.ref.get_col())
 
@@ -888,15 +930,38 @@ class mjType(object):
 
     if left_type is None:
       raise SemanticError(line, col,
-                      "No existe el tipo %s" % left)
+                          "No existe el tipo %s" % left)
 
     if right_type is None:
       raise SemanticError(line, col,
-                      "No existe el tipo %s" % right)
+                          "No existe el tipo %s" % right)
 
     if not right_type.inheritsFrom(left_type.name.get_lexeme()):
       raise SemanticError(line, col,
                           "Tipos incompatibles")
+
+  @staticmethod
+  def distance(left, right, ts):
+    if left == right:
+      return 0
+
+    left_type = ts.recFindType(left)
+    right_type = ts.recFindType(right)
+
+    father = left_type
+    son = right_type
+
+    if left_type.inheritsFrom(right_type):
+      father = right_type
+      son = left_type
+
+    dst = 0
+    cur = son.ext_class
+    while cur.name.get_lexeme() != father.name.get_lexeme():
+      dst += 1
+      cur = cur.ext_class
+
+    return dst
 
 ops = {ADD             : mjAdd,
        SUB             : mjSub,

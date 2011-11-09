@@ -74,9 +74,17 @@ class mjClass(mjCheckable):
     else:
       return (False, None)
 
+  def hasMethodInvAtAll(self, v):
+    if self.ts.methodInvExists(v):
+      return (True, self.ts.getMethod(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasMethodInvAtAll(v)
+    else:
+      return (False, None)
+
   def hasMethodAtAll(self, v):
     if self.ts.methodExists(v):
-      return (True, self.ts.getMethod(v))
+      return (True, self.ts.getExactMethod(v))
     elif not self.ext_class is None:
       return self.ext_class.hasMethodAtAll(v)
     else:
@@ -118,7 +126,23 @@ class mjClass(mjCheckable):
         code = d.check()
         self.gen_codes.append(code)
 
+    self.gen_default_construct()
+
     return self.gen_code()
+
+  def gen_default_construct(self):
+    for d in self.decls:
+      if isMethod(d) and d.is_constructor():
+        return
+
+    # #def __init__(self, modifs, ret_type, name, params, body, ts, localts=None):
+    # p = Token()
+    # p._lexeme("public")
+    # p._type = PUBLIC
+    # modifs = [p]
+
+    # m = mjMethod(modifs, None, name...)
+    # self.decls.append()
 
 class mjReturn(mjCheckable):
   def __init__(self, ret = None, expr = None, method = None):
@@ -535,7 +559,7 @@ class mjMethod(mjCheckable):
 
     if not cl.ext_class is None:
       # nos fijamos si es una redefinicion de metodo
-      (has, method) = cl.ext_class.hasMethodAtAll(self.get_signature())
+      (has, method) = cl.ext_class.hasMethodAtAll(self)
       if has:
         # si lo es, no tiene que ser uno static y el otro no
         if method.isStatic() != self.isStatic():
