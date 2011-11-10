@@ -154,6 +154,8 @@ class mjTS(object):
 
   def check(self):
     for t in self._sections["classes"]:
+      self._sections["classes"][t].solve_extends()
+    for t in self._sections["classes"]:
       self._sections["classes"][t].check()
     self.hasMain()
 

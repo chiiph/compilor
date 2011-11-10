@@ -57,6 +57,8 @@ class mjClass(mjCheckable):
 
     self.ts.set_owner(self)
 
+    self.gen_default_construct()
+
   def pprint_ts(self, tabs=0):
     print "  "*tabs + "** Class::" + self.name.get_lexeme() + " **"
     self.ts.pprint(tabs)
@@ -114,19 +116,18 @@ class mjClass(mjCheckable):
     for d in self.decls:
       d.pre_check()
 
-  def check(self):
+  def solve_extends(self):
     if not self.ext_name is None:
       (valid, self.ext_class) = self.ts.parent().validExtend(self.ext_name)
       if not valid:
         raise SemanticError(self.ext_name.get_line(), self.ext_name.get_col(),
                             "No existe la clase padre")
 
+  def check(self):
     for d in self.decls:
       if not d is None:
         code = d.check()
         self.gen_codes.append(code)
-
-    self.gen_default_construct()
 
     return self.gen_code()
 
@@ -136,7 +137,7 @@ class mjClass(mjCheckable):
         return
 
     p = Token()
-    p._lexeme("public")
+    p._lexeme = "public"
     p._type = PUBLIC
     modifs = [p]
 
@@ -190,7 +191,6 @@ class mjReturn(mjCheckable):
                               % (mjp.typeToStr(rt), self.method.ret_type.get_lexeme()))
       else:
         if t.type.get_lexeme() != self.method.ret_type.get_lexeme():
-          # ACAAAA
           raise SemanticError(self.ret.get_line(), self.ret.get_col(),
                               "Se esta retornando %s en un metodo de tipo %s"
                               % (t.type.get_lexeme(), self.method.ret_type.get_lexeme()))
@@ -355,6 +355,31 @@ class mjBlock(mjCheckable):
           if not s.statement is None:
             s.statement.pprint_ts(tabs+1)
 
+  def has_non_accesible_code(self):
+    for i in range(0, len(self.stats)):
+      stat = self.stats[i]
+      if isBlock(stat):
+        if stat.has_non_accesible_code():
+          return True
+      elif isIf(stat):
+        if not stat.stat is None:
+          if isBlock(stat.stat):
+            if stat.stat.has_non_accesible_code():
+              return True
+        if not stat.elsestat is None:
+          if isBlock(stat.elsestat):
+            if stat.elsestat.has_non_accesible_code():
+              return True
+      elif isWhile(stat):
+        if not stat.statement is None:
+          if isBlock(stat.statement):
+            if stat.statement.has_non_accesible_code():
+              return True
+      elif isReturn(self.stats[i]) and \
+         i < (len(self.stats) - 1):
+        return True
+    return False
+
   def check(self):
     print "Checking block..."
     for s in self.stats:
@@ -497,6 +522,12 @@ class mjMethod(mjCheckable):
                             "Combinacion invalida de modificadores, las opciones son:\n"
                             "\tpublic static, static public, o\n"
                             "\tprotected static, static protected.")
+    else:
+      raise SemanticError(self.modifs[1].get_line(),
+                          self.modifs[1].get_col(),
+                          "Combinacion invalida de modificadores, las opciones son:\n"
+                          "\tpublic static, static public, o\n"
+                          "\tprotected static, static protected.")
 
     if self.is_constructor():
       if self.isStatic():
@@ -573,7 +604,10 @@ class mjMethod(mjCheckable):
         raise SemanticError(self.name.get_line(), self.name.get_col(),
                             "El metodo puede no retornar el tipo especificado.")
 
-    #raise Exception("Check codigo inaccesible")
+    if self.body.has_non_accesible_code():
+      raise SemanticError(self.name.get_line(), self.name.get_col(),
+                          "El metodo contiene codigo inaccesible.")
+
 
 class mjClassVariableDecl(mjCheckable):
   def __init__(self, modifs, t, list_ids, ts):
@@ -642,6 +676,12 @@ class mjClassVariableDecl(mjCheckable):
                             "Combinacion invalida de modificadores, las opciones son:\n"
                             "\tpublic static, static public, o\n"
                             "\tprotected static, static protected.")
+    else:
+      raise SemanticError(self.modifs[1].get_line(),
+                          self.modifs[1].get_col(),
+                          "Combinacion invalida de modificadores, las opciones son:\n"
+                          "\tpublic static, static public, o\n"
+                          "\tprotected static, static protected.")
 
 class mjClassVariable(mjVariable):
   def __init__(self, ty, val, init, modifs, ts=None):

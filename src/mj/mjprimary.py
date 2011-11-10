@@ -432,7 +432,8 @@ class mjMethodInvocation(mjPrimary):
       # caso especial: this()
       if not isMethod(mt) or not mt.is_constructor():
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                            "Las llamadas explicitas a constructores solo pueden realizarse dentro de otros constructores.")
+                            "Las llamadas explicitas a constructores solo "
+                            "pueden realizarse dentro de otros constructores.")
       # llama a otro constructor
       call = self.call_signature().replace("this", cl.name.get_lexeme())
       # cambiamos el "super" por el nombre de la clase para buscar el constructor
@@ -456,7 +457,7 @@ class mjMethodInvocation(mjPrimary):
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a constructor de super clase desconocido.")
 
-      call = self.call_signature().replace("super", cl.name.get_lexeme())
+      call = self.call_signature().replace("super", cl.ext_class.name.get_lexeme())
       # cambiamos el "super" por el nombre de la clase para buscar el constructor
       self.ref._lexeme = cl.ext_name.get_lexeme()
       if cl.ext_class.ts.methodInvExists(self):
@@ -541,6 +542,7 @@ class mjMethodInvocation(mjPrimary):
                           "La clase %s no posee ningun metodo %s"
                           % (t.name.get_lexeme(), self.call_signature()))
 
+    method = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
     # a menos que sea un caso del estilo this.metodo()
     if val.name.get_lexeme() != "@this" and \
        val.name.get_lexeme() != "@super":
@@ -548,7 +550,7 @@ class mjMethodInvocation(mjPrimary):
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Se esta tratando de acceder a un miembro protegido de la clase %s"
                             % t.name.get_lexeme())
-    return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+    return method
 
   def to_string(self):
     return "[" + self.type_to_str() + "::" + self.ref.get_lexeme() + "]"
@@ -572,7 +574,8 @@ class mjMethodInvocation(mjPrimary):
         # si la llamada es this() o super()
         if res.is_constructor():
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                              "No se puede llamar a un constructor como un parametro para otra funcion.")
+                              "No se puede llamar a un constructor como un "
+                              "parametro para otra funcion.")
         else:
           param_str.append(res.ret_type.get_lexeme())
       elif isToken(res.type):
@@ -586,7 +589,8 @@ class mjMethodInvocation(mjPrimary):
     m = self.resolve()
     if m.is_constructor():
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                          "La llamada a un constructor debe realizarse con una sentencia new o como una sentencia individual.")
+                          "La llamada a un constructor debe realizarse con"
+                          " una sentencia new o como una sentencia individual.")
 
     mjType.compatible(self, othertype)
 
@@ -604,21 +608,6 @@ class mjClassInstanceCreation(mjMethodInvocation):
     return mjPrimary.compatibleWith(self, othertype)
 
   def inmediate_resolve(self):
-    if self.ref.get_type() == THIS:
-      # caso especial: this.loquesea o this
-      # hay qeu devolver una variable del tipo actual, para que sea consistente con el resto de los checkeos
-      # pero este this puede estar en bloques anidados, asi que hay qeu buscar la primer ts parent que isClassTs() == True
-      cts = self.find_class_ts()
-      if cts is None: # grave problema
-        raise Exception("No existe ts de clase!!")
-
-      cl = cts.owner()
-      name = Token()
-      name._lexeme = "@this"
-      return mjVariable(cl.name, name, self.ref, ts=cts)
-    elif self.ref.get_type() == SUPER:
-      raise NotImplementedError()
-
     tmpts = self.ts
     found = False
     possible_static_var = False
@@ -777,7 +766,8 @@ class mjOp(mjPrimary):
       else:
         types.append(r.type.get_lexeme())
 
-    s = list(set(types))
+    # tratamos a los chars como ints
+    s = list(set([x if x != "char" else "int" for x in types]))
     diffs = len(s)
     if diffs != 1:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
@@ -785,14 +775,15 @@ class mjOp(mjPrimary):
 
     if not s[0] in ["String", "int", "boolean", "char"]:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
-                          "Operacion con tipos no validos, solo pueden ser int, boolean o String.")
+                          "Operacion con tipos no validos, solo pueden "
+                          "ser int, boolean, char o String.")
 
     name = Token()
     name._lexeme = "@" + ("".join(random.choice(string.letters + string.digits) for i in xrange(10)))
     name._line = self.symbol.get_line()
     name._col = self.symbol.get_col()
     t = Token()
-    (rt, name_type) = self._var_type(r, types)
+    (rt, name_type) = self._var_type(r, s)
     t._lexeme = name_type
     t._line = self.symbol.get_line()
     t._col = self.symbol.get_col()
@@ -822,7 +813,8 @@ class mjArithOp(mjOp):
   def _var_type(self, r, types):
     if not (types[0] in ["int", "char"]):
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
-                         "No se puede realizar esta operacion sobre otro tipo que no sea int.")
+                         "No se puede realizar esta operacion sobre otro tipo "
+                          "que no sea int o char.")
     return (INT_TYPE, "int")
 
 class mjBoolOp(mjOp):
@@ -834,7 +826,8 @@ class mjBoolOp(mjOp):
       return (BOOLEAN_TYPE, "boolean")
     else:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
-                          "Operandos de tipo invalido, las operaciones booleanas solo aceptan int o boolean.")
+                          "Operandos de tipo invalido, las operaciones "
+                          "booleanas solo aceptan int, char o boolean.")
 
 class mjStrictIntBoolOp(mjOp):
   def __init__(self, symbol, operands):
@@ -845,7 +838,8 @@ class mjStrictIntBoolOp(mjOp):
       return (BOOLEAN_TYPE, "boolean")
     else:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
-                          "Operandos de tipo invalido, las operaciones booleanas solo aceptan int o boolean.")
+                          "Operandos de tipo invalido, las operaciones "
+                          "booleanas solo aceptan int o char.")
 
 class mjStrictBoolOp(mjOp):
   def __init__(self, symbol, operands):
@@ -856,7 +850,8 @@ class mjStrictBoolOp(mjOp):
       return (BOOLEAN_TYPE, "boolean")
     else:
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
-                          "Operandos de tipo invalido, las operaciones booleanas solo aceptan int o boolean.")
+                          "Operandos de tipo invalido, las operaciones "
+                          "booleanas solo acepta boolean.")
 
 class mjOr(mjStrictBoolOp):
   def __init__(self, symbol, operands):

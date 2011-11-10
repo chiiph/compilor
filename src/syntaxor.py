@@ -783,9 +783,10 @@ class Syntaxor(object):
             ex = self.postfix_expression()
             return ex
         elif self.tok(NOT):
+            t = self._current_token
             self.update_token()
             ex = self.unary_expression()
-            return mjNot([ex])
+            return mjp.mjNot(t, [ex])
 
     def postfix_expression(self):
         if self._current_token.get_type() in FIRST_primary:
@@ -1163,7 +1164,7 @@ class Syntaxor(object):
                     if not prim_first is None:
                         prim_ref = prim_last
 
-                    method = mjp.mjMethodInvocation(prim_ref.ref, expr)
+                    method = mjp.mjMethodInvocation(prim_ref, expr)
                     method.goesto = prim_ref.goesto
                     if not prim_first is None: # caso "especial"
                         prim_first.goesto = prim_id
