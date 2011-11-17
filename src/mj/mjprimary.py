@@ -703,7 +703,7 @@ class mjMethodInvocation(mjPrimary):
         self.code += "push %s ; (static)%s.%s\n" % (method.label,
                                                     val.name.get_lexeme(),
                                                     method.get_signature())
-        self.code += "call"
+        self.code += "call\n"
         ### /CODE
 
         return method
@@ -778,7 +778,7 @@ class mjMethodInvocation(mjPrimary):
     if val.name.get_lexeme() == "@super":
       self.code += "load 3\n ; this para el super"
       self.code += "push %s\n" % method.label
-      self.code += "call"
+      self.code += "call\n"
     else:
       self.code += "dup\n"
       self.code += "loadref 0 ; vtable \n"
