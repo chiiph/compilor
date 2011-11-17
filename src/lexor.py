@@ -35,7 +35,7 @@ class Token(object):
 class Lexor(object):
     _whitespace = frozenset([ " ", "\n", "\r", "\t" ])
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, system_classes = ""):
         self._cursor = 0
         self._line   = 1
         self._col    = 0
@@ -45,7 +45,7 @@ class Lexor(object):
         self._file_path = file_path
         self._file = open(self._file_path, "r")
         self._cursor = -1
-        self._file_data = self._file.read()
+        self._file_data = system_classes + self._file.read()
         self._one_sep = False
         self._maybe_start_comment = False
         self._prev_token = None

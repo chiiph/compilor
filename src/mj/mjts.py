@@ -155,9 +155,29 @@ class mjTS(object):
   def check(self):
     for t in self._sections["classes"]:
       self._sections["classes"][t].solve_extends()
+    code = ".code\n"
+    code += "push heap_init\n"
+    code += "call\n"
+
     for t in self._sections["classes"]:
-      self._sections["classes"][t].check()
-    self.hasMain()
+      code += "push %s\n" % self._sections["classes"][t].preconstruct
+      code += "call\n"
+
+    rest_code = ""
+    for t in self._sections["classes"]:
+      rest_code += self._sections["classes"][t].check()
+    main_label = self.hasMain()
+    code += "push %s\n" % main_label
+    code += "call\n"
+    code += "halt\n"
+    code += rest_code
+    print "#"*80
+    print "#"*80
+    print "#"*80
+    print code
+    print "#"*80
+    print "#"*80
+    print "#"*80
 
   def hasMain(self):
     mains = []
@@ -179,4 +199,5 @@ class mjTS(object):
       raise SemanticError(0,0,
                           "Existen mas de un metodo static void main()")
 
+    return mains[0].label
 

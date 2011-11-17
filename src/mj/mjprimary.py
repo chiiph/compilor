@@ -1,9 +1,11 @@
 from mjcheckers import mjCheckable
 from constants import *
 from errors import SemanticError
-from mjclass import isClass, mjVariable, isVariable, isMethod, isClassVariable
+from mjclass import isClass, mjVariable, isVariable, isMethod, isClassVariable, mjClass, mjMethod, mjBlock
 from firsts import FIRST_literal, FIRST_primitive_type
 from lexor import Token, isToken
+
+from memoize import memoized
 
 import random
 import string
@@ -28,6 +30,9 @@ def literalToType(lit):
   else:
     return REF_TYPE
 
+def isAssignment(obj):
+  return isinstance(obj, mjAssignment)
+
 def isMethodInv(obj):
   return isinstance(obj, mjMethodInvocation)
 
@@ -49,6 +54,8 @@ class mjPrimary(mjCheckable):
     self.ts = None
     self.goesto = None
     self.var = None
+
+    self.code = ""
 
   def set_ts(self,ts):
     self.ts = ts
@@ -82,6 +89,7 @@ class mjPrimary(mjCheckable):
   def get_type(self):
     return self.type # las expressions reimplementan esto para resolverse y devolver un INT_TYPE o STRING_TYPE
 
+  @memoized
   def resolve(self):
     if self.ref.get_type() in FIRST_literal:
       return self.lit_or_string_resolve()
@@ -93,18 +101,15 @@ class mjPrimary(mjCheckable):
       # Si no es inmediato, tenemos varias posibilidades
       # En esta implementacion de resolve, sabemos que el actual es un identificador
       if isClass(val): # es un mjClass, por ende este es un acceso a una variable estatica, si es que existe
-        print "Accessing a static var..."
         # tenemos qeu buscar en el ts de la clase, si hay una variable con el nombre este
         # y ver si es estatica y publica
         return self._resolve_class(val)
       elif isMethod(val):
         # o es el caso de algo.unmetodo().attr
-        print "Member of an object returned in a method invocation..."
         return self._resolve_method(val)
       elif isVariable(val):
         # o es el caso de que es una variable, no importa de que (ya se resolvio antes)
         # ....atributo.attr
-        print "Member of an object..."
         return self._resolve_var(val)
       elif isToken(val):
         # o es un token, en cuyo caso algo anduvo mal, o es un literal
@@ -120,12 +125,32 @@ class mjPrimary(mjCheckable):
     if val.ts.varExists(self.ref.get_lexeme()):
       var = val.ts.getVar(self.ref.get_lexeme())
       if var.isPublic() and var.isStatic():
+
+        ### CODE
+        self.code += "push %s ; %s\n" % (val.cr, val.name.get_lexeme())
+        self.code += "loadref %d ; .%s\n" % (var.offset, var.name.get_lexeme())
+        ### /CODE
+
         return var
       else:
         if var.isProtected():
-          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                              "Se esta tratando de acceder a un miembro protegido de %s"
-                              % val.name.get_lexeme())
+          cts = self.find_class_ts()
+          if cts is None: # grave problema
+            raise Exception("No existe ts de clase!!")
+
+          cl = cts.owner()
+          if not cl.inheritsFrom(val.name.get_lexeme()):
+            raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                                "Se esta tratando de acceder a un miembro protegido de %s"
+                                % val.name.get_lexeme())
+
+          ### CODE
+          self.code += "push %s ; %s\n" % (val.cr, val.name.get_lexeme())
+          self.code += "loadref %d ; .%s\n" % (var.offset, var.name.get_lexeme())
+          ### /CODE
+
+
+          return var
         else:
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "Para acceder a %s debe crear una instancia de %s primero."
@@ -153,6 +178,11 @@ class mjPrimary(mjCheckable):
     t = self.ts.recFindType(val.ret_type.get_lexeme())
     (hasvar, var) = t.hasVarAtAll(self.ref.get_lexeme())
     if hasvar:
+
+      ### CODE
+      self.code += "loadref %d ; %s\n" % (var.offset, var.ref.get_lexeme())
+      ### /CODE
+
       return var
     else:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
@@ -178,6 +208,9 @@ class mjPrimary(mjCheckable):
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Se esta tratando de acceder a un miembro protegido de la clase %s"
                             % t.name.get_lexeme())
+    ### CODE
+    self.code += "loadref %d ; %s\n" % (var.offset, var.name.get_lexeme())
+    ### /CODE
     return var
 
   def lit_or_string_resolve(self):
@@ -190,8 +223,45 @@ class mjPrimary(mjCheckable):
       t._col = self.ref.get_col()
       t._type = STRING_LITERAL
       var = mjVariable(t, name, self.ref, self.ts)
+
+      ### CODE
+      self.code += "; --- alloc de string: %s --- \n" % self.ref.get_lexeme()
+      # len + 1 (\0) + 1 (vtable)
+      self.code += "push %d ; len(\"%s\")\n" % (len(self.ref.get_lexeme()[:-1][1:])+1+1,
+                                                self.ref.get_lexeme())
+      self.code += "push malloc\n"
+      self.code += "call\n"
+      self.code += "dup\n"
+      self.code += "push VT_string\n"
+      self.code += "storeref 0\n"
+      self.code += "dup\n"
+      i = 0
+      for ch in self.ref.get_lexeme()[:-1][1:]:
+        i += 1
+        self.code += "push '%s'\n" % ch
+        self.code += "storeref %d\n" % i
+        self.code += "dup\n"
+      i += 1
+      self.code += "push 0\n"
+      self.code += "storeref %d\n" % i
+      ### /CODE
+
       return var
     else:
+
+      ### CODE
+      if self.ref.get_type() == CHAR_LITERAL:
+        self.code += "push '%s'; char lit\n" % self.ref.get_lexeme()
+      elif self.ref.get_type() == TRUE:
+        t = 1
+        self.code += "push %d; %s\n" % (t, self.ref.get_lexeme())
+      elif self.ref.get_type() == FALSE:
+        t = 0
+        self.code += "push %d; %s\n" % (t, self.ref.get_lexeme())
+      else: # INT_LITERAL
+        self.code += "push %s ; int lit\n" % self.ref.get_lexeme()
+      ### /CODE
+
       return self.ref
 
   def find_class_ts(self, ts=None):
@@ -218,6 +288,11 @@ class mjPrimary(mjCheckable):
       self.goesto.set_var(v)
 
   def inmediate_resolve(self):
+    ### Casos especiales
+    if self.ref.get_lexeme() == "System":
+      return mjClass(self.ref, None, [], None)
+    ### /Casos especiales
+
     cts = self.find_class_ts()
     if cts is None: # grave problema
       raise Exception("No existe ts de clase!!")
@@ -252,6 +327,11 @@ class mjPrimary(mjCheckable):
       # pero este this puede estar en bloques anidados, asi que hay qeu buscar la primer ts parent que isClassTs() == True
       name = Token()
       name._lexeme = "@this"
+
+      ### CODE
+      self.code += "load %d ; this\n" % 3 # fp -> d -> r -> this
+      ### /CODE
+
       return mjVariable(cl.name, name, self.ref, ts=cts)
     elif self.ref.get_type() == SUPER:
       if mt.isStatic():
@@ -263,6 +343,13 @@ class mjPrimary(mjCheckable):
                             "No se encontro la clase padre.")
       name = Token()
       name._lexeme = "@super"
+
+      ### CODE
+      # es igual a this, el cambio esta mas adelante cuando se resuelva
+      # la parte siguiente del primary
+      self.code += "load %d ; super\n" % 3 # fp -> d -> r -> this
+      ### /CODE
+
       return mjVariable(cl.name, name, self.ref, ts=cts)
 
     tmpts = self.ts
@@ -288,8 +375,22 @@ class mjPrimary(mjCheckable):
         if mt.isStatic() and isClassVariable(v) and not v.isStatic():
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "Referencia a identificador no static desde un metodo static")
+        ### CODE
+        if isClassVariable(v):
+          # si es una var de instancia, cargo this y despues loadref del offset en el CIR
+          self.code += "load %d ; this\n" % 3 # agregamos el this
+          self.code += "loadref %d ; .%s\n" % (v.offset, self.ref.get_lexeme())
+        else:
+          # sino, es una variable local o un parametro
+          self.code += "load %d ; %s\n" % (v.offset, self.ref.get_lexeme())
+        ### /CODE
+
         return v
       else:
+        ### CODE
+        # No se hace nada, en la siguiente parte del primary
+        # se buscara un label de metodo o un offset del CR
+        ### /CODE
         return tmpts.getType(self.ref.get_lexeme())
 
   def compatibleWith(self, othertype):
@@ -327,8 +428,16 @@ class mjPrimary(mjCheckable):
 
     return True
 
+  def get_rec_code(self):
+    if self.goesto is None:
+      return self.code
+
+    return self.goesto.get_rec_code() + self.code
+
+  @memoized
   def check(self):
     self.resolve()
+    return self.get_rec_code()
 
 class mjMethodInvocation(mjPrimary):
   def __init__(self, prim, args):
@@ -441,7 +550,15 @@ class mjMethodInvocation(mjPrimary):
       if cl.ts.methodInvExists(self):
         methods = cl.ts.getMethod(self)
         self.ref._lexeme = "this"
-        return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+        m = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+
+        ### CODE
+        self.code += "load 3 ; this\n"
+        self.code += "push %s ; %s\n" % (m.label, m.call_signature())
+        self.code += "call\n"
+        ### /CODE
+
+        return m
       else:
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a constructor desconocido: %s"
@@ -463,7 +580,15 @@ class mjMethodInvocation(mjPrimary):
       if cl.ext_class.ts.methodInvExists(self):
         methods = cl.ext_class.ts.getMethod(self)
         self.ref._lexeme = "super"
-        return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+        m = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+
+        ### CODE
+        self.code += "load 3 ; this\n"
+        self.code += "push %s ; %s\n" % (m.label, m.call_signature())
+        self.code += "call\n"
+        ### /CODE
+
+        return m
       else:
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Referencia a constructor desconocido: %s"
@@ -487,6 +612,18 @@ class mjMethodInvocation(mjPrimary):
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "No se puede realizar una llamada a un constructor de esta forma.")
       # aca no se checkea por visibilidad porque es la misma clase
+
+      ### CODE
+      if method.isStatic():
+        self.code += "push %s ; (static)%s\n" (method.label, method.call_signature())
+      else:
+        self.code += "load %d ; this\n" % 3
+        self.code += "dup\n" # duplica para que quede this en la llamada
+        self.code += "loadref 0 ; vtable\n"
+        self.code += "loadref %d ; offset de %s en la vtable\n" % (method.offset,
+                                                                   method.get_signature())
+      self.code += "call\n"
+      ### /CODE
       return method
     else:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
@@ -494,17 +631,94 @@ class mjMethodInvocation(mjPrimary):
                           % self.call_signature())
 
   def _resolve_class(self, val):
+    ### Casos especiales
+    if val.name.get_lexeme() == "System":
+      if not self.ref.get_lexeme() in ["print", "println", "read"]:
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "El metodo %s no pertenece a System."
+                            % self.ref.get_lexeme())
+      if self.ref.get_lexeme() == "read":
+        if len(self.args) != 0:
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Llamada con parametros invalidos a %s."
+                              % self.ref.get_lexeme())
+
+      if self.ref.get_lexeme() == "read" and len(self.args) != 0 or \
+         self.ref.get_lexeme() == "print" and len(self.args) != 1 or \
+         self.ref.get_lexeme() == "println" and len(self.args) > 1:
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Llamada con parametros invalidos a %s."
+                            % self.ref.get_lexeme())
+
+      r = self.args[0].resolve()
+      if len(self.args) == 1:
+        if isMethodInv(r):
+          print r
+          if not r.ret_type.get_lexeme() in ["boolean", "int",
+                                             "char", "String"] or \
+           r.type in [BOOLEAN_TYPE, INT_TYPE, CHAR_TYPE] or \
+           r.type == IDENTIFIER:# and self.args[0].type.get_lexeme() == "String":
+            raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                                "Llamada con parametros invalidos a %s."
+                                % self.ref.get_lexeme())
+
+
+      m = self.ref.get_lexeme()
+      t = None
+      if len(self.args) == 1:
+        r = self.args[0].resolve()
+        if isMethod(r):
+          t = r.ret_type.get_lexeme()
+        else:
+          t = r.type.get_lexeme()
+
+      if m == "print" or m == "println" and len(self.args) == 1:
+        if t == "boolean":
+          self.code += "bprint\n"
+        elif t == "int":
+          self.code += "iprint\n"
+        elif t == "char":
+          self.code += "cprint\n"
+        elif t == "String":
+          self.code += "sprint\n"
+
+      if m == "println":
+        self.code += "prnln\n"
+
+      if m == "read":
+        self.code += "read\n"
+      ret = Token()
+      ret._lexeme = "void"
+      ret._type = VOID_TYPE
+      return mjMethod([], ret, self.ref, [], mjBlock(), None)
+    ### /Casos especiales
+
     # Este es el caso de acceso a un metodo estatico
     if val.ts.methodInvExists(self):
       methods = val.ts.getMethod(self)
       method = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
       if method.isPublic() and method.isStatic():
+
+        ### CODE
+        self.code += "push %s ; (static)%s.%s\n" % (method.label,
+                                                    val.name.get_lexeme(),
+                                                    method.get_signature())
+        self.code += "call"
+        ### /CODE
+
         return method
       else:
         if method.isProtected():
-          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+          cts = self.find_class_ts()
+          if cts is None: # grave problema
+            raise Exception("No existe ts de clase!!")
+
+          cl = cts.owner()
+          if not cl.inheritsFrom(val.name.get_lexeme()):
+            raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "Se esta tratando de acceder a un miembro protegido de %s"
                               % val.name.get_lexeme())
+          return method
         else:
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "Para acceder a %s debe crear una instancia de %s primero."
@@ -524,7 +738,16 @@ class mjMethodInvocation(mjPrimary):
     t = self.ts.recFindType(val.ret_type.get_lexeme())
     (hasmethod, methods) = t.hasMethodInvAtAll(self)
     if hasmethod:
-      return self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+      m = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
+
+      ### CODE
+      self.code += "dup\n" # duplico el this de la variable que viene de val
+      self.code += "loadref 0 ; vtable \n"
+      self.code += "loadref %d ; offset a %s\n" % (m.offset, m.call_signature())
+      self.code += "call\n"
+      ### /CODE
+
+      return m
     else:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "La clase %s no posee ningun metodo %s"
@@ -550,6 +773,13 @@ class mjMethodInvocation(mjPrimary):
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "Se esta tratando de acceder a un miembro protegido de la clase %s"
                             % t.name.get_lexeme())
+
+    ### CODE
+    self.code += "dup\n"
+    self.code += "loadref 0 ; vtable \n"
+    self.code += "loadref %d ; offset a %s\n" % (method.offset, method.get_signature())
+    self.code += "call\n"
+    ### /CODE
     return method
 
   def to_string(self):
@@ -594,8 +824,17 @@ class mjMethodInvocation(mjPrimary):
 
     mjType.compatible(self, othertype)
 
+  @memoized
   def check(self):
-    self.resolve()
+    m = self.resolve()
+    code = ""
+
+    if not m.ret_type is None:
+      if m.ret_type.get_type() != VOID_TYPE:
+        code += "rmem 1\n"
+    for a in self.args:
+      code += a.check()
+    return code + self.get_rec_code()
 
 class mjClassInstanceCreation(mjMethodInvocation):
   def __init__(self, prim, args):
@@ -610,7 +849,6 @@ class mjClassInstanceCreation(mjMethodInvocation):
   def inmediate_resolve(self):
     tmpts = self.ts
     found = False
-    possible_static_var = False
     while (not tmpts is None) and (not found):
       # buscamos una clase que se llame como el metodo
       found = tmpts.typeExists(self.ref.get_lexeme())
@@ -631,12 +869,29 @@ class mjClassInstanceCreation(mjMethodInvocation):
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "%s es un constructor protegido."
                               % self.call_signature())
+
+        ### CODE
+        self.code += "push %d ; long CIR %s\n" % (cl.long, cl.name.get_lexeme())
+        self.code += "push malloc\n"
+        self.code += "call\n"
+        self.code += "dup\n"
+        self.code += "push %s ; vtable\n" % (cl.vtable)
+        self.code += "storeref 0\n"
+        self.code += "dup\n"
+        self.code += "push %s ; preconstructor\n" % cl.preconstruct
+        self.code += "call\n"
+        self.code += "dup\n"
+        self.code += "push %s ; constructor\n" % m.label
+        self.code += "call\n"
+        ### /CODE
+
         return m
       else:
         raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                             "No existe ningun constructor con el signature %s"
                             % self.call_signature())
 
+  @memoized
   def resolve(self):
     if self.ref.get_type() in FIRST_literal:
       return self.lit_or_string_resolve()
@@ -658,6 +913,15 @@ class mjClassInstanceCreation(mjMethodInvocation):
       # esto se levanta en la etapa sintactica, pero por las dudas...
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "No se pueden crear clases de tipos dereferenciados")
+
+  @memoized
+  def check(self):
+    self.resolve()
+    code = ""
+
+    for a in self.args:
+      code += a.check()
+    return code + self.get_rec_code()
 
 class mjExpression(mjPrimary):
   def __init__(self, op):
@@ -700,6 +964,7 @@ class mjAssignment(mjPrimary):
     self.left.pprint(tabs+1)
     self.expr.pprint(tabs+1)
 
+  @memoized
   def check(self):
     left = self.left.resolve()
     right = self.expr.resolve()
@@ -730,6 +995,22 @@ class mjAssignment(mjPrimary):
     mjType.compatible(left.type.get_lexeme(), right_str,
                       self.ts, self.ref.get_line(), self.ref.get_col())
 
+    ### CODE
+    self.code += self.expr.check()
+    self.code += "dup\n"
+
+    left_code = self.left.check()
+
+    if isClassVariable(left):
+      self.code += "\n".join(left_code.split("\n")[:-2]) + "\n"
+      self.code += "swap\n"
+      self.code += "storeref %d ; assignment\n" % left.offset
+    else:
+      self.code += "store %d ; assignment (local var)\n" % left.offset
+    ### /CODE
+    return self.code
+
+  @memoized
   def resolve(self):
     return self.expr.resolve()
 
@@ -739,6 +1020,8 @@ class mjOp(mjPrimary):
     self.symbol = symbol
     self.operands = operands
     self.ts = None
+    self.label_cc_true = None
+    self.label_cc_false = None
 
   def set_ts(self, ts):
     self.ts = ts
@@ -754,8 +1037,12 @@ class mjOp(mjPrimary):
     if isToken(r):
       return (literalToType(r.get_type()), types[0])
     else:
-      return (r.type.get_type(), types[0])
+      if isMethod(r):
+        return (r.ret_type.get_type(), types[0])
+      else:
+        return (r.type.get_type(), types[0])
 
+  @memoized
   def resolve(self):
     types = []
     r = None
@@ -764,7 +1051,10 @@ class mjOp(mjPrimary):
       if isToken(r):
         types.append(typeToStr(literalToType(r.get_type())))
       else:
-        types.append(r.type.get_lexeme())
+        if isMethod(r):
+          types.append(r.ret_type.get_lexeme())
+        else:
+          types.append(r.type.get_lexeme())
 
     # tratamos a los chars como ints
     s = list(set([x if x != "char" else "int" for x in types]))
@@ -801,10 +1091,33 @@ class mjOp(mjPrimary):
     else:
       return False
 
+  @memoized
   def check(self):
+    code = ""
+
     for o in self.operands:
-      o.check()
+      if not self.label_cc_true is None:
+        o.label_cc_true = self.label_cc_true
+        o.label_cc_false = self.label_cc_false
+      code += o.check()
+
+      # si es el ultimo, no hay cc
+      if o is self.operands[-1]:
+        break
+
+      if self.symbol.get_type() == CONDITIONAL_AND:
+        if not self.label_cc_false is None:
+          code += "bf %s ; && por cc\n" % self.label_cc_false
+          code += "push 1 ; retorna el valor de verdad\n"
+      elif self.symbol.get_type() == CONDITIONAL_OR:
+        if not self.label_cc_true is None:
+          code += "bt %s ; || por cc\n" % self.label_cc_true
+          code += "push 0 ; retorna el valor de verdad\n"
+
     self.resolve()
+    code += "%s \n" % mne_ops[self.symbol.get_lexeme()]
+
+    return code
 
 class mjArithOp(mjOp):
   def __init__(self, symbol, operands):
@@ -973,3 +1286,20 @@ ops = {ADD             : mjAdd,
        CONDITIONAL_AND : mjAnd,
        CONDITIONAL_OR  : mjOr,
        }
+
+mne_ops = {"+"  : "add",
+           "-"  : "sub",
+           "/"  : "div",
+           "*"  : "mul",
+           "%"  : "mod",
+           "!"  : "not",
+           "<"  : "lt",
+           ">"  : "gt",
+           "<=" : "le",
+           ">=" : "ge",
+           "==" : "eq",
+           "!=" : "ne",
+           "&&" : "and",
+           "||" : "or",
+           }
+

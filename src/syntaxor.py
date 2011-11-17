@@ -8,8 +8,8 @@ import mj.mjclass as mjc
 from mj.mjts import mjTS
 
 class Syntaxor(object):
-    def __init__(self, path):
-        self._lexor = Lexor(path)
+    def __init__(self, path, system_classes = ""):
+        self._lexor = Lexor(path, system_classes)
         self._current_token = None
 
     def check_syntax(self, ts):

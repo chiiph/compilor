@@ -5,8 +5,8 @@ public class ClassIdentifier1 extends ClassIdentifier2
 //----------------------------------------------------------------------------//
 // Class attributes.
 
-    public int              variableIndentifier01;
-    public char             variableIndentifier02;
+    public int              variableIndentifier01 = 2 + 3;
+  public char             variableIndentifier02 = new algo();
     public boolean          variableIndentifier03;
     public ClassIdentifier3 variableIndentifier04;
 
@@ -34,10 +34,19 @@ public class ClassIdentifier1 extends ClassIdentifier2
                                , ClassIdentifier3 variableIdentifier4
                                )
     {
+      {
+        int a;
+
+      }
+
       2.algo();
       true.algomas();
 
-      this.algo.algo.algo;
+
+      PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP;
+      th.algo.algo.algo;
+      algo algomas;
+
       (a + 4) = 3;
 
 
@@ -52,7 +61,7 @@ public class ClassIdentifier1 extends ClassIdentifier2
     public    ClassIdentifier1 ( int              variableIdentifier1
                                , char             variableIdentifier2
                                , boolean          variableIdentifier3
-                               , ClassIdentifier3 variableIdentifier4
+                               , ClassIdentifier2 variableIdentifier4
                                )
     {
         this.quecyo(constructor, algo);

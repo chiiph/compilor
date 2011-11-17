@@ -1,3 +1,9 @@
+import copy
+import random
+import string
+
+from memoize import memoized
+
 from mjts import mjTS
 from lexor import Token
 from constants import IDENTIFIER, PUBLIC, STATIC, PROTECTED, VOID_TYPE, BOOLEAN_TYPE
@@ -39,18 +45,24 @@ def isId(obj):
 
 class mjClass(mjCheckable):
   def __init__(self, name, ext_name, decls, ts, localts = None):
+    super(mjClass, self).__init__()
     self.name = name
     self.ext_name = ext_name
     self.ext_class = None # no resuelto todavia
     self.decls = decls
-    self.gen_codes = []
+    self.long = 0
+    self.vtable = "VT_%s" % self.name.get_lexeme()
+    self.cr = "CR_%s" % self.name.get_lexeme()
+    self.preconstruct = "%s_spreconstr" % self.name.get_lexeme()
+    self.ipreconstruct = "%s_ipreconstr" % self.name.get_lexeme()
 
-    (redef, other) = ts.classExists(self)
-    if redef:
-      raise SemanticError(other.name.get_line(), other.name.get_col(),
-                          "Clase ya definida")
+    if not ts is None:
+      (redef, other) = ts.classExists(self)
+      if redef:
+        raise SemanticError(other.name.get_line(), other.name.get_col(),
+                            "Clase ya definida")
 
-    ts.addClass(self)
+      ts.addClass(self)
     self.ts = localts
     if localts is None:
       self.ts = mjTS(ts)
@@ -109,27 +121,198 @@ class mjClass(mjCheckable):
 
     return self.ext_class.inheritsFrom(cl)
 
-  def gen_code(self):
-    return ""
-
   def pre_check(self):
     for d in self.decls:
       d.pre_check()
 
   def solve_extends(self):
     if not self.ext_name is None:
-      (valid, self.ext_class) = self.ts.parent().validExtend(self.ext_name)
+      (valid, ref) = self.ts.parent().validExtend(self.ext_name)
+      # copiamos para mantener los offsets de esta clase en particular
+      self.ext_class = ref
       if not valid:
         raise SemanticError(self.ext_name.get_line(), self.ext_name.get_col(),
                             "No existe la clase padre")
 
+  @memoized
+  def sort(self):
+    static_vars = []
+    vars = []
+    static_methods = []
+    methods = []
+
+    for v in self.ts._sections["variables"].values():
+      if v.isStatic():
+        static_vars.append(v)
+      else:
+        vars.append(v)
+
+    for m in self.decls:
+      if not isMethod(m):
+        continue
+      if m.is_constructor():
+        m.label = "%s" % (m.get_signature().replace("(", "$").replace(")", "$").replace(",","_"))
+        continue
+      if m.isStatic():
+        static_methods.append(m)
+      else:
+        methods.append(m)
+
+    return static_vars, vars, static_methods, methods
+
+  def set_offsets(self, static_init = 0, vars_init = 1, methods_init = 0):
+    # Clasificamos las declaraciones
+    static_vars, vars, static_methods, methods = self.sort()
+
+    for m in methods:
+      m.label = "%s_%s" % (self.name.get_lexeme(),
+                           m.get_signature().replace("(", "$").replace(")", "$").replace(",","_"))
+
+    for m in static_methods:
+      m.label = "%s_%s" % (self.name.get_lexeme(),
+                           m.get_signature().replace("(", "$").replace(")", "$").replace(",","_"))
+
+    if self.ext_name is None:
+      static_vars_offset = static_init
+      vars_offset = vars_init # empieza en 1 porque en 0 estara la vtable
+      methods_offset = methods_init
+
+      # Seteamos los offsets
+      for v in static_vars:
+        v.offset = static_vars_offset
+        static_vars_offset += 1
+
+      for v in vars:
+        v.offset = vars_offset
+        vars_offset += 1
+
+      for m in methods:
+        m.offset = methods_offset
+        methods_offset += 1
+    else:
+      if self.ext_class is None:
+        raise Exception("Herencia no resuelta!")
+
+      static_vars_offset, vars_offset, methods_offset = self.ext_class.set_offsets()
+
+      # los offsets de variables son iguales, pero "arriba" de quienes heredan
+      for v in static_vars:
+        v.offset = static_vars_offset
+        static_vars_offset += 1
+
+      for v in vars:
+        v.offset = vars_offset
+        vars_offset += 1
+
+      for m in methods:
+        redef = self.ext_class.ts.getExactMethod(m)
+        if redef is None:
+          m.offset = methods_offset
+          methods_offset += 1
+        else:
+          m.offset = redef.offset
+
+    return static_vars_offset, vars_offset, methods_offset
+
+  def get_all(self):
+    static_vars, vars, static_methods, methods = self.sort()
+    if self.ext_class is None:
+      return static_vars, vars, static_methods, methods
+
+    all_static_vars, all_vars, all_static_methods, all_methods = self.ext_class.get_all()
+
+    sorted_methods = []
+    for m in all_methods:
+      sorted_methods.append(m)
+      for m_son in methods:
+        if m_son.offset == m.offset:
+          # solo deberia haber uno
+          # si hay redefinicion, se sobreescribe en la lista
+          sorted_methods[len(sorted_methods)-1] = m_son
+
+    methods = sorted(methods, key = lambda m: m.offset)
+
+    return (static_vars,
+            all_vars+vars,
+            all_static_methods+static_methods,
+            sorted_methods+methods)
+
+  @memoized
   def check(self):
+    code = ""
+
+    self.set_offsets()
+    all_static_vars, all_vars, all_static_methods, all_methods = self.get_all()
+
+    vt_labels = []
+    for m in all_methods:
+      if m.is_constructor():
+        continue
+      vt_labels.append(m.label)
+
+    code += ".data\n"
+    # Creamos el CR
+    code += "CR_%s: dw %d DUP(0)\n" % (self.name.get_lexeme(),
+                                       len(all_static_vars))
+
+    # Creamos el VT
+    self.vtable = "VT_%s" % self.name.get_lexeme()
+    code += "%s: dw %s\n" % (self.vtable,
+                             ",".join(vt_labels))
+
+    code += ".code\n"
+    # Creamos el spreconstr
+    code += "%s: loadfp\n" % self.preconstruct
+    code += "loadsp\n"
+    code += "storefp\n"
+
+    if not self.ext_class is None:
+      code += "push %s\n" % self.ext_class.preconstruct
+      code += "call\n"
+
+    for sv in all_static_vars:
+      init_code = sv.val.check()
+      if len(init_code) != 0:
+        code += init_code
+        code += "dup\n"
+        code += "push CR_%s\n" % self.name.get_lexeme()
+        code += "swap\n"
+        code += "storeref %d\n" % sv.offset
+        code += "pop\n"
+
+    code += "storefp\n"
+    code += "ret 0\n"
+
+    # Creamos el ipreconstr
+    code += "%s: loadfp\n" % self.ipreconstruct
+    code += "loadsp\n"
+    code += "storefp\n"
+
+    self.long = len(all_vars)+1 # +1: vtable
+
+    if not self.ext_class is None:
+      code += "push %s\n" % self.ext_class.ipreconstruct
+      code += "call\n"
+
+    for v in all_vars:
+      init_code = v.val.check()
+      if len(init_code) != 0:
+        code += init_code
+        code += "dup\n"
+        code += "load 3 ; this\n"
+        code += "swap\n"
+        code += "storeref %d ; offset a %s\n" % (v.offset,
+                                                 v.name.get_lexeme())
+        code += "pop\n"
+
+    code += "storefp\n"
+    code += "ret 1\n"
+
     for d in self.decls:
       if not d is None:
-        code = d.check()
-        self.gen_codes.append(code)
+        code += d.check()
 
-    return self.gen_code()
+    return code
 
   def gen_default_construct(self):
     for d in self.decls:
@@ -146,6 +329,7 @@ class mjClass(mjCheckable):
 
 class mjReturn(mjCheckable):
   def __init__(self, ret = None, expr = None, method = None):
+    super(mjReturn, self).__init__()
     self.expr = expr
     self.method = method
     self.ts = None
@@ -163,17 +347,14 @@ class mjReturn(mjCheckable):
     if not self.expr is None:
       self.expr.set_ts(ts)
 
+  @memoized
   def check(self):
-    print "Checking return..."
-    print self.method
-    self.method.pprint()
-    print self.method.ret_type
     if self.method.is_constructor():
       if not self.expr is None:
         raise SemanticError(self.ret.get_line(), self.ret.get_col(),
                             "Los return en constructores no deben retornar valores")
       else:
-        return
+        return ""
 
     if self.expr is None:
       if self.method.ret_type.get_type() != VOID_TYPE:
@@ -195,8 +376,12 @@ class mjReturn(mjCheckable):
                               "Se esta retornando %s en un metodo de tipo %s"
                               % (t.type.get_lexeme(), self.method.ret_type.get_lexeme()))
 
+      return self.expr.check()+"store %d\n" % (3 + len(self.method.params) + 1)
+    return ""
+
 class mjWhile(mjCheckable):
   def __init__(self, expr, statement):
+    super(mjWhile, self).__init__()
     self.expr = expr
     self.statement = statement
 
@@ -210,8 +395,8 @@ class mjWhile(mjCheckable):
       self.statement.pprint(tabs+1)
     print "  "*tabs + "}}}"
 
+  @memoized
   def check(self):
-    print "Checking while..."
     e = self.expr.resolve()
     if mjp.isToken(e):
       if mjp.literalToType(e.get_type()) != BOOLEAN_TYPE:
@@ -228,10 +413,22 @@ class mjWhile(mjCheckable):
     else:
       raise Exception()
 
-    self.statement.check()
+    rand = "".join(random.choice(string.letters + string.digits) for i in xrange(10))
+    label_true = "while_true_%s" % rand
+    label_false = "while_false_%s" % rand
+
+    code += "%s: nop\n" % label_true
+    code += self.expr.code()
+    code += "bf %s\n" % label_false
+    code += self.statement.check()
+    code += "jump %s\n" % label_true
+    code += "%s: nop\n" % label_false
+
+    return code
 
 class mjIf(mjCheckable):
   def __init__(self, expr, stat, elsestat=None):
+    super(mjIf, self).__init__()
     self.expr = expr
     self.stat = stat
     self.elsestat = elsestat
@@ -250,8 +447,8 @@ class mjIf(mjCheckable):
       self.elsestat.pprint(tabs+1)
       print "  "*tabs + "}}}"
 
+  @memoized
   def check(self):
-    print "Checking if..."
     e = self.expr.resolve()
     if mjp.isToken(e):
       if mjp.literalToType(e.get_type()) != BOOLEAN_TYPE:
@@ -268,12 +465,30 @@ class mjIf(mjCheckable):
     else:
       raise Exception()
 
-    self.stat.check()
+    rand = "".join(random.choice(string.letters + string.digits) for i in xrange(10))
+    label_true = "if_true_%s" % rand
+    label_false = "if_false_%s" % rand
+    label_end = "else_false_%s" % rand
+
+    self.expr.label_cc_true = label_true
+    self.expr.label_cc_false = label_false
+    code = self.expr.check()
+    code += "bf %s\n" % label_false
+    code += "%s: nop\n" % label_true
+    code += self.stat.check()
+    code += "jump %s\n" % label_end
+    code += "%s: nop\n" %label_false
+
     if not self.elsestat is None:
-      self.elsestat.check()
+      code += self.elsestat.check()
+
+    code += "%s: nop\n" % label_end
+
+    return code
 
 class mjVariableDecl(mjCheckable):
   def __init__(self, ref, args):
+    super(mjVariableDecl, self).__init__()
     self.ref = ref
     self.args = args
     self.ts = None
@@ -292,21 +507,34 @@ class mjVariableDecl(mjCheckable):
       if not e is None:
         e.set_ts(ts)
 
+  @memoized
   def check(self):
+    code = "rmem %d\n" % len(self.args)
     for v, e in self.args:
       if not e is None:
-        e.check()
+        code += e.check()
         if not e.compatibleWith(self.ref):
           raise SemanticError(v.get_line(), v.get_col(),
                               "Inicializacion de tipo incompatible")
-      if not self.ts.addVar(mjVariable(self.ref, v, e, self.ts)):
+      var = mjVariable(self.ref, v, e, self.ts)
+      if not self.ts.addVar(var):
         raise SemanticError(v.get_line(), v.get_col(),
                             "Variable redefinida")
+      var.offset = self.offset
+      self.offset -= 1
+      if not e is None:
+        code += "dup\n"
+        code += "store %d\n" % var.offset
+        code += "pop\n"
+
+    return code
 
 class mjBlock(mjCheckable):
   def __init__(self, stats = [], ts=None):
+    super(mjBlock, self).__init__()
     self.stats = stats
     self.ts = ts
+    self.code = ""
 
   def set_ts(self, ts):
     self.ts = ts
@@ -380,12 +608,24 @@ class mjBlock(mjCheckable):
         return True
     return False
 
+  @memoized
   def check(self):
-    print "Checking block..."
+    self.code = ""
+
     for s in self.stats:
-      print s
       if not s is None:
-        s.check()
+        if isVariableDecl(s) or isBlock(s):
+          s.offset = self.offset
+          self.code += s.check()
+          self.offset = s.offset
+        else:
+          self.code += s.check()
+          if mjp.isAssignment(s):
+            self.code += "pop\n"
+
+    if len(self.ts._sections["variables"]) > 0:
+      self.code += "fmem %d\n" % len(self.ts._sections["variables"])
+    return self.code
 
   def set_owning_method(self, m):
     for stat in self.stats:
@@ -449,6 +689,7 @@ class mjVariable(object):
     self.name = name
     self.val = val
     self.ts = ts
+    self.offset = 0
 
   def pprint(self, tabs=0):
     print "  "*tabs + self.type.get_lexeme() + " " + self.name.get_lexeme()
@@ -457,6 +698,7 @@ class mjVariable(object):
 
 class mjMethod(mjCheckable):
   def __init__(self, modifs, ret_type, name, params, body, ts, localts=None):
+    super(mjMethod, self).__init__()
     self.modifs = modifs
     self.ret_type = ret_type
     self.name = name
@@ -477,12 +719,21 @@ class mjMethod(mjCheckable):
 
     self.ts.set_owner(self)
 
-    if not ts.addMethod(self):
-      raise SemanticError(self.name.get_line(), self.name.get_col(),
-                          "Redefinicion de metodo.")
+    if not ts is None:
+      if not ts.addMethod(self):
+        raise SemanticError(self.name.get_line(), self.name.get_col(),
+                            "Redefinicion de metodo.")
+
+    param_offset = 3
+    if not self.isStatic():
+      param_offset = 4
+
+    param_offset = len(self.params) + param_offset + 1
 
     for (t, v) in self.params:
+      param_offset -= 1
       var = mjVariable(t, v, ts=self.ts)
+      var.offset = param_offset
       self.processed_params.append(var)
       if not self.ts.addVar(var):
         raise SemanticError(v.get_line(), v.get_col(),
@@ -567,9 +818,8 @@ class mjMethod(mjCheckable):
   def is_constructor(self):
     return self.ret_type is None
 
+  @memoized
   def check(self):
-    print "Checking method..."
-
     for (t, v) in self.params:
       self.check_type(t)
 
@@ -597,8 +847,6 @@ class mjMethod(mjCheckable):
           raise SemanticError(self.name.get_line(), self.name.get_col(),
                               "Redefinicion de metodo que cambia la visibilidad static del que redefine.")
 
-    self.body.check()
-
     if not self.is_constructor() and self.ret_type.get_type() != VOID_TYPE:
       if not self.body.has_reachable_ret():
         raise SemanticError(self.name.get_line(), self.name.get_col(),
@@ -608,9 +856,25 @@ class mjMethod(mjCheckable):
       raise SemanticError(self.name.get_line(), self.name.get_col(),
                           "El metodo contiene codigo inaccesible.")
 
+    code = "%s: loadfp\n" % self.label
+    code += "loadsp\n"
+    code += "storefp\n"
+    code += self.body.check()
+
+    release = 0
+    if not self.isStatic():
+      release = 1 # this
+
+    release += len(self.params)
+
+    code += "storefp\n"
+    code += "ret %d\n" % release
+
+    return code
 
 class mjClassVariableDecl(mjCheckable):
   def __init__(self, modifs, t, list_ids, ts):
+    super(mjClassVariableDecl, self).__init__()
     self.modifs = modifs
     self.type = t
     self.list_ids = list_ids
@@ -638,6 +902,7 @@ class mjClassVariableDecl(mjCheckable):
         print "   "*tabs + name.get_lexeme() + " = "
         init.pprint(tabs+1)
 
+  @memoized
   def check(self):
     self.check_type()
     self.check_modifs()
@@ -647,6 +912,7 @@ class mjClassVariableDecl(mjCheckable):
         if not i.compatibleWith(self.type):
           raise SemanticError(v.get_line(), v.get_col(),
                               "Inicializacion de tipo incompatible")
+    return ""
 
   def check_type(self):
     if self.type.get_type() in FIRST_primitive_type:

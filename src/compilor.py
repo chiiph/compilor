@@ -45,6 +45,7 @@ if __name__ == "__main__":
   if ((argv_len == 3) or (argv_len == 2)):
     input_filepath = sys.argv[1]
     try:
+      #system_classes = open("src/system_classes.java", "r").read()
       syntaxor = Syntaxor(input_filepath)
     except IOError as ioe:
       print "Error: no such file."
@@ -57,9 +58,6 @@ if __name__ == "__main__":
 
     try:
       ts = mjTS()
-      s = Token()
-      s._lexeme = "String"
-      mjClass(s, None, [], ts)
       ast = syntaxor.check_syntax(ts)
 
       for cl in ast:
