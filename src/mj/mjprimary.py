@@ -775,10 +775,15 @@ class mjMethodInvocation(mjPrimary):
                             % t.name.get_lexeme())
 
     ### CODE
-    self.code += "dup\n"
-    self.code += "loadref 0 ; vtable \n"
-    self.code += "loadref %d ; offset a %s\n" % (method.offset, method.get_signature())
-    self.code += "call\n"
+    if val.name.get_lexeme() == "@super":
+      self.code += "load 3\n ; this para el super"
+      self.code += "push %s\n" % method.label
+      self.code += "call"
+    else:
+      self.code += "dup\n"
+      self.code += "loadref 0 ; vtable \n"
+      self.code += "loadref %d ; offset a %s\n" % (method.offset, method.get_signature())
+      self.code += "call\n"
     ### /CODE
     return method
 

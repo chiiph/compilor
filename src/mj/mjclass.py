@@ -250,6 +250,9 @@ class mjClass(mjCheckable):
         continue
       vt_labels.append(m.label)
 
+    if len(vt_labels) == 0:
+      vt_labels.append("0")
+
     code += ".data\n"
     # Creamos el CR
     code += "CR_%s: dw %d DUP(0)\n" % (self.name.get_lexeme(),
@@ -295,7 +298,9 @@ class mjClass(mjCheckable):
       code += "call\n"
 
     for v in all_vars:
-      init_code = v.val.check()
+      init_code = ""
+      if not v.val is None:
+        init_code = v.val.check()
       if len(init_code) != 0:
         code += init_code
         code += "dup\n"
