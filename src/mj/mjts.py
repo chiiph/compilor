@@ -1,4 +1,7 @@
 from errors import SemanticError
+from lexor import Token
+from constants import IDENTIFIER
+import mjclass as mjc
 
 class mjTS(object):
   def __init__(self, parent=None, owner=None):
@@ -44,6 +47,10 @@ class mjTS(object):
     return True
 
   def typeExists(self, t):
+    # built-in
+    if t == "String":
+      return True
+
     for c in self._sections["classes"].keys():
       if c == t:
         return True
@@ -131,6 +138,9 @@ class mjTS(object):
     return self._sections["variables"][v]
 
   def getType(self, v):
+    if not v in self._sections["classes"]:
+      raise SemanticError(0,0,
+                          "No existe ningun tipo llamado %s" % v)
     return self._sections["classes"][v]
 
   def getMethod(self, m):
@@ -152,7 +162,18 @@ class mjTS(object):
         print "  "*tabs + " " + j
     print "  "*tabs + "-"*30
 
+  def create_predefs(self):
+    o = Token()
+    o._lexeme = "Object"
+    o._type = IDENTIFIER
+    o._line = 0
+    o._col = 0
+
+    cl = mjc.mjClass(o, None, [], self)
+
   def check(self):
+    self.create_predefs()
+
     for t in self._sections["classes"]:
       self._sections["classes"][t].solve_extends()
     code = ".code\n"
@@ -171,13 +192,8 @@ class mjTS(object):
     code += "call\n"
     code += "halt\n"
     code += rest_code
-    print "#"*80
-    print "#"*80
-    print "#"*80
-    print code
-    print "#"*80
-    print "#"*80
-    print "#"*80
+
+    return code
 
   def hasMain(self):
     mains = []

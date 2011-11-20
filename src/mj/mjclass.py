@@ -71,6 +71,14 @@ class mjClass(mjCheckable):
 
     self.gen_default_construct()
 
+    if self.ext_name is None and self.name.get_lexeme() != "Object":
+      e = Token()
+      e._lexeme = "Object"
+      e._type = IDENTIFIER
+      e._line = 0
+      e._col = 0
+      self.ext_name = e
+
   def pprint_ts(self, tabs=0):
     print "  "*tabs + "** Class::" + self.name.get_lexeme() + " **"
     self.ts.pprint(tabs)
@@ -205,7 +213,7 @@ class mjClass(mjCheckable):
         vars_offset += 1
 
       for m in methods:
-        redef = self.ext_class.ts.getExactMethod(m)
+        redef = self.get_redef(m)
         if redef is None:
           m.offset = methods_offset
           methods_offset += 1
@@ -213,6 +221,15 @@ class mjClass(mjCheckable):
           m.offset = redef.offset
 
     return static_vars_offset, vars_offset, methods_offset
+
+  def get_redef(self, m):
+    if self.ext_class is None:
+      return None
+
+    redef = self.ext_class.ts.getExactMethod(m)
+    if redef is None:
+      return self.ext_class.get_redef(m)
+    return redef
 
   def get_all(self):
     static_vars, vars, static_methods, methods = self.sort()
@@ -280,7 +297,7 @@ class mjClass(mjCheckable):
         code += "dup\n"
         code += "push CR_%s\n" % self.name.get_lexeme()
         code += "swap\n"
-        code += "storeref %d\n" % sv.offset
+        code += "storeref %d ; offset a %s\n" % (sv.offset, sv.name.get_lexeme())
         code += "pop\n"
 
     code += "storefp\n"
@@ -381,7 +398,7 @@ class mjReturn(mjCheckable):
                               "Se esta retornando %s en un metodo de tipo %s"
                               % (t.type.get_lexeme(), self.method.ret_type.get_lexeme()))
 
-      return self.expr.check()+"store %d\n" % (3 + len(self.method.params) + 1)
+      return self.expr.check()+"store %d ; offset a ret_val\n" % (3 + len(self.method.params) + 1)
     return ""
 
 class mjWhile(mjCheckable):
@@ -389,6 +406,10 @@ class mjWhile(mjCheckable):
     super(mjWhile, self).__init__()
     self.expr = expr
     self.statement = statement
+
+  def set_ts(self, ts):
+    self.expr.set_ts(ts)
+    self.statement.set_ts(ts)
 
   def pprint(self, tabs=0):
     print "  "*tabs + "while"
@@ -412,9 +433,9 @@ class mjWhile(mjCheckable):
         raise SemanticError(e.name.get_line(), e.name.get_col(),
                             "La expresion debe ser de tipo boolean")
     elif isMethod(e):
-      if e.is_constructor() or e.ret_type.get_type() != BOOLEAN_TYPE:
+      if e.is_constructr() or e.ret_type.get_type() != BOOLEAN_TYPE:
         raise SemanticError(self.expr.ref.get_line(), self.expr.ref.get_col(),
-                            "La expresion debe ser de tipo boolean")
+                             "La expresion debe ser de tipo boolean")
     else:
       raise Exception()
 
@@ -422,8 +443,8 @@ class mjWhile(mjCheckable):
     label_true = "while_true_%s" % rand
     label_false = "while_false_%s" % rand
 
-    code += "%s: nop\n" % label_true
-    code += self.expr.code()
+    code = "%s: nop\n" % label_true
+    code += self.expr.check()
     code += "bf %s\n" % label_false
     code += self.statement.check()
     code += "jump %s\n" % label_true
@@ -437,6 +458,11 @@ class mjIf(mjCheckable):
     self.expr = expr
     self.stat = stat
     self.elsestat = elsestat
+
+  def set_ts(self, ts):
+    self.stat.set_ts(ts)
+    if not self.elsestat is None:
+      self.elsestat.set_ts(ts)
 
   def pprint(self, tabs=0):
     print "  "*tabs + "if"
@@ -529,7 +555,7 @@ class mjVariableDecl(mjCheckable):
       self.offset -= 1
       if not e is None:
         code += "dup\n"
-        code += "store %d\n" % var.offset
+        code += "store %d ; offset a %s \n" % (var.offset, var.name.get_lexeme())
         code += "pop\n"
 
     return code
@@ -629,7 +655,8 @@ class mjBlock(mjCheckable):
             self.code += "pop\n"
 
     if len(self.ts._sections["variables"]) > 0:
-      self.code += "fmem %d\n" % len(self.ts._sections["variables"])
+      vars_freed =  ",".join(self.ts._sections["variables"])
+      self.code += "fmem %d ; libreando %s\n" % (len(self.ts._sections["variables"]), vars_freed)
     return self.code
 
   def set_owning_method(self, m):
@@ -699,7 +726,8 @@ class mjVariable(object):
   def pprint(self, tabs=0):
     print "  "*tabs + self.type.get_lexeme() + " " + self.name.get_lexeme()
     if not self.val is None:
-      print "  "*tabs + " " + self.val.get_lexeme()
+      print "  "*tabs
+      self.val.pprint(tabs+1)
 
 class mjMethod(mjCheckable):
   def __init__(self, modifs, ret_type, name, params, body, ts, localts=None):

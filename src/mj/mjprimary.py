@@ -205,9 +205,15 @@ class mjPrimary(mjCheckable):
     if val.name.get_lexeme() != "@this" and \
        val.name.get_lexeme() != "@super":
       if not var.isPublic():
-        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                            "Se esta tratando de acceder a un miembro protegido de la clase %s"
-                            % t.name.get_lexeme())
+        cts = self.find_class_ts()
+        if cts is None: # grave problema
+          raise Exception("No existe ts de clase!!")
+
+        cl = cts.owner()
+        if not cl.inheritsFrom(val.type.get_lexeme()):
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Se esta tratando de acceder a un miembro protegido de la clase %s"
+                              % t.name.get_lexeme())
     ### CODE
     self.code += "loadref %d ; %s\n" % (var.offset, var.name.get_lexeme())
     ### /CODE
@@ -225,10 +231,9 @@ class mjPrimary(mjCheckable):
       var = mjVariable(t, name, self.ref, self.ts)
 
       ### CODE
-      self.code += "; --- alloc de string: %s --- \n" % self.ref.get_lexeme()
       # len + 1 (\0) + 1 (vtable)
-      self.code += "push %d ; len(\"%s\")\n" % (len(self.ref.get_lexeme()[:-1][1:])+1+1,
-                                                self.ref.get_lexeme())
+      self.code += "push %d ; len(%s) + \\0 + vtable \n" % (len(self.ref.get_lexeme()[:-1][1:])+1+1,
+                                                            self.ref.get_lexeme())
       self.code += "push malloc\n"
       self.code += "call\n"
       self.code += "dup\n"
@@ -238,7 +243,7 @@ class mjPrimary(mjCheckable):
       i = 0
       for ch in self.ref.get_lexeme()[:-1][1:]:
         i += 1
-        self.code += "push '%s'\n" % ch
+        self.code += "push \"%s\"\n" % ch
         self.code += "storeref %d\n" % i
         self.code += "dup\n"
       i += 1
@@ -251,7 +256,8 @@ class mjPrimary(mjCheckable):
 
       ### CODE
       if self.ref.get_type() == CHAR_LITERAL:
-        self.code += "push '%s'; char lit\n" % self.ref.get_lexeme()
+        self.code += "push %d; char lit %s \n" % (ord(self.ref.get_lexeme()[1:][:-1]),
+                                                  self.ref.get_lexeme())
       elif self.ref.get_type() == TRUE:
         t = 1
         self.code += "push %d; %s\n" % (t, self.ref.get_lexeme())
@@ -445,6 +451,12 @@ class mjMethodInvocation(mjPrimary):
     self.goesto = prim.goesto
     self.args = args
 
+  def set_var(self, var):
+    super(mjMethodInvocation, self).set_var(var)
+    for a in self.args:
+      if isinstance(a, mjPrimary):
+        a.set_var(var)
+
   def set_ts(self,ts):
     self.ts = ts
     for a in self.args:
@@ -476,8 +488,14 @@ class mjMethodInvocation(mjPrimary):
     nums = []
     for i in range(0, len(self.args)):
       if method.params[i][0].get_type() == IDENTIFIER:
+        a = self.args[i].resolve()
+        type = ""
+        if isMethod(a):
+          type = a.ret_type.get_lexeme()
+        else:
+          type = a.type.get_lexeme()
         nums.append(mjType.distance(method.params[i][0].get_lexeme(),
-                                    self.args[i].resolve().type.get_lexeme(),
+                                    type,
                                     self.ts)
                     )
     if len(nums) == 0:
@@ -554,7 +572,7 @@ class mjMethodInvocation(mjPrimary):
 
         ### CODE
         self.code += "load 3 ; this\n"
-        self.code += "push %s ; %s\n" % (m.label, m.call_signature())
+        self.code += "push %s ; %s\n" % (m.label, m.get_signature())
         self.code += "call\n"
         ### /CODE
 
@@ -583,7 +601,7 @@ class mjMethodInvocation(mjPrimary):
         m = self.get_THE_method(methods, self.ref.get_line(), self.ref.get_col())
 
         ### CODE
-        self.code += "load 3 ; this\n"
+        self.code += "load 3 ; super\n"
         self.code += "push %s ; %s\n" % (m.label, m.call_signature())
         self.code += "call\n"
         ### /CODE
@@ -615,7 +633,7 @@ class mjMethodInvocation(mjPrimary):
 
       ### CODE
       if method.isStatic():
-        self.code += "push %s ; (static)%s\n" (method.label, method.call_signature())
+        self.code += "push %s ; (static)%s\n" % (method.label, method.get_signature())
       else:
         self.code += "load %d ; this\n" % 3
         self.code += "dup\n" # duplica para que quede this en la llamada
@@ -827,7 +845,9 @@ class mjMethodInvocation(mjPrimary):
                           "La llamada a un constructor debe realizarse con"
                           " una sentencia new o como una sentencia individual.")
 
-    mjType.compatible(self, othertype)
+    mjType.compatible(m.ret_type.get_lexeme(), othertype.get_lexeme(), self.ts,
+                      self.ref.get_line(), self.ref.get_col())
+    return True
 
   @memoized
   def check(self):
@@ -865,6 +885,10 @@ class mjClassInstanceCreation(mjMethodInvocation):
                           "Referencia a constructor desconocido: %s"
                           % self.call_signature())
     else:
+      if self.ref.get_lexeme() == "String":
+        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                            "Un string no puede crearse de esta forma.")
+
       cl = tmpts.getType(self.ref.get_lexeme())
       if cl.ts.methodInvExists(self):
         methods = cl.ts.getMethod(self)
@@ -883,7 +907,7 @@ class mjClassInstanceCreation(mjMethodInvocation):
         self.code += "push %s ; vtable\n" % (cl.vtable)
         self.code += "storeref 0\n"
         self.code += "dup\n"
-        self.code += "push %s ; preconstructor\n" % cl.preconstruct
+        self.code += "push %s ; preconstructor\n" % cl.ipreconstruct
         self.code += "call\n"
         self.code += "dup\n"
         self.code += "push %s ; constructor\n" % m.label
@@ -927,22 +951,6 @@ class mjClassInstanceCreation(mjMethodInvocation):
     for a in self.args:
       code += a.check()
     return code + self.get_rec_code()
-
-class mjExpression(mjPrimary):
-  def __init__(self, op):
-    super(mjExpression, self).__init__(op, type=mjPrimary.Expr)
-
-  def to_string(self):
-    return "[" + self.type_to_str() + "]"
-
-  def pprint(self, tabs=0):
-    print "-"*15
-    print "  "*tabs + self.to_string()
-    if instanceof(self.ref, mjOp):
-      self.ref.pprint()
-    print "-"*15
-    if not self.goesto is None:
-      self.goesto.pprint(tabs+1)
 
 class mjAssignment(mjPrimary):
   def __init__(self, prim, expr):
@@ -1009,9 +1017,9 @@ class mjAssignment(mjPrimary):
     if isClassVariable(left):
       self.code += "\n".join(left_code.split("\n")[:-2]) + "\n"
       self.code += "swap\n"
-      self.code += "storeref %d ; assignment\n" % left.offset
+      self.code += "storeref %d ; assignment (class var) %s\n" % (left.offset, left.name.get_lexeme())
     else:
-      self.code += "store %d ; assignment (local var)\n" % left.offset
+      self.code += "store %d ; assignment (local var) %s\n" % (left.offset, left.name.get_lexeme())
     ### /CODE
     return self.code
 
@@ -1260,6 +1268,11 @@ class mjType(object):
 
     left_type = ts.recFindType(left)
     right_type = ts.recFindType(right)
+
+    if not left_type.inheritsFrom(right_type) and \
+           not right_type.inheritsFrom(left_type):
+      # si no son tipos compatibles, la distancia es maxima
+      return 999999999
 
     father = left_type
     son = right_type

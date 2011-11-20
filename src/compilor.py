@@ -1,4 +1,4 @@
-import sys
+import sys,os
 from syntaxor import Syntaxor
 from lexor import Token
 from constants import *
@@ -6,6 +6,73 @@ from errors    import LexicalError, SemanticError, SyntaxError
 
 from mj.mjclass import mjClass
 from mj.mjts import mjTS
+
+def find_biggest_label(code):
+  biggest = 0
+  for l in code.split("\n"):
+    cur = l.find(":")
+    if cur > biggest:
+      biggest = cur
+
+  return biggest
+
+def find_farthest_comment(code):
+  biggest = 0
+  for l in code.split("\n"):
+    cur = find_comment(l)
+    if cur > biggest:
+      biggest = cur
+
+  return biggest
+
+def find_comment(line):
+  pos = 0
+  found = False
+  while not found and pos < len(line):
+    if line[pos] == ";":
+      return pos
+    if line[pos] == "\"":
+      pos += 1
+      while line[pos] != "\"":
+        pos += 1
+
+    pos += 1
+
+  return -1
+
+def align_comments(code):
+  s = find_farthest_comment(code)
+  pretty_code = ""
+  for l in code.split("\n"):
+    has = find_comment(l)
+    if has == -1:
+      pretty_code += l + "\n"
+    else:
+      parts = [l[:-(len(l)-has)], l[has:]]
+      pretty_code += parts[0] + " "*(s-len(parts[0])) + parts[1] + "\n"
+
+  return pretty_code
+
+def align_labels(code):
+  i = find_biggest_label(code)
+  pretty_code = ""
+  for l in code.split("\n"):
+    has = l.find(":")
+    if has == -1:
+      sep = " "*(i+2)
+      if l.find(".") == 0:
+        sep = ""
+      pretty_code += sep + l + "\n"
+    else:
+      parts = l.split(":")
+      label = parts[0]
+      rest = ":".join(parts[1:])
+      pretty_code += label + ":" + " "*(i-has) + rest + "\n"
+
+  return pretty_code
+
+def prettify_code(code):
+  return align_comments(align_labels(code))
 
 def pretty_print_error_message(input_filepath, exc):
   input_file = open(input_filepath, 'r')
@@ -54,17 +121,25 @@ if __name__ == "__main__":
     if (argv_len == 3):
       output_filepath = sys.argv[2]
       output_file = open(output_filepath, 'w')
-      sys.stdout = output_file
 
+    code = ""
     try:
       ts = mjTS()
       ast = syntaxor.check_syntax(ts)
 
       for cl in ast:
         cl.pprint()
-        #cl.pprint_ts()
+      #   cl.pprint_ts()
 
-      ts.check()
+      code = prettify_code(ts.check()).replace("\n", os.linesep)
+
+      fileobj = None
+      if argv_len == 3:
+        fileobj = output_file
+      else:
+        fileobj = open(input_filepath.replace(".java", ".asm"), 'w')
+
+      fileobj.write(code)
 
     except SemanticError as se:
       pretty_print_error_message(input_filepath, se)
@@ -77,5 +152,7 @@ if __name__ == "__main__":
 
     if (argv_len == 3):
       output_file.close()
+    else:
+      fileobj.close()
   else:
     usage()
