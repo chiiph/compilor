@@ -127,8 +127,8 @@ if __name__ == "__main__":
       ts = mjTS()
       ast = syntaxor.check_syntax(ts)
 
-      for cl in ast:
-        cl.pprint()
+      # for cl in ast:
+      #   cl.pprint()
       #   cl.pprint_ts()
 
       code = prettify_code(ts.check()).replace("\n", os.linesep)
@@ -137,7 +137,8 @@ if __name__ == "__main__":
       if argv_len == 3:
         fileobj = output_file
       else:
-        fileobj = open(input_filepath.replace(".java", ".asm"), 'w')
+        output_filepath = input_filepath.replace(".java", ".asm")
+        fileobj = open(output_filepath, 'w')
 
       fileobj.write(code)
 
@@ -148,7 +149,8 @@ if __name__ == "__main__":
     except LexicalError as le:
       pretty_print_error_message(input_filepath, le)
 
-    print "La sintaxis de %s es correcta." % input_filepath
+    print "%s es un archivo MiniJava correcto." % input_filepath
+    print "El output ha sido generado en %s" % output_filepath
 
     if (argv_len == 3):
       output_file.close()

@@ -291,7 +291,9 @@ class mjClass(mjCheckable):
       code += "call\n"
 
     for sv in all_static_vars:
-      init_code = sv.val.check()
+      init_code = ""
+      if not sv.val is None:
+        init_code = sv.val.check()
       if len(init_code) != 0:
         code += init_code
         code += "dup\n"

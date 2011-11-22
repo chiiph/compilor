@@ -175,6 +175,10 @@ class mjPrimary(mjCheckable):
                           % val.ret_type.get_lexeme())
 
     # sino
+    if val.ret_type.get_type() == VOID_TYPE:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "void no puede ser dereferenciado.")
+
     t = self.ts.recFindType(val.ret_type.get_lexeme())
     (hasvar, var) = t.hasVarAtAll(self.ref.get_lexeme())
     if hasvar:
@@ -193,6 +197,10 @@ class mjPrimary(mjCheckable):
     if isToken(val.type) and val.type.get_type() in FIRST_primitive_type:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "Los tipos primitivos no no pueden ser dereferenciados")
+
+    if val.type.get_type() == VOID_TYPE:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "void no puede ser dereferenciado.")
 
     t = val.ts.recFindType(val.type.get_lexeme())
     (hasvar, var) = t.hasVarAtAll(self.ref.get_lexeme())
@@ -602,7 +610,7 @@ class mjMethodInvocation(mjPrimary):
 
         ### CODE
         self.code += "load 3 ; super\n"
-        self.code += "push %s ; %s\n" % (m.label, m.call_signature())
+        self.code += "push %s ; %s\n" % (m.label, m.get_signature())
         self.code += "call\n"
         ### /CODE
 
@@ -671,7 +679,6 @@ class mjMethodInvocation(mjPrimary):
       r = self.args[0].resolve()
       if len(self.args) == 1:
         if isMethodInv(r):
-          print r
           if not r.ret_type.get_lexeme() in ["boolean", "int",
                                              "char", "String"] or \
            r.type in [BOOLEAN_TYPE, INT_TYPE, CHAR_TYPE] or \
@@ -753,6 +760,10 @@ class mjMethodInvocation(mjPrimary):
                           % val.ret_type.get_lexeme())
 
     # sino
+    if val.ret_type.get_type() == VOID_TYPE:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "void no puede ser dereferenciado.")
+
     t = self.ts.recFindType(val.ret_type.get_lexeme())
     (hasmethod, methods) = t.hasMethodInvAtAll(self)
     if hasmethod:
@@ -761,7 +772,7 @@ class mjMethodInvocation(mjPrimary):
       ### CODE
       self.code += "dup\n" # duplico el this de la variable que viene de val
       self.code += "loadref 0 ; vtable \n"
-      self.code += "loadref %d ; offset a %s\n" % (m.offset, m.call_signature())
+      self.code += "loadref %d ; offset a %s\n" % (m.offset, m.get_signature())
       self.code += "call\n"
       ### /CODE
 
@@ -776,6 +787,10 @@ class mjMethodInvocation(mjPrimary):
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "Los tipos primitivos no pueden ser dereferenciados")
 
+    if val.type.get_type() == VOID_TYPE:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "void no puede ser dereferenciado.")
+
     t = val.ts.recFindType(val.type.get_lexeme())
     (hasmethod, methods) = t.hasMethodInvAtAll(self)
     if not hasmethod:
@@ -788,9 +803,15 @@ class mjMethodInvocation(mjPrimary):
     if val.name.get_lexeme() != "@this" and \
        val.name.get_lexeme() != "@super":
       if not method.isPublic():
-        raise SemanticError(self.ref.get_line(), self.ref.get_col(),
-                            "Se esta tratando de acceder a un miembro protegido de la clase %s"
-                            % t.name.get_lexeme())
+        cts = self.find_class_ts()
+        if cts is None: # grave problema
+          raise Exception("No existe ts de clase!!")
+
+        cl = cts.owner()
+        if not cl.inheritsFrom(val.type.get_lexeme()):
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Se esta tratando de acceder a un miembro protegido de la clase %s"
+                              % t.name.get_lexeme())
 
     ### CODE
     if val.name.get_lexeme() == "@super":
@@ -1244,6 +1265,11 @@ class mjType(object):
         raise SemanticError(line, col,
                             "Tipos incompatibles")
       return
+
+    if left == "void" or right == "void":
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "Tipos incompatibles.")
+
 
     # Aca sabemos que no son tipos primitivos
     left_type = ts.recFindType(left)

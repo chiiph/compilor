@@ -6,6 +6,8 @@ public class test
 
   public test()
     {
+      int a;
+
       (new test()) = 4;
 
     }
