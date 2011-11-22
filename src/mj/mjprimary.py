@@ -184,7 +184,7 @@ class mjPrimary(mjCheckable):
     if hasvar:
 
       ### CODE
-      self.code += "loadref %d ; %s\n" % (var.offset, var.ref.get_lexeme())
+      self.code += "loadref %d ; %s\n" % (var.offset, var.name.get_lexeme())
       ### /CODE
 
       return var

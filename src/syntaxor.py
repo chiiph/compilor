@@ -649,11 +649,13 @@ class Syntaxor(object):
         (op, rce) = self.rest_conditional_expression()
         if op is None:
             return coe
+        else:
+            return mjp.mjAssignment(coe, rce)
         return op(sym, [coe, rce])
 
     def rest_conditional_expression(self):
         if self.tok(ASSIGNMENT):
-            op = mjp.ops[self._current_token.get_type()]
+            op = 1 # simplemente not None
             self.update_token()
             ce = self.conditional_expression()
             return (op, ce)
