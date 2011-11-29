@@ -579,11 +579,12 @@ código.
 <integral type> ::= CHAR
 <reference type> ::= <class type>
 <class type> ::= <type name>
-<type name> ::= IDENTIFIER\end{lstlisting}
+<type name> ::= IDENTIFIER
+\end{lstlisting}
 
-% FIXXME: dirty hack to circumvent missing \n after lstlisting
 \minisec{Bloques y Sentencias}
-\begin{lstlisting}<block> ::= BRACE_OPEN BRACE_CLOSE
+\begin{lstlisting}
+<block> ::= BRACE_OPEN BRACE_CLOSE
 <block> ::= BRACE_OPEN <block statements> BRACE_CLOSE
 <block statements> ::= <block statement>
 <block statements> ::= <block statements> <block statement>
@@ -744,11 +745,13 @@ código.
 <numeric type> ::= <integral type>
 <integral type> ::= INT_TYPE
 <integral type> ::= CHAR_TYPE
-<boolean type> ::= BOOLEAN_TYPE\end{lstlisting}
+<boolean type> ::= BOOLEAN_TYPE
+\end{lstlisting}
 
 % FIXXME: dirty hack to circumvent missing \n after lstlisting
 \minisec{Bloques y Sentencias}
-\begin{lstlisting}<block> ::= BRACE_OPEN <rest block>
+\begin{lstlisting}
+<block> ::= BRACE_OPEN <rest block>
 <rest block> ::= BRACE_CLOSE
 <rest block> ::= <block statements> BRACE_CLOSE
 <block statements> ::= <block statement> <rest block statements>
@@ -1156,6 +1159,7 @@ declarators>:(method_decl, init, list_ids, method_body)
 { return BOOLEAN_TYPE }
     \end{lstlisting}
 
+\minisec{Bloques y sentencias}
     \begin{lstlisting}
 <block> ::= BRACE_OPEN <rest block>:rest
 { return mjBlock(rest) }

@@ -665,7 +665,7 @@ class mjBlock(mjCheckable):
           if mjp.isAssignment(s):
             self.code += "pop\n"
           if mjp.isClassInstanceCreation(s) or \
-             (mjp.isMethodInv(s) and s.resolve().ret_type.get_type() != VOID_TYPE):
+             (mjp.isMethodInv(s) and s.resolve().ret_type and s.resolve().ret_type.get_type() != VOID_TYPE):
             self.code += "fmem 1\n"
 
     if len(self.ts._sections["variables"]) > 0:
