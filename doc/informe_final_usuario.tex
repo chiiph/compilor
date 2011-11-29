@@ -1,0 +1,148 @@
+% coding: utf-8
+\documentclass [a4paper,abstracton,titlepage]{scrartcl}
+\pagestyle{plain}
+\usepackage{makeidx}
+\usepackage[table]{xcolor}
+\usepackage{color}
+\definecolor{LinkColor}{rgb}{0.33,0.42,0.18}
+\definecolor{TableEvenColor}{rgb}{0.93,1,0.8}
+\definecolor{TableOddColor}{rgb}{0.93,1,1}
+\definecolor{TableBorderColor}{rgb}{0.55,0.67,0.73}
+\definecolor{ListingBorderColor}{rgb}{0.55,0.55,0.55}
+\definecolor{ListingBackgroundColor}{rgb}{0.95,0.95,0.95}
+\definecolor{SidebarBorderColor}{rgb}{0.95,0.95,0.95}
+\definecolor{SidebarBackgroundColor}{rgb}{1,1,0.93}
+\usepackage[spanish]{babel}
+\usepackage[
+    pdftex,
+    pdftitle={Informe Final - Compiladores e Interpretes},
+    pdfauthor={Touceda, Tomás LU 84024},
+    backref,
+    pagebackref,
+    breaklinks=true,
+    unicode
+    ]
+    {hyperref}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage[T1]{fontenc}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{textcomp}
+\usepackage{alltt}
+\usepackage{listings}
+\usepackage{moreverb}
+\usepackage{upquote}
+
+\lstset{basicstyle=\footnotesize\ttfamily,showstringspaces=false,breaklines,frame=single, rulecolor=\color{ListingBorderColor}, xleftmargin=0cm, linewidth=0.95\textwidth}
+
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+\title{Informe final - Compiladores e Intérpretes\\Manual del usuario}
+\author{Touceda, Tomás LU 84024}
+\publishers{\begin{tabular}{ll}    \end{tabular}}
+
+\makeindex
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\hypertarget{_especificación_e_instrucciones_de_uso}{}
+\section{Instrucciones de uso}
+
+\subsection{Compilador}
+
+El compilador se debe ejecutar de la siguiente manera:
+
+\begin{alltt}C:\textbackslash{}...\textbackslash{}\textgreater{} python src/compilor.py \textless{}archivo\_{}entrada\textgreater{} [\textless{}archivo\_{}salida\textgreater{}]\end{alltt}
+
+La especificación del archivo de salida es opcional.
+Si se omite, el compilador generará el archivo de código intermedio con el mismo nombre del archivo de entrada, pero con una extensión ``.asm'' en vez de ``.java''.
+Si no se especifica un archivo de entrada, o se pasan más argumentos que el
+archivo de entrada y el de salida, el compilador mostrará un mensaje
+explicando el uso por linea de comando.
+
+\subsection{CeIVM}
+
+Para ejecutar el código intermedio generado por el compilador en la máquina virtual de MiniJava, se deberá utilizar el siguiente comando:
+
+\begin{alltt}C:\textbackslash{}\textgreater{} java -jar CeIVM-cei2011-v1.0.1/CeIVM-cei2011.jar \textless{}archivo\_{}entrada\textgreater{}\end{alltt}
+
+\section{Especificación de MiniJava}
+
+\subsection{Tipos primitivos}
+
+MiniJava cuenta con los siguientes tipos predefinidos: int, char y boolean.
+
+\subsection{Tipos built-in}
+
+Además de los tipos primitivos, se proveen tres tipos ``built-in'':
+
+\begin{itemize}
+ \item Object: Toda clase definida hereda de la clase Object. No posee ningún método, existe simplemente para dar flexibilidad al programador a la hora de realizar programación genérica.
+ \item String: Se cuenta con la clase String, cuyos objetos solo pueden ser creados estableciendo el texto del string entre comillas dobles. Más información a continuación.
+ \item System: Se cuenta con la clase System, de la cual no se pueden crear objetos sino que se pueden utilizar alguno de sus métodos estáticos. Más información a continuación.
+\end{itemize}
+
+\minisec{String}
+
+La clase String cuenta con los siguientes métodos de instancia:
+
+\begin{itemize}
+ \item \texttt{char charAt(int index)}: Devuelve el caracter que ocupa la posición en el String o indicada por index.
+ \item \texttt{String concat(String str)}: Concatena str al final del String y lo devuelve.
+ \item \texttt{boolean equals(String str)}: Devuelve verdadero si str y el String contienen la misma secuencia de caracteres, y falso en caso contrario.
+ \item \texttt{int length()}: Devuelve la longitud del String.
+\end{itemize}
+
+\minisec{System}
+
+La clase System cuenta con los siguientes métodos estáticos:
+
+\begin{itemize}
+ \item \texttt{static int read()}: lee el próximo byte del stream de entrada estándar
+ \item \texttt{static void print(boolean b)}: imprime un boolean por salida estándar
+ \item \texttt{static void print(char c)}: imprime un char por salida estándar
+ \item \texttt{static void print(int i)}: imprime un int por salida estándar
+ \item \texttt{static void print(String s)}: imprime un String por salida estándar
+ \item \texttt{static void println()}: imprime un separador de línea por salida estándar finalizanado la línea actual 
+ \item \texttt{static void println(boolean b)}: imprime un boolean por salida estándar finalizanado la línea actual
+ \item \texttt{static void println(char c)}: imprime un char por salida estándar finalizanado la línea actual
+ \item \texttt{static void println(int i)}: imprime un int por salida estándar finalizanado la línea actual
+ \item \texttt{static void println(String str)}: imprime un String por salida estándar finalizanado la línea actual
+\end{itemize}
+
+\subsection{Tipos definidos por el usuario}
+
+MiniJava provee la posibilidad de declarar clases nuevas que posean o no herencia explícita, en las cuales se pueden declarar constructores, métodos estáticos o de instancia, y atributos estáticos o de instancia. La visibilidad de las declaraciones dentro de una clase podrá ser $public$ o $protected$ únicamente, todo el resto de los modificadores son inválidos.
+
+Dentro de los métodos y constructores, se podrán definir variables locales. No se podrá usar ningún tipo de manejo de excepciones.
+
+Las clases pueden ser únicamente $public$. No es posible utilizar declaraciones de $package$ o el uso de $import$. Las clases tampoco pueden ser abstractas ni interfaces.
+
+Únicamente uno de los tipos definidos por el usuario debe contener un método static cuyo signature sea \texttt{public static void main()}.
+
+\subsection{Sentencias y expresiones}
+
+Las posibles sentencias y expresiones que se pueden utilizar en MiniJava son las siguientes:
+
+\begin{itemize}
+ \item Asignaciones.
+ \item Invocación a métodos.
+ \item Creación de instancia de clase.
+ \item Sentencias compuestas.
+ \item Sentencias condicionales como \texttt{if (expr) then sent} o \texttt{if (expr) sent else sent}.
+ \item Sentencias de repetición \texttt{while}.
+ \item Sentencias de retorno de métodos.
+ \item Expresiones aritméticas con los operadores: +, -, /, * y \%.
+ \item Operaciones booleanas con los operadores: \&\&, ||, !, <, >, <=, >=, ==, !=.
+ \item Concatenación de Strings con el operador +.
+\end{itemize}
+
+\end{document}

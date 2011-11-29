@@ -1,0 +1,1591 @@
+\documentclass[a4paper,oneside]{report}
+\usepackage[spanish]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{fullpage}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{rotating}
+
+\lstset{
+language=python,
+numbers=left,
+numberstyle=\footnotesize,
+stepnumber=1,
+numbersep=5pt,
+backgroundcolor=\color{lightgray},
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+frame=single,
+tabsize=2,
+captionpos=b,
+breaklines=true,
+breakatwhitespace=false,
+escapeinside={\%*}{*)},
+morekeywords={*,...}
+}
+
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+\title{Compiladores e Intérpretes \\ Entrega 3: Análisis Semántico}
+
+\author{Tomás Touceda (LU: 84.024)}
+
+\date{20 de Agosto de 2011}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Manejo de errores}
+
+Para el manejo de errores se utilizó un tipo nuevo de excepción llamado
+$SemanticError$, cuando se encuentra algún tipo de error semántico, esta
+excepción es lanzada con los datos necesarios para que el método general que la
+atrapa pueda mostrar el lugar en el código donde ocurrió el problema. Por una
+cuestión de simpleza en el esquema de traducción, SemanticError solo tendrá un
+parámetro de tipo String.
+
+\section{Esquema de Traducción}
+  \subsection{Consideraciones de la especificación}
+Se utilizó una sintaxis similar a la de CUP para la especificación del
+esquema de traducción. Particularmente, en este paso los atributos son
+sintentizados. Por ejemplo,
+
+\begin{lstlisting}
+<class declaration> ::= 
+PUBLIC CLASS IDENTIFIER:id <rest class declaration>:(ext_id, decls)
+{ return mjClass(id, ext_id, decls) }
+\end{lstlisting}
+
+En el lado derecho de la regla, PUBLIC y CLASS son únicamente
+utilizados para el análisis sintáctico. En cambio IDENTIFIER:id
+muestra que el identificador será referenciado con el nombre id en el
+código encerrado entre llaves, y rest class declaration:(ext\_id,
+decls) muestra que la regla rest class declaration devolverá
+una tupla de dos elementos y serán usados en el código con los nombres
+ext\_id y decls.
+
+  \subsection{Gramática y traducción}
+
+    \subsubsection{Programas}
+    \begin{lstlisting}
+<compilation unit> ::=   <type declarations>:decls
+{ return decls }
+    \end{lstlisting}
+
+    \subsubsection{Declaraciones}
+    \begin{lstlisting}
+<type declarations> ::= <class declaration>:classdecl <type declarations>:rest
+{ return [classdecl] + rest }
+<type declarations> ::= LAMBDA
+{ return [] }
+<class declaration> ::=   
+PUBLIC CLASS IDENTIFIER:id <rest class declaration>:(ext_id, decls)
+{ return mjClass(id, ext_id, decls) }
+<rest class declaration> ::= <class body>:decls
+{ return (None, decls) }
+<rest class declaration> ::= ENTENDS IDENTIFIER:id <class body>:decls
+{ return (id, decls) }
+<class body> ::= BRACE_OPEN <rest class body>:decls
+{ return decls }
+<rest class body> ::=   BRACE_CLOSE
+{ return [] }
+<rest class body> ::=   <class body declarations>:decls BRACE_CLOSE
+{ return decls }
+<class body declarations> ::= 
+<class body declaration>:decl <rest class body declarations>:rest
+{ return [decl] + rest }
+<rest class body declarations> ::= LAMBDA
+{ return [] }
+<rest class body declarations> ::= <class body declarations>:decls
+{ return decls }
+<class body declaration> ::=   
+<field modifiers>:modifs <rest class body declaration>:(method_decl, id, init,
+list_ids, method_body)
+{
+  if method_decl:
+    if init == None: # constructor
+      return mjMethod(modifs = modifs, ret_type = None,
+		      name = id, params = list_ids, body = method_body)
+    else:
+      return mjMethod(modifs = modifs, ret_type = id,
+                      name = init, params = list_ids, body = method_body)
+  else:
+    # id es el tipo (custom, o primitive)
+    return mjClassVariableDecl(modifs, id, list_ids)
+}
+<rest class body declaration> ::= <type noident void>:_type
+<declarators>:(method_decl, init, list_ids, method_body)
+{
+  return (method_decl, _type, init, list_ids, method_body)
+}
+<rest class body declaration> ::= IDENTIFIER:id <rest2 class body
+declaration>:(method_decl, init, list_ids, method_body)
+{
+  # agregamos un campo mas: el id, 
+  # que es el tipo de return si es method_decl y no constructor
+  # o el nombre del constructor (que desp hay qeu ver que sea 
+  # igual al de la clase)
+  if method_decl:
+    if init == None: # entonces constructor declarator
+      return (method_decl, id, None, list_ids, method_body) 
+      # todavia faltan los field modifiers
+    else: # method decl comun, y id es un tipo custom de return
+      return (method_decl, id, init, list_ids, method_body)
+  else:
+    return (method_decl, id, None, list_ids, None)
+}
+<rest2 class body declaration> ::= <constructor declarator>:params <constructor
+body>:body
+{
+  # Se detecta que es un constructor, porque el 
+  # campo que corresponde al id (el segundo) es None
+  return (True, None, params, body)
+}
+<rest2 class body declaration> ::= <declarators>:(method_decl, init, list_ids,
+method_body)
+{
+  return (method_decl, init, list_ids, method_body)
+}
+<constructor declarator> ::= PAREN_OPEN <rest constructor declarator>:params
+{ return params }
+<rest constructor declarator> ::= PAREN_CLOSE
+{ return [] }
+<rest constructor declarator> ::= <formal parameter list>:params PAREN_CLOSE
+{ return params }
+<formal parameter list> ::= <formal parameter>:param <rest formal parameter
+list>:rest_params
+{ return [param] + rest_params }
+<rest formal parameter list> ::= COMMA <formal parameter list>:params
+{ return params }
+<rest formal parameter list> ::= LAMBDA
+{ return [] }
+<formal parameter> ::= <type>:_type IDENTIFIER:id 
+{ return (_type, id) }
+<constructor body> ::= BRACE_OPEN <rest constructor body>:body
+{ return body }
+<rest constructor body> ::= BRACE_CLOSE
+{ return mjBlock() } # un bloque vacio
+<rest constructor body> ::= <block statements>:stats BRACE_CLOSE
+{ return mjBlock(stats) }
+
+<field modifiers> ::= <field modifier>:modif <rest field modifiers>:rest_modif
+{ return [modif] + rest_modif }
+<rest field modifiers> ::= LAMBDA
+{ return [] }
+<rest field modifiers> ::= <field modifiers>:modif
+{ return modif }
+<field modifier> ::= PUBLIC
+{ return PUBLIC }
+<field modifier> ::= PROTECTED
+{ return PROTECTED }
+<field modifier> ::= STATIC
+{ return STATIC }
+
+<declarators> ::= IDENTIFIER:id <rest declarators>:(method_decl, init, list_ids,
+method_body)
+{
+  if method_decl:
+    return (method_decl, id, list_ids, method_body)
+  else:
+    return (method_decl, None, [(id, init)] + list_ids, method_body)
+}
+<rest declarators> ::= COMMA IDENTIFIER:id <rest2 declarators>:(method_decl,
+initializer, list_ids, method_body)
+{ return (False, None, [(id, initializer)] + list_ids, None) }
+<rest declarators> ::= ASSIGNMENT <expression>:expr <rest2 declarators>
+:(method_decl, initializer, list_ids, method_body)
+{ return (False, expr, list_ids, None) }
+<rest declarators> ::= PAREN_OPEN <rest method declarator>:params <method
+body>:bl
+{ return (True, None, params, bl) }
+<rest declarators> ::= SCOLON
+{ return (False, None, [], None) }
+<rest2 declarators> ::= COMMA IDENTIFIER:id <rest2 declarators>:(method_decl,
+init, list_ids, method_body)
+{ return (False, None, [(id, initializer)] + list_ids, None) }
+<rest2 declarators> ::= ASSIGNMENT <expression>:expr <rest2
+declarators>:(method_decl, init, list_ids, method_body)
+{ return (False, expr, list_ids, method_body) }
+<rest2 declarators> ::= SCOLON
+{ return (False, None, [], None) }
+
+<rest method declarator> ::= PAREN_CLOSE
+{ return [] }
+<rest method declarator> ::= <formal parameter list>:params PAREN_CLOSE
+{ return params }
+<method body> ::=   <block>:bl
+{ return bl }
+    \end{lstlisting}
+    
+    \subsubsection{Tipos}
+    \begin{lstlisting}
+<type> ::= <primitive type>:prim_type
+{ return prim_type }
+<type> ::= IDENTIFIER:type_id
+{ return type_id }
+<type> ::= VOID_TYPE
+{ return VOID_TYPE }
+<type noident void> ::= <primitive type>:prim_type
+{ return prim_type }
+<type noident void> ::= VOID_TYPE
+{ return VOID_TYPE }
+<primitive type> ::= <numeric type>:num_type
+{ return num_type }
+<primitive type> ::= <boolean type>:bool_type
+{ return bool_type }
+<numeric type> ::= <integral type>:int_type
+{ return int_type }
+<integral type> ::= INT_TYPE
+{ return INT_TYPE }
+<integral type> ::= CHAR_TYPE
+{ return CHAR_TYPE }
+<boolean type> ::= BOOLEAN_TYPE
+{ return BOOLEAN_TYPE }
+    \end{lstlisting}
+
+    \begin{lstlisting}
+<block> ::=   BRACE_OPEN <rest block>:rest
+{ return mjBlock(rest) }
+<rest block> ::= BRACE_CLOSE
+{ return [] }
+<rest block> ::= <block statements>:blstats BRACE_CLOSE
+{ return blstats }
+<block statements> ::= <block statement>:blstat <rest block statements>:rest
+{ return [blstat] + rest }
+<rest block statements> ::= LAMBDA
+{ return [] }
+<rest block statements> ::= <block statements>:blstats
+{ return blstats } # blstat es una list
+
+<block statement> ::= <primitive type>:primitive_type <local variable
+declaration statement>:vardecl
+{ return mjVariableDecl(primitive_type, vardecl) }
+<block statement> ::= <if start statement>:ifstat
+{ return ifstat }
+<block statement> ::= <while statement>:whilestat
+{ return whilestat }
+<block statement> ::= <block>:bl
+{ return bl }
+<block statement> ::= <empty statement>
+{ return None }
+<block statement> ::= <return statement>:retstat
+{ return retstat }
+<block statement> ::= <primary>:(prim_first, prim_last) <rest method
+invocation>:(where, _type, expr, first, last)
+{
+  if where == 2:
+    if _type == 1:
+      return mjAssignment(prim_last, expr)
+  return prim_last
+}
+<local variable declaration statement> ::= <local variable declaration>:localvar
+SCOLON
+{ return localvar }
+<local variable declaration> ::= IDENTIFIER:id <variable declarators>:(vardecls,
+rest)
+{ return [(id, vardecls)] + rest }
+
+<variable declarators> ::= <variable declarator>:vardecl <rest variable
+declarators>:rest
+{ return (vardecl, rest) }
+<rest variable declarators> ::= LAMBDA
+{ return [] }
+<rest variable declarators> ::= COMMA IDENTIFIER:id <variable declarators>:expr
+{ return [(id, expr)] }
+<variable declarator> ::= <rest variable declarator>:expr
+{ return expr }
+<rest variable declarator> ::= LAMBDA
+{ return None }
+<rest variable declarator> ::= ASSIGNMENT <expression>:expr
+{ return expr }
+<statement> ::= <statement without trailing substatement>:stat
+{ return stat }
+<statement> ::= <if start statement>:ifstat
+{ return ifstat }
+<statement> ::= <while statement>:whilestat
+{ return whilestat }
+<statement without trailing substatement> ::= <block>:bl
+{ return bl }
+<statement without trailing substatement> ::= <empty statement>
+{ return None }
+<statement without trailing substatement> ::= <expression statement>:expr
+{ return expr }
+<statement without trailing substatement> ::= <return statement>:ret
+{ return ret }
+<empty statement> ::= SCOLON
+{ return None }
+<expression statement> ::= <statement expression>:expr SCOLON
+{ return expr }
+<statement expression> ::= <method invocation>:methodinv
+{ return methodinv }
+<if start statement> ::= IF PAREN_OPEN <expression>:expr PAREN_CLOSE
+<statement>:stat <rest if start statement>:elsestat
+{ return mjIf(expr, stat, elsestat) }
+<rest if start statement> ::= LAMBDA
+{ return None }
+<rest if start statement> ::= ELSE <statement>:stat
+{ return stat }
+<while statement> ::= WHILE PAREN_OPEN <expression>:expr PAREN_CLOSE
+<statement>:stat
+{ return mjWhile(expr, stat) }
+<return statement> ::= RETURN <rest return statement>:expr
+{ return mjReturn(expr) }
+<rest return statement> ::= SCOLON
+{ return None }
+<rest return statement> ::= <expression>:expr SCOLON
+{ return expr }
+    \end{lstlisting}
+
+    \subsubsection{Expresiones}
+    \begin{lstlisting}
+<expression> ::= <assignment expression>:ae
+{ return ae }
+<assignment expression> ::= <conditional expression>:ce
+{ return ce }
+
+<conditional expression> ::= <conditional or expression>:expr <rest
+conditional expression>:(op, ce)
+{
+  if op != None:
+    return op(expr, ce)
+  else:
+    return expr
+}
+<rest conditional expression> ::= LAMBDA
+{ return (None, None) }
+<rest conditional expression> ::= ASSIGNMENT <conditional expression>:ce
+{ return (mjAssignment, ce) }
+<conditional or expression> ::= <conditional and expression>:expr <rest
+conditional or expression>:(op, coe)
+{
+  if op != None:
+    return op(expr, coe)
+  else:
+    return expr
+}
+<rest conditional or expression> ::= CONDITIONAL_OR <conditional or
+expression>:coe
+{ return (mjOr, coe) }
+<rest conditional or expression> ::= LAMBDA
+{ return (None, None) }
+<conditional and expression> ::= <equality expression>:expr
+<rest conditional and expression>:(op, cae)
+{
+  if op != None:
+    return op(expr, cae)
+  else:
+    return expr
+}
+<rest conditional and expression> ::= LAMBDA
+{ return (None, None) }
+<rest conditional and expression> ::= CONDITIONAL_AND <conditional
+and expression>:cae
+{ return (mjAnd, cae) }
+<equality expression> ::= <relational expression>:expr
+<rest equality expression>:(op, ee)
+{
+  if op != None:
+    return op(expr, ee)
+  else:
+    return expr
+}
+<rest equality expression> ::= EQUALS <equality
+expression>:ee
+{ return (mjEq, re) }
+<rest equality expression> ::= NOT_EQUALS <equality
+expression>:ee
+{ return (mjNotEq, re) }
+<rest equality expression> ::= LAMBDA
+{ return (None, None) }
+<relational expression> ::= <additive expression>:expr
+<rest relational expression>:(op, re)
+{
+  if op != None:
+    return op(expr, re)
+  else:
+    return expr
+}
+<rest relational expression> ::= LT <relational expression>:re
+{ return (mjLt, re) }
+<rest relational expression> ::= GT <relational expression>:re
+{ return (mjGt, re) }
+<rest relational expression> ::= LT_EQ <relational expression>:re
+{ return (mjLtEq, re) }
+<rest relational expression> ::= GT_EQ <relational expression>:re
+{ return (mjGtEq, re) }
+<rest relational expression> ::= LAMBDA
+{ return (None, None) }
+<additive expression> ::= <multiplicative expression>:expr <rest additive
+expression>:(op, ae)
+{
+  if op != None:
+    return op(expr, ae)
+  else:
+    return expr
+}
+<rest additive expression> ::= ADD <additive expression>:ae
+{ return (mjAdd, ae) }
+<rest additive expression> ::= SUB <additive expression>:ae
+{ return (mjSub, ae) }
+<rest additive expression> ::= LAMBDA
+{ return (None, None) }
+<multiplicative expression> ::= <unary expression>:ue <rest multiplicative
+expression>:(op, me)
+{ return op(ue, me) }
+<rest multiplicative expression> ::= MUL <multiplicative expression>:me
+{ return (mjMul, me) }
+<rest multiplicative expression> ::= DIV <multiplicative expression>:me
+{ return (mjDiv, me) }
+<rest multiplicative expression> ::= MOD <multiplicative expression>:me
+{ return (mjMod, me) }
+<rest multiplicative expression> ::= LAMBDA
+{ return (None, None) }
+<unary expression> ::= ADD <unary expression>:un
+{ return mjAdd(un) }
+<unary expression> ::= SUB <unary expression>:un
+{ return mjSub(un) }
+<unary expression> ::= <unary expression not plus minus>:un
+{ return un }
+<unary expression not plus minus> ::= <postfix expression>:prim_last
+{ return prim_last }
+<unary expression not plus minus> ::= NOT <unary expression>:expr
+{ return mjNot(expr) }
+<postfix expression> ::= <primary>:(prim_first, prim_last)
+{ return prim_last }
+
+<primary> ::= <literal>:lit <rest primary>:(first, last)
+{
+  if first == None:
+    return lit
+  first.from = lit
+  return (list, last)
+}
+<primary> ::= THIS:this <rest primary>:(first, last)
+{
+  if first == None:
+    return (this, this)
+  first.from = this
+  return (this, last)
+}
+<primary> ::= PAREN_OPEN <expression>:expr PAREN_CLOSE <rest primary>:(first,
+last)
+{
+  if last == None:
+    return expr
+  first.from = expr
+  return last
+}
+<primary> ::= <class instance creation expression>:classinst <rest
+primary>:(first, last)
+{
+  if last == None:
+    return classinst
+  first.from = classinst
+  return last
+}
+<primary> ::= <method invocation>:methodinv <rest primary>:(first, last)
+{
+  if last == None:
+    return methodinv
+  first.from = methodinv
+  return last
+}
+<rest primary> ::= ACCESSOR IDENTIFIER:id <rest2 primary>:(where, argList,
+first, last)
+{
+  if where == 1:
+    # entonces tenemos argList (aun cuando sea vacia), 
+    # o sea, id es un method inv
+    method = mjMethodInvocation(id, argList)
+    if first != None:
+      first.from = method
+      return (method, method)
+    return (method, last)
+  elif where == 2:
+    return (id, id)
+}
+<rest primary> ::= LAMBDA
+{ return (None, None) }
+
+<rest2 primary> ::= PAREN_OPEN <rest2 method invocation>:argList <rest
+primary>:(first, last)
+{
+  return (1, argList, first, last) # 1: es este caso
+}
+<rest2 primary> ::= <rest primary>:(first, last)
+{
+  return (2, [], first, last) # 2: es este
+}
+
+<class instance creation expression> ::= NEW IDENTIFIER:id PAREN_OPEN
+<rest class instance creation expression>:argList
+{
+  return mjClassInstanceCreation(id, argList)
+}
+<rest class instance creation expression> ::= PAREN_CLOSE
+{ return [] }
+<rest class instance creation expression> ::= <argument list>:argList
+PAREN_CLOSE
+{ return argList }
+<argument list> ::= <expression>:expr <rest argument list>:restList
+{
+  return [expr] + restList
+}
+<rest argument list> ::= LAMBDA
+{ return [] }
+<rest argument list> ::= COMMA <argument list>:argList
+{
+  return argList
+}
+<method invocation> ::= IDENTIFIER:id <rest primary>:(prim_first, prim_last)
+<rest method invocation>(where, _type, expr, first, last)
+{
+  # aca ya vamos a terminar la cadena del primary,
+  # enlazando id<-prim_first<-...<-prim_last<-first 
+  # y devolviendo last, que es el qeu importa en si
+  # el enlazado id<-prim_first dependera de si prim_first es None o no
+  if prim_first != None:
+    prim_first.from = id
+
+  # esto si bien se llama method invocation puede ser:
+  # 1: asignacion
+  # 2: method invocation
+  # 3: acceso a campo de un obj, o algo asi
+  # y lo sabemos segun el _type
+
+  # Pero antes tenemos qeu ver si viene algo con first y last
+  # y enlazarlos apropiadamente
+  if first != None:
+    if prim_first != None:
+      first.from = prim_last
+    else:
+      first.from = id
+
+# esto es para el where:
+# 1: primer caso (recursivo, accessor id)
+# 2: segundo (asignacion)
+# 3: posible method inv, depende, pero tiene (args)
+# 4: lambda
+
+  # caso especial, el rest fue lambda, o sea qeu _type no importa
+  if where == 4:
+    if prim_first != None:
+      return prim_last
+    else:
+      return id
+
+  if prim_last es un method invocation and where == 3:
+    raise SemanticError("Llamada a metodo invalida") # metodo()()
+  # si es una asignacion...
+  if _type == 1: # assignment
+    if where == 1:
+        return mjAssignment(last, expr)
+    elif where == 2:
+      # entonces la asignacion se hizo aca no mas
+      # first y last son None
+      if prim_last != None:
+        return mjAssignment(prim_last, expr)
+      else:
+        return mjAssignment(id, expr)
+    elif where == 3:
+      # entonces la asignacion se hizo mas lejos, 
+      # aca se hizo una llamada a un metodo con prim_last o id
+      # y first o last o ambos son != None
+      if prim_last != None:
+        method = mjMethodInvocation(prim_last.ref, expr) # expr es argList
+        if first != None:
+          first.from = prim_first
+      else:
+        method = mjMethodInvocation(id.ref, expr) # expr es argList
+        if first != None:
+          first.from = id
+
+      if last != None:
+        return mjAssignment(last, expr)
+      else:
+        if prim_last != None:
+          return mjAssignment(prim_last, expr)
+        else:
+          return mjAssignment(id, expr)
+    elif where == 4:
+      pass # es imposible
+  elif _type == 2: # method inv
+    if where == 1:
+      # recursivo accessor id rest
+      # el enlazado ya se hizo, asi que todo esta 
+      # listo, se retorna el ultimo eslabon
+      return last
+    elif where == 2:
+      # IMPOSIBLE, que venga de un assignment y tenga type method inv.
+      pass
+    elif where == 3:
+      # entonces aca prim_last o id son un method inv.
+      # y si first y last son None, entonces EL 
+      # method inv es este y hay que retornar eso
+      if last == None:
+        if prim_last != None:
+          return mjMethodInvocation(prim_last, expr)
+        else:
+          return mjMethodInvocation(id, expr)
+      else:
+        return last
+    elif where == 4:
+      pass # Otro imposible
+  elif _type == 3:
+    # es simplemente un acceso a campo
+    # asi qeu retornamos el ultimo eslabon
+    # sin importar desde donde se viene
+    if last != None:
+      return last
+    elif prim_last != None:
+      return prim_last
+    else:
+      return id
+  elif _type == 4:
+    if not isId(prim_ref):
+      raise Exception() # el tipo custom es un methodinv o algo invalido
+    return mjVariableDecl(prim_ref, expr)
+}
+
+# estos son iguales al anterior, salvo que cambia la primera parte
+<method invocation> ::= <literal> <rest primary> ACCESSOR IDENTIFIER
+PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation> ::= THIS <rest primary> <rest method invocation>
+<method invocation> ::= PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
+ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method
+invocation>
+<method invocation> ::= <class instance creation expression> <rest primary>
+ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method
+invocation>
+<method invocation> ::= SUPER <rest primary> <rest method invocation>
+
+# Se usan las siguientes constantes para ver desde donde se viene:
+# 1: primer caso
+# 2: segundo (asignacion)
+# 3: posible method inv, depende
+# 4: lambda
+# y las siguientes para ver que es lo que se esta encontrando que es:
+# 1: asignacion
+# 2: method invocation
+# 3: acceso a campo de un obj, o algo asi
+
+<rest method invocation> ::= ACCESSOR IDENTIFIER:id <rest
+primary>:(prim_first, prim_last) <rest method invocation>(where, _type, expr,
+first, last) # es lo qeu sea que rest method invocation diga que es
+{
+  if where == 4: # lambda
+    # entonces si prim != None, este es el last, y id el first
+    if prim_first != None:
+      prim_first.from = id # enlazamos con el actual
+      return (1, _type, expr, id, prim_last)
+    else:
+      return (1, _type, expr, id, id)
+  elif where == 1:
+    # si prim != None, y last != None
+    # first sabemos que no va a ser None y 
+    # sabemos que van a estar conectados entre si por el .from
+    if prim_first != None:
+      first.from = prim_last
+      prim_first.from = id
+    else:
+      first.from = id
+    return (1, _type, expr, id, last)
+  elif where == 2: # asignacion
+    # sabemos que first y last van a ser None
+    # si prim == None, no importa, porque va a manejar despues
+    prim_first.from = id
+    return (1, _type, expr, id, prim_last)
+  elif where == 3:
+    # entonces id o prim_last es el nombre del metodo
+    if prim_first != None:
+      # prim hasta aca tiene type=id, y ref=>token, 
+      # ahora ese token es el nombre del metodo
+      # prim_last tiene type=methodInv, y ref=> a un obj methodinv
+      method = mjMethodInvocation(prim_last, expr) # expr es argList
+      method.from = prim_last.from
+      prim_first.from = id
+      if first != None: # significa que el rest method inv que 
+                        # se llamo desde 3 no resulto en lambda
+        # entonces en _type viene el tipo real de lo ultimo que 
+        # se hizo, esto seria algo asi como:
+        # algo.algo1().algo3, donde algo1 es id aca o prim, el 
+        # nombre del metodo, y algo3 seria el first, con last=None,
+        # si fuera mas largo: algo.algo1().algo3.algo4, tendriamos last
+        first.from = method # enlazamos normalmente
+
+        return (1, _type, expr, id, last)
+      else: # first == None: o sea qeu fue un lambda, 
+            # se termina aca este primary,
+        return (1, _type, expr,  id, prim_last)
+        # si no llega a ser None, solamente nos tenemos qeu 
+        # fijar que este enlazado bien
+    else:
+      # hace lo mismo pero con id
+  elif where == 5:
+    # esto puede ser algo.algo1() asd;
+    raise SemanticError("Identificador de tipo no valido") 
+}
+
+<rest method invocation> ::= ASSIGNMENT <expression>:expr SCOLON # asignacion
+comun
+{ return (2, 1, expr, None, None) }
+<rest method invocation> ::= PAREN_OPEN <rest2 method invocation>:argList
+<rest method invocation>:(where, _type, expr, first, last) # method inv
+{
+  if where == 4: # nada
+    return (3, 2, argList, first, last) 
+    # method invocation, el first y el last del resto
+  elif where == 2: # viene del assignment
+    raise Exception() # TODO!!!
+  elif where == 1: # aca es algo asi como: algo.algo2().algomas
+    # entonces, a traves del where, se va a saber que lo anterior es un method
+inv, pero el type en si
+    # es el que viene de las otras invs
+    return (3, _type, argList, first, last)
+  elif where == 3:
+    raise Exception() # se hizo una llamada a otro metodo pero sin id
+  elif where == 5:
+    raise Exception() # este caso puede ser: algo() asd;
+<rest method invocation> ::= <local variable declaration>:vardecls SCOLON
+# declaracion de vars de tipo custom
+{ return (5, 4, vardecls, None, None) }
+<rest method invocation> ::= LAMBDA # nada
+{ return (4, None, None, None, None) }
+<rest2 method invocation> ::= PAREN_CLOSE
+{ return [] }
+<rest2 method invocation> ::= <argument list>:argList
+PAREN_CLOSE
+  elif where == 5:
+    raise Exception() # esto puede ser algo.algo1() asd;
+}
+
+# esto viene por block statements
+# NOTA: antes era <variable declarators>, pero permitia cosas como: algo = 3,
+algomas = 4;, asi que se "forzo" un camino dentro de la regla
+<rest method invocation> ::= ASSIGNMENT <expression>:expr SCOLON # asignacion
+comun
+{ return (2, 1, expr, None, None) }
+<rest method invocation> ::= PAREN_OPEN <rest2 method invocation>:argList
+<rest method invocation>:(where, _type, expr, first, last) # method inv
+{
+  if where == 4: # nada
+    return (3, 2, argList, first, last) # method invocation, el first y el last
+del resto
+  elif where == 2: # viene del assignment
+    raise SemanticError("Asignacion invalida")
+  elif where == 1: # aca es algo asi como: algo.algo2().algomas
+    # entonces, a traves del where, se va a saber que lo anterior es un method
+inv, pero el type en si
+    # es el que viene de las otras invs
+    return (3, _type, argList, first, last)
+  elif where == 3:
+    raise SemanticError("Llamada a metodo invalida") # metodo()()
+  elif where == 5:
+    raise SemanticError("Declaracion de variable invalida") 
+    # este caso puede ser: algo() asd;
+<rest method invocation> ::= <local variable declaration>:vardecls SCOLON
+# declaracion de vars de tipo custom
+{ return (5, 4, vardecls, None, None) }
+<rest method invocation> ::= LAMBDA
+{ return (4, None, None, None, None) }
+<rest2 method invocation> ::= PAREN_CLOSE
+{ return [] }
+<rest2 method invocation> ::= <argument list>:argList
+PAREN_CLOSE
+{ return argList }
+    \end{lstlisting}
+
+\section{Tabla de símbolos}
+  \subsection{Implementación}
+Dadas las flexibilidades del lenguaje Python, la implementación de las
+diferentes tablas de símbolos fueron tratadas como una misma, y para
+diferenciar los distintos tipos se tuvo en cuenta lo siguiente:
+
+  \begin{itemize}
+   \item Tabla de símbolos global: es la única tabla de símbolos cuyo parent es
+None.
+   \item Tabla de símbolos de clase: es la única cuyo parent es una tabla de
+símbolos global.
+  \end{itemize}
+
+El resto de las tablas de símbolos utilizadas (para bloques internos, por
+ejemplo) son únicamente para almacenar variables locales declaradas en
+ese $scope$.
+
+En base a esto, el tipo tabla de símbolos (mjTS) está definido por el siguiente
+código:
+
+    \begin{lstlisting}
+class mjTS(object):
+  def __init__(self, parent=None, owner=None):
+    # Pueden ser classes, variables, methods
+    self._sections = {}
+    # Si parent es None, entonces es la TS global
+    self._parent = parent
+    # *cosa* que tiene como ts a self
+    self._owner = owner
+
+    # Usada en la global
+    self._sections["classes"] = {}
+
+    # Usadas en el resto
+    self._sections["variables"] = {}
+    self._sections["methods"] = {}
+
+  def owner(self):
+    return self._owner
+
+  def set_owner(self, o):
+    self._owner = o
+
+  def parent(self):
+    return self._parent
+
+  def has(self, section, value):
+    if section in self._sections.keys():
+      return (True, self._sections[section][value])
+
+    return (False, None)
+
+  def addClass(self, c):
+    self._sections["classes"][c.name.get_lexeme()] = c
+
+  def addMethod(self, m):
+    if self.methodExists(m.get_signature()):
+      return False
+    self._sections["methods"][m.get_signature()] = m
+    return True
+
+  def typeExists(self, t):
+    for c in self._sections["classes"].keys():
+      if c == t:
+        return True
+
+    return False
+
+  def classExists(self, cl):
+    redef = False
+    other = None
+    for c in self._sections["classes"].keys():
+      if c == cl.name.get_lexeme():
+        redef = (cl != self._sections["classes"][c])
+        if redef:
+          other = self._sections["classes"][c]
+          break
+    return (redef, other)
+
+  def validExtend(self, ext_name):
+    if ext_name.get_lexeme() in self._sections["classes"].keys():
+      return (True, self._sections["classes"][ext_name.get_lexeme()])
+    return (False, None)
+
+  def addVar(self, v):
+    if self.varExists(v.name.get_lexeme()):
+      return False
+    self._sections["variables"][v.name.get_lexeme()] = v
+    return True
+
+  def varExists(self, v):
+    return v in self._sections["variables"].keys()
+
+  def methodExists(self, m):
+    return m in self._sections["methods"].keys()
+
+  def addVar(self, v):
+    if self.varExists(v.name.get_lexeme()):
+      return False
+    self._sections["variables"][v.name.get_lexeme()] = v
+    return True
+
+  def varExists(self, v):
+    return v in self._sections["variables"].keys()
+
+  def methodExists(self, m):
+    return m in self._sections["methods"].keys()
+
+  def getVar(self, v):
+    return self._sections["variables"][v]
+
+  def getType(self, v):
+    return self._sections["classes"][v]
+
+  def getMethod(self, m):
+    return self._sections["methods"][m]
+
+  def recFindType(self, t):
+    if self.typeExists(t):
+      return self.getType(t)
+    else:
+      if not self._parent is None:
+        return self._parent.recFindType(t)
+    return None
+    \end{lstlisting}
+
+  \subsection{Breve descripción}
+
+  A continuación se describen brevemente los tipos de búsquedas implementadas
+en la tabla de símbolos.
+
+    \subsubsection{Redefinición de clases}
+
+    El método $classExists$, dado un objeto de tipo $mjClass$, busca otra clase
+definida con anterioridad bajo el mismo nombre. Devuelve una tupla (bool,
+mjClass), en la cual si el primer valor es True, en el segundo se encuentra qué
+clase redefine.
+
+    \subsubsection{Redefinición de métodos y variables}
+
+    Los métodos $varExists$ y $methodExists$ sirven para corroborar si ya
+existe alguna variable o algún método llamado como el parámetro que se les
+pasa ya definido.
+
+    $methodExists$ recibe un signature de método, no solo el nombre, y
+asi soportar sobrecarga.
+
+    \subsubsection{Checkeo de herencia}
+
+    El método $validExtend$ es utilizado para ver si la clase de la cual se
+está heredando existe, y obtener la definición de la misma en forma de objeto
+mjClass.
+
+    \subsubsection{Variables y métodos heredados}
+
+    Para búsqueda de variables y métodos heredados, se implementaron las
+búsquedas en la clase mjClass, ya que implica ``conocimiento'' extra que la
+tabla de símbolos no posee ni debería poseer.
+
+    \begin{lstlisting}
+  def hasVarAtAll(self, v):
+    if self.ts.varExists(v):
+      return (True, self.ts.getVar(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasVarAtAll(v)
+    else:
+      return (False, None)
+
+  def hasMethodAtAll(self, v):
+    if self.ts.methodExists(v):
+      return (True, self.ts.getMethod(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasMethodAtAll(v)
+    else:
+      return (False, None)
+    \end{lstlisting}
+
+Estos métodos, $hasVarAtAll$ y $hasMethodAtAll$ buscan recursivamente sobre la
+cadena de herencia ya resuelta, si existe o no una variable o método llamado de
+la manera especificada.
+
+\section{AST}
+  \subsection{Diagrama de clases}
+
+    \includegraphics[angle=90,scale=0.75]{classes.png}
+
+  \subsection{Etapas de definición del AST}
+
+El árbol de sintaxis abstracto se podría decir que se construye en dos etapas.
+Como primer paso, se crean las estructuras básicas del mismo en el esquema de
+traducción, cuyo código convive con el del análisis sintáctico. Lo que se
+saltea en esta etapa, es la creación y propagación de tablas de símbolos y el
+enlazado entre ciertas estructuras (los mjReturns con sus respectivos
+mjMethods, por ejemplo). La idea es mantener el código del análisis sintáctico
+lo más limpio posible.
+
+En la siguiente etapa, se realiza la creación y propagación de tablas de
+símbolos y los enlaces restantes.
+
+Si bien se habla de dos etapas, todo se ejecuta en una única etapa, la
+diferencia principal es que todos los datos que se propagan en la segunda parte
+no son llevados en el código de análisis sintáctico, sino que todo se realiza
+manipulando el árbol de forma directa dentro de los constructores de los
+objetos de mayor jerarquía (mjClass).
+
+% norberto rearte: 2914054945
+% Maria piloto
+% 
+% 14 hrs
+% rodriguez 362
+% dni
+
+    \subsection{Ejemplo}
+
+Para hacer más gráfico el enlace de estructuras, se brinda un ejemplo del
+código de input y como se forma el AST.
+
+\begin{lstlisting}
+public class ClaseHija extends ClasePadre {
+  protected int valorEntero = 1;
+  public String cadena;
+
+  public ClaseHija() {
+    super(valorEntero);
+  }
+
+  protected void metodo() {
+    System.println("Un metodo");
+  }
+}
+
+public class ClasePadre {
+  protected int otroValor;
+  public ClasePadre(int valor) {
+    this.otroValor = valor;
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+Class::ClaseHija
+Extends::ClasePadre
+  protected  int
+   valorEntero = 
+    [<INT_LITERAL>::1]
+  public  String
+   cadena
+  Constructor::ClaseHija
+    {{{
+      [MethodInv::super]
+      (((
+        [<IDENTIFIER>::valorEntero]
+      )))
+    }}}
+  Method::metodo : void
+    {{{
+      [MethodInv::println]
+      (((
+        [<STRING_LITERAL>::"Un metodo"]
+      )))
+        [<IDENTIFIER>::System]
+    }}}
+Class::ClasePadre
+  protected  int
+   otroValor
+  Constructor::ClasePadre
+    {{{
+      [Assignment]
+        [<IDENTIFIER>::otroValor]
+          [<THIS>::this]
+        [<IDENTIFIER>::valor]
+    }}}
+\end{lstlisting}
+
+\section{Análisis semántico}
+  \subsection{Consideraciones}
+
+Para mantener el código lo más simple posible, la mayoría de los checkeos
+semánticos se realizaron sobre el AST directamente. Los que se realizaron sobre
+el esquema de traducción se especificaron dentro del mismo.
+
+Cada sección a partir de esta comentará los checkeos que realiza cada nodo del
+árbol. Si alguno de las condiciones especificadas en los items se cumple, se
+reportará un error.
+
+  \subsection{mjClass}
+
+  \begin{itemize}
+   \item Busca en la tabla de símbolos global por una clase con su mismo nombre
+definida con anterioridad.
+   \item Busca en la tabla de símbolos global a la clase de la cual hereda (si
+es que posee herencia explícita).
+   \item Ejecuta el checkeo de todas las declaraciones que componen la clase.
+  \end{itemize}
+
+  \subsection{mjReturn}
+  
+  Se informa error si:
+
+  \begin{itemize}
+   \item El método es un constructor, y el return contiene algún tipo de
+expresión.
+   \item El return no contiene una expresión, y el tipo de retorno del
+método no es $void$.
+   \item El tipo de la expresión de retorno difiere del tipo de retorno
+declarado en el método.
+  \end{itemize}
+
+
+  \subsection{mjWhile}
+
+  \begin{itemize}
+   \item Se informa error si el tipo de la expresión no es $boolean$.
+   \item Se ejecuta el checkeo en el cuerpo del while.
+  \end{itemize}
+
+  \subsection{mjIf}
+
+  \begin{itemize}
+   \item Se informa error si el tipo de la expresión no es $boolean$.
+   \item Se ejecuta el checkeo en el cuerpo del if, y de existir else, también
+se lo checkea.
+  \end{itemize}
+
+  \subsection{mjVariableDecl}
+
+  Se informa error si:
+
+  \begin{itemize}
+   \item El tipo de la expresión de inicialización no es de un tipo equivalente
+al de la declaración de la variable.
+   \item Existe otra variable en el mismo entorno con el mismo nombre.
+  \end{itemize}
+
+  \subsection{mjBlock}
+
+  \begin{itemize}
+    \item Se ejecuta el checkeo las sentencias del bloque.
+  \end{itemize}
+
+  \subsection{mjMethod}
+
+  En la primer pasada, en la creación del AST, se corrobora que no exista otro
+método con un signature igual al del actual. Se corrobora también que no haya
+más de un parámetro con el mismo nombre.
+
+  En la siguiente pasada, se informa error si:
+
+  \begin{itemize}
+   \item El tipo de retorno no está definido.
+   \item La lista de modificadores es inválida (distinta de ``public static'',
+``protected static'', ``public'', ``protected'').
+   \item Es un constructor con modificador estático.
+   \item Si alguno de los tipos de los parámetros no está definido.
+   \item Es un constructor con nombre distinto al de la clase a la que
+pertenece.
+   \item Si es un método que no retorna $void$ y existe un camino en el cual no
+se llega a una sentencia de return.
+   \item Si existe código inaccesible en el mismo (código luego de un mjReturn).
+  \end{itemize}
+
+
+  \subsection{mjClassVariableDecl}
+
+En la primera pasada se corrobora que la variable no haya sido definida con
+anterioridad.
+
+En la segunda pasada, se informa error si:
+
+  \begin{itemize}
+   \item El tipo de la misma no está definido.
+   \item Los modificadores son inválidos.
+   \item Si la expresión de inicialización es de tipo incompatible.
+  \end{itemize}
+
+  \subsection{mjPrimary}
+
+Se corrobora que pueda ser resuelto el primary. Esto significa que toda la
+cadena del mismo puede ser resuelta.
+
+  \subsection{mjMethodInvocation}
+
+Se corrobora lo mismo que en primary, pero reimplementa la forma en la cual se
+realiza la resolución.
+
+  \subsection{mjClassInstanceCreation}
+
+De la misma forma, se corrobora lo mismo que en primary, también reimplementa
+la forma en la que se hace la resolución.
+
+  \subsection{mjAssignment}
+
+Se resuelven el lado izquierdo y derecho de la asignación. Una vez realizado
+esto, se informa error si:
+
+  \begin{itemize}
+   \item El lado izquierdo es un literal (1, ``cadena'', true, etc).
+   \item El lado izquierdo es algo que no es mjVariable (mjMethodInvocation,
+por ejemplo).
+   \item El lado izquierdo es una variable, pero el nombre está prefijado con
+$@$, lo cual indica que la variable es generada por el compilador, por lo que
+no es una variable en sí, sino una representación de, por ejemplo, el tipo de
+una expresión.
+   \item Si el lado derecho es una llamada a método, y la misma es un
+constructor sin el operador new.
+   \item Si el tipo de la expresión del lado derecho es incompatible con el del
+lado izquierdo.
+  \end{itemize}
+
+  \subsection{mjOp}
+
+Se informa error si el tipo de la expresión no se puede resolver. En este caso,
+el tipo resuelto será el de todos sus operandos, y se espera que todos tengan
+el mismo tipo. A la vez, este tipo debe ser $String$, $int$ o $boolean$.
+
+  \subsection{mjArithOp}
+
+Similar a mjOp, con la diferencia que acepta operandos únicamente de tipo
+$int$, y siempre retorna $int$.
+
+  \subsection{mjBoolOp}
+
+Similar a mjOp, con la diferencia que acepta operandos de tipo $int$ o
+$boolean$, y siempre retorna $boolean$.
+
+  \subsection{mjStrictIntBoolOp}
+
+Similar a mjOp, con la diferencia que acepta operandos únicamente de tipo
+$int$, y siempre retorna $boolean$.
+
+  \subsection{mjStrictBoolOp}
+
+Similar a mjOp, con la diferencia que acepta operandos únicamente de tipo
+$boolean$, y siempre retorna $boolean$.
+
+  \subsection{Otros checkeos}
+
+Fuera del AST, se corrobora que existe un único método $main()$ que sea public
+static, caso contrario se informa error.
+
+\section{Generación de código}
+
+  \subsection{Estructura general}
+
+El código generado tendrá la siguiente estructura:
+
+\begin{center}
+  \begin{tabular}{ r | c | l }
+    \cline{2-2}
+    0 & JUMP main & \\ \cline{2-2}
+     & Métodos estáticos & \\ \cline{2-2}
+     & Inicializadores estáticos & \\ \cline{2-2}
+     & Métodos de clase & \\ \cline{2-2}
+     & Inicializadores de clase & \\ \cline{2-2}
+     & \vdots & \\ \cline{2-2}
+     & main & \\
+    \cline{2-2}
+  \end{tabular}
+\end{center}
+
+Los ``inicializadores estáticos'' son inicializadores de variables estáticas de
+clase, y son ejecutados al comienzo del main. Los ``inicializadores de clase''
+son los que son asignados a variables no estáticas de clase, y son ejecutados
+en cada creación de objeto.
+
+Los punteros vtable apuntarán al comienzo de los inicializadores de clase.
+
+Las variables estáticas serán almacenadas en el heap. Para referenciarlas, se
+guardarán los punteros al comienzo de la estructura en el comienzo del heap, de
+la siguiente manera:
+
+\begin{center}
+  \begin{tabular}{ r | c | l }
+    \cline{2-2}
+    HP & ptr variables estáticas Clase1 & \\ \cline{2-2}
+     & ptr variables estáticas Clase2 & \\ \cline{2-2}
+     & ptr variables estáticas Clase3 & \\ \cline{2-2}
+     & \vdots & \\ \cline{2-2}
+    HL &  & \\
+    \cline{2-2}
+  \end{tabular}
+\end{center}
+
+El código para realizarlo, se utilizará el siguiente código al comienzo del
+$main$:
+
+\begin{lstlisting}
+PUSH cant_classes ; cant_classes es la cantidad de clases declaradas
+PUSH alloc ; alloc es el puntero a la rutina de alloc en heap
+CALL
+\end{lstlisting}
+
+Para referenciar una variable estática, se utilizará el siguiente código:
+
+\begin{lstlisting}
+LOADHP
+LOADREF N ; siendo N el offset de la clase
+LOADREF M ; siendo M el offset de la variable estática dentro de la lista
+\end{lstlisting}
+
+
+  \subsection{mjClass}
+
+Se ordenan las declaraciones según lo especificado en la sección anterior, se
+genera el código de cada declaración y se lo concatena. La declaración del
+método $main$ se la devuelve aparte, asi puede ser concatenada al final de todo
+el código.
+
+Cada método o inicializador estático estará referenciado por un label, cuyo
+nombre será: nombreDeLaClase\_nombreDelMetodo o
+nombreDeLaClase\_nombreDeVariable. De esta forma, en el comienzo del main se
+realizarán llamadas ``CALL label'' por cada label de inicializador estático,
+como se especifica en la sección de mjClassVariableDecl.
+
+Una vez que se cuenta con todas las mjClassVariableDecl que son estáticas, se
+reserva el espacio en el heap pasa almacenarlas, y se guarda el puntero en el
+HP+offset para esta clase.
+
+El código de inicialización de variables estáticas se devolverá separado del
+resto, para poder concatenarlo al comienzo del método $main$.
+
+  \subsection{mjReturn}
+
+De existir una expresión en el return, se genera el código de la misma y se lo
+concatena con ``RET''. De no existir expresión, simplemente se retorna ``RET''.
+
+  \subsection{mjWhile}
+
+El código del while estará estructurado de la siguiente manera:
+
+  \begin{lstlisting}
+true_while_<random>:
+   ... ; Código de la expresión
+   BF false_while_<random>
+   ... ; Código del bloque while
+   JUMP true_while_<random>
+false_while_<random>:
+   ... ; Código de las sentencias a continuación del while
+  \end{lstlisting}
+
+Las etiquetas true\_while\_ y false\_while\_, poseen una cadena aleatoria, para
+evitar colisiones de labels.
+
+  \subsection{mjIf}
+
+El código del if estará estructurado de la siguiente manera:
+
+  \begin{lstlisting}
+   ... ; Código de la expresión
+   BF false_if_<random>
+   ... ; Código del bloque then del if
+   JUMP exit_if_<random>
+false_if_<random>:
+   ... ; Código del else (en caso de existir)
+exit_if_<random>:
+   ... ; Código de las sentencias a continuación del if
+  \end{lstlisting}
+
+Las etiquetas son estructuradas de la misma forma que se explicó con el while.
+
+  \subsection{mjVariableDecl}
+
+La declaración de variable local puede contener más de un identificador, por lo
+que el código generado por cada variable será:
+
+  \begin{lstlisting}
+RMEM 1 ; Se reserva una locación si no hay inicializador
+  \end{lstlisting}
+
+o el código generado del inicializador, ya que sabemos que va a retornar el
+valor en el tope de la pila.
+
+Para acceder luego a cada variable será necesario saber el offset desde el FP
+hasta la posición reservada. Para esto, ya se conoce el offset hasta la
+declaración (ya que se llamó primero a las rutinas de mjMethodInvocation), por
+lo que simplemente se asigna el offset según la posición de la variable en la
+lista de declaraciones.
+
+Según la cantidad de variables declaradas, se devuelve el offset nuevo desde el
+FP, junto con el código generado.
+
+  \subsection{mjBlock}
+
+Para cada sentencia del bloque, se ejecuta la rutina de generación de código. A
+la vez, se va propagando el nuevo offset desde el FP para cada llamada a la
+rutina.
+
+  \subsection{mjMethod}
+
+El método debe apilar el FP (enlace dinámico), y luego ejecutar la rutina de
+generación de código del cuerpo del mismo.
+
+  \subsection{mjClassVariableDecl}
+
+Si la variable es estatica y contiene inicializador, su valor será guardado en
+el heap en la locación especificada en la sección de mjClass. Para realizar
+esto último, se utilizará el siguiente código al comienzo del main (para cada
+variable estática).
+
+\begin{lstlisting}
+LOADHP
+LOADREF N ; siendo N el offset de la clase
+PUSH nombreDeLaClase_nombreDeVariable ; label al inicializador estático
+CALL 
+STOREREF M ; siendo M el offset de la variable estática dentro de la lista
+\end{lstlisting}
+
+Si la variable no es estática, no se genera código ahora mismo, pero más
+adelante se la utilizará para crear el CIR.
+
+  \subsection{mjPrimary}
+
+Los distintos eslabones de mjPrimary están unidos por un atributo llamado
+$goesto$, en caso de ser el último, o ser un primary de un solo elemento,
+goesto es $None$.
+
+La lógica de generación de código estará muy ligada a la de resolución de
+símbolos. Por lo que estará delineado por el siguiente pseudocódigo como parte
+de la clase mjPrimary:
+
+\begin{lstlisting}
+if self.ref.get_type() in FIRST_literal:
+  # Es un literal
+  return PUSH valor(self.ref)
+
+if self.goesto is None:
+  if self.ref.get_type() == THIS or self.ref.get_type() == SUPER:
+    return LOAD N # siendo N = len(ED) + len(ret) + len(params)
+  
+  # ahora puede ser o el nombre de una clase o una variable de instancia
+  if es una clase:
+    # no se genera nada, se va a generar el 
+    # código acorde en la siguiente vuelta
+  else:
+    if la variable es estatica:
+      return (
+      LOADHP
+      LOADREF clase.N # siendo N el offset de la clase
+      LOADREF self.M # siendo M el offset de la variable
+      )
+    else:
+      # variable de clase, sin this, hay que agregarlo
+      return (
+      LOAD N    # siendo N = len(ED) + len(ret) + len(params)
+      LOADREF self.M # siendo M el offset dentro del CIR
+      )
+else: # self.goesto != None
+  # se genera el codigo para todo lo que viene antes de este eslabón
+  val = self.goesto.resolve() 
+
+  if val es una clase: # dereferenciamiento estático
+    return (
+    LOADHP
+    LOADREF val.N # siendo N el offset de la clase
+    LOADREF self.M # siendo M el offset de la variable
+    )
+  elif val es un metodo: 
+    # se invocó a val y ahora se accede a un atributo del objeto que devuelve
+    # en el tope esta el valor de retorno
+    if val.ret es primitivo:
+      # sabemos que esto es un error, y lo detectamos antes
+    else:
+      return LOADREF self.M # siendo M el offset de la variable en la clase
+  elif val es una variable:
+    # val es una variable de tipo referencia, y tengo que cargar ahora
+    # un atributo del objeto al que referencia
+    return LOADREF self.M # siendo M el offset de la variable en la clase
+\end{lstlisting}
+
+  \subsubsection{Referencia}
+
+  \begin{itemize}
+   \item $self.ref$: Es una referencia al token que representa el eslabón del
+primary.
+  \end{itemize}
+
+  \subsection{mjMethodInvocation}
+
+Este es muy similar a mjPrimary, ya que hereda de este, pero el eslabón que
+representa el $self$ en este caso, va a ser una llamada a método.
+
+\begin{lstlisting}
+if self.goesto is None:
+  if self.ref.get_type() == THIS or self.ref.get_type() == SUPER:
+    return LOAD N # siendo N = len(ED) + len(ret) + len(params)
+  
+  # sabemos que es una llamada a método de instancia
+  for p in self.params: # para cada parametro
+    # se genera el codigo para cada parametro
+  # y luego se realiza la llamada
+  return (
+  LOAD N # siendo N el offset de la clase
+  LOADREF 0 # se carga la vtable
+  LOADREF M # siendo M el offset dentro de la vtable
+  CALL
+  )
+else: # self.goesto != None
+  # se genera el codigo para todo lo que viene antes de este eslabón
+  val = self.goesto.resolve() 
+
+  if val es una clase: # dereferenciamiento estático
+    for p in self.params: # para cada parametro
+      # se genera el codigo para cada parametro
+    return (
+    PUSH val.nombre + "_" + self.nombre # nombreDeLaClase_nombreDeVariable
+    CALL
+    )
+  elif val es un metodo or val es una variable: 
+    # simplemente cargamos la vtable, y llamamos
+    # sabemos que la referencia al objeto en val ya esta en la pila
+    return (
+    LOADREF 0 # vtable
+    LOADREF self.M # offset en la vtable
+    CALL
+    )
+\end{lstlisting}
+
+  \subsection{mjClassInstanceCreation}
+
+Este caso es igual al anterior, solo que el método se resuelve de una manera
+distinta ya que en este caso se buscan constructores, no métodos de instancia.
+
+El código generado es el mismo, solo que antes de realizar la llamada al
+constructor correspondiente, se crea el Class Instance Record:
+
+\begin{lstlisting}
+PUSH N+1 ; siendo N la cantidad de variables de instancia, 
+         ; más la referencia a la vtable
+PUSH alloc ; referencia al código de alloc en heap
+CALL
+
+; Crea la vtable
+PUSH M ; siendo M la cantidad de metodos de la clase, 
+       ; junto con todos los heredados
+PUSH alloc
+CALL
+
+; Guarda el metodo1
+PUSH clase1_metodo1
+STOREREF 0
+POP
+
+; Guarda el metodo2
+PUSH clase1_metodo2
+STOREREF 1
+POP
+
+... ; Para cada metodo
+
+STOREREF 0 ; Guardamos el ptr a la vtable en el ptr del obj
+POP ; Sacamos el ptr a la vtable de la pila
+
+; El ptr al obj esta en el tope
+; A partir de aca, se llama al constructor como a cualquier otro metodo
+\end{lstlisting}
+
+  \subsection{mjAssignment}
+
+La resolución del símbolo a la izquierda de la asignación generará el código
+para acceder a su valor, pero lo que necesitamos es son las instrucciones
+necesarias para que un STOREREF modifique su valor. Por lo que el pseudocódigo
+sería el siguiente:
+
+\begin{lstlisting}
+simright = right.resolve()
+simleft = left.resolve()
+simleft.code.replace_last_inst(STOREREF simleft.offset)
+return simright.code + simleft.code
+\end{lstlisting}
+
+  \subsection{mjOp}
+
+Para generar el código necesario para las expresiones, simplemente se genera el
+código de cada operando y se agrega la operación en cuestion. Esto funciona
+porque cada operando va a apilar su valor, y la operación siguiente usará los
+últimos dos valores de la pila.
+
+El pseudocódigo sería el siguiente:
+
+\begin{lstlisting}
+code = ""
+for o in operands:
+  if o es un literal:
+    code += PUSH valor(o)
+  else:
+    code += o.gen_code()
+code += ADD # asumiendo que se trata de una suma
+\end{lstlisting}
+
+\end{document}

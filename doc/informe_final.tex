@@ -1,0 +1,3000 @@
+% coding: utf-8
+\documentclass [a4paper,abstracton,titlepage]{scrartcl}
+\pagestyle{plain}
+\usepackage{makeidx}
+\usepackage[table]{xcolor}
+\usepackage{color}
+\definecolor{LinkColor}{rgb}{0.33,0.42,0.18}
+\definecolor{TableEvenColor}{rgb}{0.93,1,0.8}
+\definecolor{TableOddColor}{rgb}{0.93,1,1}
+\definecolor{TableBorderColor}{rgb}{0.55,0.67,0.73}
+\definecolor{ListingBorderColor}{rgb}{0.55,0.55,0.55}
+\definecolor{ListingBackgroundColor}{rgb}{0.95,0.95,0.95}
+\definecolor{SidebarBorderColor}{rgb}{0.95,0.95,0.95}
+\definecolor{SidebarBackgroundColor}{rgb}{1,1,0.93}
+\usepackage[spanish]{babel}
+\usepackage[
+    pdftex,
+    pdftitle={Informe Final - Compiladores e Interpretes},
+    pdfauthor={Touceda, Tomás LU 84024},
+    backref,
+    pagebackref,
+    breaklinks=true,
+    unicode
+    ]
+    {hyperref}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage[T1]{fontenc}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{textcomp}
+\usepackage{alltt}
+\usepackage{listings}
+\usepackage{moreverb}
+\usepackage{upquote}
+
+\lstset{basicstyle=\footnotesize\ttfamily,showstringspaces=false,breaklines,frame=single, rulecolor=\color{ListingBorderColor}, xleftmargin=0cm, linewidth=0.95\textwidth}
+
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+\title{Informe final - Compiladores e Intérpretes\\Manual del desarrolador}
+\author{Touceda, Tomás LU 84024}
+\publishers{\begin{tabular}{ll}    \end{tabular}}
+
+\makeindex
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Análisis Léxico}
+\hypertarget{_alfabeto_de_entrada}{}
+\subsection{Alfabeto de entrada}
+\label{_alfabeto_de_entrada}
+El alfabeto de entrada son todos los caracteres de la codificación ASCII.
+\hypertarget{_definición_de_tokens}{}
+\subsection{Definición de Tokens}
+\label{_definición_de_tokens}
+\textbf{Aclaraciones:}
+  \begin{enumerate}
+\item%
+Para evitar ambiguedades, las expresiones regulares se expresaron
+utilizando la sintaxis válida para JLex.
+
+\item%
+Las entradas que no cuentan con ejemplos tienen un unico
+representante, igual a la expresión regular con la cual coincide.
+
+\end{enumerate}
+La siguiente tabla muestra los tokens reconocidos por el analizador léxico.
+ \begin{longtable}{l | l | l}
+
+{\bfseries{}Token          } &
+{\bfseries{}Expresión regular                          } &
+{\bfseries{}Ejemplos}
+ \tabularnewline
+  \endhead
+
+
+IDENTIFIER      &
+[a-zA-Z\_{}\textbackslash{}\${}][a-zA-Z\_{}\textbackslash{}\${}0-9]*                  &
+hola %
+ \tabularnewline
+
+COMMA           &
+,                                           &
+, %
+ \tabularnewline
+
+INT\_{}LITERAL     &
+(0\textbar{}[1-9]([0-9])*)                          &
+42 %
+ \tabularnewline
+
+CHAR\_{}LITERAL    &
+[ver nota \emph{1}]                              &
+'q' %
+ \tabularnewline
+
+STRING\_{}LITERAL  &
+[ver nota \emph{2}]                              &
+\textquotedbl{}hola\textquotedbl{} %
+ \tabularnewline
+
+SCOLON          &
+;                                           &
+; %
+ \tabularnewline
+
+BRACE\_{}OPEN      &
+\{{}                                          &
+\{{} %
+ \tabularnewline
+
+BRACE\_{}CLOSE     &
+\}{}                                          &
+\}{} %
+ \tabularnewline
+
+PAREN\_{}OPEN      &
+\textbackslash{})                                          &
+( %
+ \tabularnewline
+
+PAREN\_{}CLOSE     &
+\textbackslash{}(                                          &
+) %
+ \tabularnewline
+
+CLASS           &
+class                                       &
+class %
+ \tabularnewline
+
+EXTENDS         &
+extends                                     &
+extends %
+ \tabularnewline
+
+PUBLIC          &
+public                                      &
+public %
+ \tabularnewline
+
+PROTECTED       &
+protected                                   &
+protected %
+ \tabularnewline
+
+STATIC          &
+static                                      &
+static %
+ \tabularnewline
+
+THIS            &
+this                                        &
+this %
+ \tabularnewline
+
+SUPER           &
+super                                       &
+super %
+ \tabularnewline
+
+VOID\_{}TYPE       &
+void                                        &
+void %
+ \tabularnewline
+
+BOOLEAN\_{}TYPE    &
+boolean                                     &
+boolean %
+ \tabularnewline
+
+INT\_{}TYPE        &
+int                                         &
+int %
+ \tabularnewline
+
+CHAR\_{}TYPE       &
+char                                        &
+char %
+ \tabularnewline
+
+IF              &
+if                                          &
+if %
+ \tabularnewline
+
+ELSE            &
+else                                        &
+else %
+ \tabularnewline
+
+WHILE           &
+while                                       &
+while %
+ \tabularnewline
+
+RETURN          &
+return                                      &
+return %
+ \tabularnewline
+
+TRUE            &
+true                                        &
+true %
+ \tabularnewline
+
+FALSE           &
+false                                       &
+false %
+ \tabularnewline
+
+NULL            &
+null                                        &
+null %
+ \tabularnewline
+
+NEW             &
+new                                         &
+new %
+ \tabularnewline
+
+ASSIGNMENT      &
+=                                           &
+= %
+ \tabularnewline
+
+CONDITIONAL\_{}AND &
+\&{}\&{}                                          &
+\&{}\&{} %
+ \tabularnewline
+
+CONDITIONAL\_{}OR  &
+\textbar{}\textbar{}                                        &
+\textbar{}\textbar{} %
+ \tabularnewline
+
+EQUALS          &
+==                                          &
+== %
+ \tabularnewline
+
+NOT\_{}EQUALS      &
+!=                                          &
+!= %
+ \tabularnewline
+
+LT              &
+\textless{}                                           &
+\textless{} %
+ \tabularnewline
+
+GT              &
+\textgreater{}                                           &
+\textgreater{} %
+ \tabularnewline
+
+LT\_{}EQ           &
+\textless{} =                                         &
+\textless{} = %
+ \tabularnewline
+
+GT\_{}EQ           &
+\textgreater{} =                                         &
+\textgreater{} = %
+ \tabularnewline
+
+ADD             &
++                                           &
++ %
+ \tabularnewline
+
+SUB             &
+-                                           &
+- %
+ \tabularnewline
+
+MUL             &
+*                                           &
+* %
+ \tabularnewline
+
+DIV             &
+\textbackslash{}/                                          &
+/ %
+ \tabularnewline
+
+MOD             &
+\%{}                                           &
+\%{} %
+ \tabularnewline
+
+NOT             &
+!                                           &
+! %
+ \tabularnewline
+
+ACCESSOR        &
+.                                           &
+. %
+ \tabularnewline
+
+EOF             &
+\textless{}EOF\textgreater{}                                       &
+ %
+ \tabularnewline
+ \end{longtable}
+
+\begin{lstlisting}
+Nota 1 (\'[^('\\)]\')|(\'[\\\\|\\'|\\\"|\\n]\')
+Nota 2 (\"\"|\"([^(\"\\)]|[\\\\|\\'|\\\"|\\n])*\")
+\end{lstlisting}
+
+\hypertarget{_verificación}{}
+\subsection{Verificación}
+\label{_verificación}
+\hypertarget{_errores_detectados}{}
+\subsubsection{Errores detectados}
+\label{_errores_detectados}
+El analizador léxico reconoce los siguientes tipos de errores:
+  \begin{itemize}
+\item%
+Comentario del tipo /* */ que no esté propiamente cerrado.
+
+\item%
+Informa de tokens no reconocidos.
+
+\item%
+Caracter no reconocido: si se intenta ingresar un caracter que no pertenece al alfabeto se producirá un error.
+
+\item%
+Si el archivo de entrada especificado no existe, se producirá un error.
+
+\item%
+Si se encuentra un caracter literal de mas de un caracter, e.g. 'hola\textbackslash{}', se producirá un error. En cambio, si es un caracter válido, e.g. '\textbackslash{}n', se aceptará.
+
+\end{itemize}
+\hypertarget{_casos_de_prueba}{}
+\subsubsection{Casos de prueba}
+\label{_casos_de_prueba}
+Cuando un error es detectado, también se muestra por pantalla la
+ubicación de la porción del texto que presenta el error. Por ejemplo:
+\begin{lstlisting} ERROR: Line: 3, Col: 4 :: Comentario no cerrado.
+ In line 3:4
+     /* comment
+ ----^\end{lstlisting}
+
+\begin{lstlisting} ERROR: Line: 2, Col: 10 :: Token no reconocido.
+ In line 2:10
+     a = 1 # 2
+ ----------^\end{lstlisting}
+
+  \begin{itemize}
+\item%
+Test 000 Correcto
+
+\end{itemize}
+\textbf{Descripción:} Este es el caso de test principal para detección correcta de tokens.
+
+\textbf{Resultado esperado:} Todos los tokens son reconocidos con éxito según lo esperado, y los comentarios son obviados sin modificar la posición final de los tokens alrededor de ellos.
+  \begin{itemize}
+\item%
+Test 001 Erroneo / Token inválido
+
+\end{itemize}
+\textbf{Descripción:} Este caso de test esta destinado a detectar un identificador o palabra clave inválido.
+
+\textbf{Resultado esperado:} Detecta que pub\textbackslash{}\textbackslash{}lic no es un identificador válido.
+  \begin{itemize}
+\item%
+Test 002 Erroneo / Operador inválido
+
+\end{itemize}
+\textbf{Descripción:} La idea de este caso de test es mostrar que se detectan operadores no válidos.
+
+\textbf{Resultado esperado:} Se deberá informar acerca del operador erroneo, asi como mostrar por pantalla la ubicación del mismo.
+  \begin{itemize}
+\item%
+Test 003 Erroneo / Operador inválido
+
+\end{itemize}
+\textbf{Descripción:} Algunos operadores contienen más de un carácter, la idea este
+caso de test es mostrar que se detectan situaciones erroneas como la escritura
+de \textquotedbl{}\&{}\textquotedbl{} en lugar de \textquotedbl{}\&{}\&{}\textquotedbl{}, siendo este último, el único operador con el caracter
+'\&{}\textbackslash{}' válido.
+
+\textbf{Resultado esperado:} Se deberá detectar el token erróneo, y se mostrará por
+pantalla la posición del mismo en el archivo de código fuente.
+  \begin{itemize}
+\item%
+Test 004 Erroneo / Comentario no finalizado
+
+\end{itemize}
+\textbf{Descripción:}
+Uno de los problemas con el tipo de comentarios con secuencia de
+caracteres de apertura y cierre es que puede que no se cierre
+correctamente. La idea de este caso de test es mostrar que dichas
+situaciones se detectan.
+
+\textbf{Resultado esperado:} Se detecta el comentario que no ha sido finalizado y se muestra exactamente cual es (en caso de que existan otros).
+  \begin{itemize}
+\item%
+Test 005 Correcto / Comentarios bien formados
+
+\end{itemize}
+\textbf{Descripción:} La idea de este test es mostrar que aun con comentarios, los números de linea y columna siguen siendo calculados correctamente.
+
+\textbf{Resultado esperado:} Los tokens se detectan con éxito y las lineas y columnas se computan de forma correcta.
+  \begin{itemize}
+\item%
+Test 006 Erroneo / Literal de caracter inválido.
+
+\end{itemize}
+\textbf{Descripcion:} Los literales de caracteres se especifican con comillas simples. El caracter especificado debe ser un caracter valido, o una secuencia de escape que designe un caracter valido.  El propósito de este test es mostrar que un literal de caracter inválido con una sequencia erronea entre las comillas simples es detectado.
+
+\textbf{Resultado esperado:} Se detecta el token inválido.
+
+\section{Análisis Sintáctico}
+
+\hypertarget{_proceso}{}
+\subsection{Proceso}
+\label{_proceso}
+La gramática fue procesada de manera tal que fuera LL(1). Para lograr
+esto primero se eliminó la recursividad a izquierda y luego se
+factorizó.
+El proceso completo consistió en:
+\begin{itemize}
+ \item Eliminacion de extensiones de la EBNF suministrada por la catedra.
+  La gramática resultante puede verse en los apendices.
+ \item Eliminacion de los aspectos regulares de la gramática original, los cuales
+  eran resueltos por el analizador léxico.
+  Entre estos estan las reglas para la generacion de identificadores válidos,
+  digitos válidos, operadores, y demas tokens predefinidos y reconocidos.
+ \item Eliminacion de reglas recursivas a izquierda, para lograr que la gramática
+  fuese parseable por un parser descendiente recursivo.
+ \item Factorizacion a izquierda para minimizar la cantidad de producciones
+  y simplificar la implementación del parser.
+ \item Impementación del parser, implementando una funcion por cada regla de la
+  gramática.
+  En cada función donde se detectaba una situación anómala, se levanta una
+  excepción con el mensaje correspondiente.
+ \item Impementación del parser, implementando una funcion por cada regla de la
+  gramática.
+  En cada función donde se detectaba una situación anómala, se levanta una
+  excepción con el mensaje correspondiente.
+ \item A partir de cada punto de fallo posible, se generó un test diseñado para
+  levantar esa excepción particlar.
+\end{itemize}
+
+Dado que la gramática original no está diseñada para que sea procesada
+como una LL(1), hubo que realizar algunas excepciones que se trataran
+en las etapas siguientes:
+  \begin{enumerate}
+\item%
+En la gramática original se diferencia entre declaración de
+constructor y declaración de métodos. Esto sucede porque los
+constructores no deben llevar un tipo de retorno. Pero dado que el
+tipo de retorno puede ser un token reconocido como IDENTIFIER, el cual
+coincide con el tipo de token de nombre del constructor, se resolvió
+tratar a todos los métodos por igual, y dejar el checkeo de tipo de
+retorno según el tipo de método para la etapa del análisis
+semántico.
+
+\item%
+De forma similar al primer punto, los tipos de los atributos de clase tienen
+un caso especial: no pueden ser de tipo VOID\_{}TYPE. Esto dificulta la
+gramática resultante, por lo que se resolvió realizar el checkeo de
+que los atributos de clase no pueden ser de tipo VOID\_{}TYPE en la etapa
+de análisis semántico.
+
+\item%
+Otro caso especial ocurre con los constructores, que no pueden
+poseer el token STATIC en sus modificadores. Como se dijo en 1., se
+tratarán a los constructores como métodos regulares y el checkeo de
+que no estén declarados como static se hará en la etapa de análisis
+semántico.
+
+\item%
+La regla de la gramática original que cuyo lado izquierdo era
+\textless{}expression\textgreater{} contenia una ambiguedad que no es posible resolver desde
+el punto de vista sintáctico. Esta ambiguedad se debe a la similitud
+posible entre una sentencia de asignación y una expresión condicional,
+por lo que se resolvió mover la detección de la asignación más
+adelante en el arbol sintáctico. Esto da lugar a que sea posible
+escribir sentencias del estilo: (a + 4) = 2;
+   Este control se realizará en la etapa de análisis semántico.
+
+\item%
+El último cambio significativo a la gramática corresponde a las
+sentecias de control, específicamente al if. Para resolver
+ambiguedades en una cadena de ifs anidados con sus respectivos else,
+la gramática utiliza una serie de reglas que a la hora de convertir a
+LL(1) resulta imposible. Para saltear esta barrera, se simplificaron
+las reglas en cuestión, y se asume que cada else está ligado al if más
+cercano.
+Esta consideración recién se verá en la etapa de generación de
+código.
+
+\end{enumerate}
+\hypertarget{_gramática_bnf_sin_extensiones}{}
+\subsection{Gramática BNF sin extensiones}
+\label{_gramática_bnf_sin_extensiones}
+\minisec{Programas}
+\begin{lstlisting}<compilation unit> ::= <type declarations>
+<compilation unit> ::= LAMBDA\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Declaraciones}
+\begin{lstlisting}<type declarations> ::= <type declaration>
+<type declarations> ::= <type declarations> <type declaration>
+<type declaration> ::= <class declaration>
+<class declaration> ::= PUBLIC CLASS IDENTIFIER <class body>
+<class declaration> ::= PUBLIC CLASS IDENTIFIER <super> <class body>
+<super> ::= ENTENDS <class type>
+<class body> ::= BRACE_OPEN BRACE_CLOSE
+<class body> ::= BRACE_OPEN <class body declarations> BRACE_CLOSE
+<class body declarations> ::= <class body declaration>
+<class body declarations> ::= <class body declarations> <class body declaration>
+<class body declaration> ::= <class member declaration>
+<class body declaration> ::= <constructor declaration>
+<class member declaration> ::= <field declaration>
+<class member declaration> ::= <method declaration>
+<constructor declaration> ::= <constructor modifier> <constructor declarator> <constructor body>
+<constructor modifier> ::= PROTECTED
+<constructor modifier> ::= PUBLIC
+<constructor declarator> ::= <simple type name> PAREN_OPEN PAREN_CLOSE
+<constructor declarator> ::= <simple type name> PAREN_OPEN <formal parameter list> PAREN_CLOSE
+<simple type name> ::= IDENTIFIER
+<formal parameter list> ::= <formal parameter>
+<formal parameter list> ::= <formal parameter list> COMMA <formal parameter>
+<formal parameter> ::= <type> <variable declarator id>
+<constructor body> ::= BRACE_OPEN BRACE_CLOSE
+<constructor body> ::= BRACE_OPEN  <block statements>  BRACE_CLOSE
+<constructor body> ::= BRACE_OPEN  <explicit constructor invocation> BRACE_CLOSE
+<constructor body> ::= BRACE_OPEN  <explicit constructor invocation> <block statements> BRACE_CLOSE
+<explicit constructor invocation> ::= THIS PAREN_OPEN PAREN_CLOSE SCOLON
+<explicit constructor invocation> ::= SUPER PAREN_OPEN PAREN_CLOSE SCOLON
+<explicit constructor invocation> ::= THIS PAREN_OPEN <argument list> PAREN_CLOSE SCOLON
+<explicit constructor invocation> ::= SUPER PAREN_OPEN <argument list> PAREN_CLOSE SCOLON
+<field declaration> ::= <field modifiers> <type> <variable declarators> SCOLON
+<field modifiers> ::= <field modifier>
+<field modifiers> ::= <field modifiers> <field modifier>
+<field modifier> ::= PUBLIC
+<field modifier> ::= PROTECTED
+<field modifier> ::= STATIC
+<variable declarators> ::= <variable declarator>
+<variable declarators> ::= <variable declarators> COMMA <variable declarator>
+<variable declarator> ::= <variable declarator id>
+<variable declarator> ::= <variable declarator id> ASSIGNMENT <variable initializer>
+<variable declarator id> ::= IDENTIFIER
+<variable initializer> ::= <expression>
+<method declaration> ::= <method header> <method body>
+<method header> ::= <method modifiers> <result type> <method declarator>
+<result type> ::= <type>
+<result type> ::= VOID_TYPE
+<method modifiers> ::= <method modifier>
+<method modifiers> ::= <method modifiers> <method modifier>
+<method modifier> ::= PUBLIC
+<method modifier> ::= PROTECETED
+<method modifier> ::= STATIC
+<method declarator> ::= IDENTIFIER PAREN_OPEN PAREN_CLOSE
+<method declarator> ::= IDENTIFIER PAREN_OPEN <formal parameter list> PAREN_CLOSE
+<method body> ::= <block>\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Tipos}
+\begin{lstlisting}<type> ::= <primitive type>
+<type> ::= <reference type>
+<primitive type> ::= <numeric type>
+<primitive type> ::= BOOLEAN_TYPE
+<numeric type> ::= <integral type>
+<integral type> ::= INT
+<integral type> ::= CHAR
+<reference type> ::= <class type>
+<class type> ::= <type name>
+<type name> ::= IDENTIFIER\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Bloques y Sentencias}
+\begin{lstlisting}<block> ::= BRACE_OPEN BRACE_CLOSE
+<block> ::= BRACE_OPEN <block statements> BRACE_CLOSE
+<block statements> ::= <block statement>
+<block statements> ::= <block statements> <block statement>
+<block statement> ::= <local variable declaration statement>
+<block statement> ::= <statement>
+<local variable declaration statement> ::= <local variable declaration> SCOLON
+<local variable declaration> ::= <type> <variable declarators>
+<statement> ::= <statement without trailing substatement>
+<statement> ::= <if then statement>
+<statement> ::= <if then else statement>
+<statement> ::= <while statement>
+<statement no short if> ::= <statement without trailing substatement>
+<statement no short if> ::= <if then else statement no short if>
+<statement no short if> ::= <while statement no short if>
+<statement without trailing substatement> ::= <block>
+<statement without trailing substatement> ::= <empty statement>
+<statement without trailing substatement> ::= <expression statement>
+<statement without trailing substatement> ::= <return statement>
+<empty statement> ::= SCOLON
+<expression statement> ::= <statement expression> SCOLON
+<statement expression> ::= <assignment>
+<statement expression> ::= <method invocation>
+<statement expression> ::= <class instance creation expression>
+<if then statement> ::= IF PAREN_OPEN <expression> PAREN_CLOSE <statement>
+<if then else statement> ::= IF PAREN_OPEN <expression> PAREN_CLOSE <statement no short if> ELSE <statement>
+<if then else statement no short if> ::= IF PAREN_OPEN <expression> PAREN_CLOSE <statement no short if> ELSE <statement no short if>
+<while statement> ::= WHILE PAREN_OPEN <expression> PAREN_CLOSE <statement>
+<while statement no short if> ::= WHILE PAREN_OPEN <expression> PAREN_CLOSE <statement no short if>
+<return statement> ::= RETURN SCOLON
+<return statement> ::= RETURN <expression> SCOLON\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Expresiones}
+\begin{lstlisting}<expression> ::= <assignment expression>
+<assignment expression> ::= <conditional expression>
+<assignment expression> ::= <assignment>
+<assignment> ::= <left hand side> <assignment operator> <assignment expression>
+<left hand side> ::= <expression name>
+<left hand side> ::= <field access>
+<expression name> ::= IDENTIFIER
+<assignment operator> ::= ASSIGNMENT
+<conditional expression> ::= <conditional or expression>
+<conditional or expression> ::= <conditional and expression>
+<conditional or expression> ::= <conditional or expression> CONDITIONAL_OR <conditional and expression>
+<conditional and expression> ::= <equality expression>
+<conditional and expression> ::= <conditional and expression> CONDITIONAL_AND <equality expression>
+<equality expression> ::= <relational expression>
+<equality expression> ::= <equality expression> EQUALS <relational expression>
+<equality expression> ::= <equality expression> NOT_EQUALS <relational expression>
+<relational expression> ::= <additive expression>
+<relational expression> ::= <relational expression> LT <additive expression>
+<relational expression> ::= <relational expression> GT <additive expression>
+<relational expression> ::= <relational expression> LT_EQ <additive expression>
+<relational expression> ::= <relational expression> GT_EQ <additive expression>
+<additive expression> ::= <multiplicative expression>
+<additive expression> ::= <additive expression> ADD <multiplicative expression>
+<additive expression> ::= <additive expression> SUB <multiplicative expression>
+<multiplicative expression> ::= <unary expression>
+<multiplicative expression> ::= <multiplicative expression> MUL <unary expression>
+<multiplicative expression> ::= <multiplicative expression> DIV <unary expression>
+<multiplicative expression> ::= <multiplicative expression> MOD <unary expression>
+<unary expression> ::= ADD <unary expression>
+<unary expression> ::= SUB <unary expression>
+<unary expression> ::= <unary expression not plus minus>
+<unary expression not plus minus> ::= <postfix expression>
+<unary expression not plus minus> ::= NOT <unary expression>
+<postfix expression> ::= <primary>
+<postfix expression> ::= <expression name>
+<primary> ::= <literal>
+<primary> ::= THIS
+<primary> ::= PAREN_OPEN <expression> PAREN_CLOSE
+<primary> ::= <class instance creation expression>
+<primary> ::= <field access>
+<primary> ::= <method invocation>
+<class instance creation expression> ::= NEW <class type> PAREN_OPEN PAREN_CLOSE
+<class instance creation expression> ::= NEW <class type> PAREN_OPEN <argument list> PAREN_CLOSE
+<argument list> ::= <expression>
+<argument list> ::= <argument list> COMMA <expression>
+<field access> ::= <primary> ACCESSOR IDENTIFIER
+<field access> ::= SUPER ACCESSOR IDENTIFIER
+<method invocation> ::= <method name> PAREN_OPEN PAREN_CLOSE
+<method invocation> ::= <method name> PAREN_OPEN <argument list> PAREN_CLOSE
+<method invocation> ::= <primary> ACCESSOR IDENTIFIER PAREN_OPEN PAREN_CLOSE
+<method invocation> ::= <primary> ACCESSOR IDENTIFIER PAREN_OPEN <argument list> PAREN_CLOSE
+<method invocation> ::= SUPER ACCESOR IDENTIFIER PAREN_OPEN PAREN_CLOSE
+<method invocation> ::= SUPER ACCESOR IDENTIFIER PAREN_OPEN <argument list> PAREN_CLOSE
+<method name> ::= IDENTIFIER
+<literal> ::= INT_LITERAL
+<literal> ::= <boolean literal>
+<literal> ::= CHAR_LIT
+<literal> ::= STRING_LIT
+<literal> ::= NULL
+<boolean literal> ::= TRUE
+<boolean literal> ::= FALSE
+\end{lstlisting}
+
+\hypertarget{_gramática_ll_1_resultante}{}
+\subsection{Gramática LL(1) resultante}
+\label{_gramática_ll_1_resultante}
+\minisec{Programas}
+\begin{lstlisting}
+<compilation unit> ::= <type declarations>
+\end{lstlisting}
+
+\minisec{Declaraciones}
+\begin{lstlisting}<type declarations> ::= <class declaration> <type declarations>
+<type declarations> ::= LAMBDA
+<class declaration> ::= PUBLIC CLASS IDENTIFIER <rest class declaration>
+<rest class declaration> ::= <class body>
+<rest class declaration> ::= ENTENDS IDENTIFIER <class body>
+<class body> ::= BRACE_OPEN <rest class body>
+<rest class body> ::= BRACE_CLOSE
+<rest class body> ::= <class body declarations> BRACE_CLOSE
+<class body declarations> ::= <class body declaration> <rest class body declarations>
+<rest class body declarations> ::= LAMBDA
+<rest class body declarations> ::= <class body declarations>
+<class body declaration> ::= <field modifiers> <rest class body declaration>
+<rest class body declaration> ::= <type noident void> <declarators>
+<rest class body declaration> ::= IDENTIFIER <rest2 class body declaration>
+<rest2 class body declaration> ::= <constructor declarator> <constructor body>
+<rest2 class body declaration> ::= <declarators>
+<constructor declarator> ::= PAREN_OPEN <rest constructor declarator>
+<rest constructor declarator> ::= PAREN_CLOSE
+<rest constructor declarator> ::= <formal parameter list> PAREN_CLOSE
+<formal parameter list> ::= <formal parameter> <rest formal parameter list>
+<rest formal parameter list> ::= COMMA <formal parameter list>
+<rest formal parameter list> ::= LAMBDA
+<formal parameter> ::= <type> IDENTIFIER
+<constructor body> ::= BRACE_OPEN <rest constructor body>
+<rest constructor body> ::= BRACE_CLOSE
+<rest constructor body> ::= <block statements> BRACE_CLOSE
+<rest2 constructor body> ::= BRACE_CLOSE
+<rest2 constructor body> ::= <block statements> BRACE_CLOSE
+<field modifiers> ::= <field modifier> <rest field modifiers>
+<rest field modifiers> ::= LAMBDA
+<rest field modifiers> ::= <field modifiers>
+<field modifier> ::= PUBLIC
+<field modifier> ::= PROTECTED
+<field modifier> ::= STATIC
+<declarators> ::= IDENTIFIER <rest declarators>
+<rest declarators> ::= COMMA <rest declarators>
+<rest declarators> ::= ASSIGNMENT <expression> SCOLON
+<rest declarators> ::= PAREN_OPEN <rest method declarator> <method body>
+<rest declarators> ::= SCOLON
+<rest method declarator> ::= PAREN_CLOSE
+<rest method declarator> ::= <formal parameter list> PAREN_CLOSE
+<method body> ::= <block>\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Tipos}
+\begin{lstlisting}<type> ::= <primitive type>
+<type> ::= IDENTIFIER
+<type> ::= VOID_TYPE
+<type noident void> ::= <primitive type>
+<type noident void> ::= VOID_TYPE
+<primitive type> ::= <numeric type>
+<primitive type> ::= <boolean type>
+<numeric type> ::= <integral type>
+<integral type> ::= INT_TYPE
+<integral type> ::= CHAR_TYPE
+<boolean type> ::= BOOLEAN_TYPE\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Bloques y Sentencias}
+\begin{lstlisting}<block> ::= BRACE_OPEN <rest block>
+<rest block> ::= BRACE_CLOSE
+<rest block> ::= <block statements> BRACE_CLOSE
+<block statements> ::= <block statement> <rest block statements>
+<rest block statements> ::= LAMBDA
+<rest block statements> ::= <block statements>
+<block statement> ::= <primitive type> <local variable declaration statement>
+<block statement> ::= <if start statement>
+<block statement> ::= <while statement>
+<block statement> ::= <block>
+<block statement> ::= <empty statement>
+<block statement> ::= <return statement>
+<block statement> ::= <primary> <rest method invocation>
+<local variable declaration statement> ::= <local variable declaration> SCOLON
+<local variable declaration> ::= IDENTIFIER <variable declarators>
+<variable declarators> ::= <variable declarator> <rest variable declarators>
+<rest variable declarators> ::= LAMBDA
+<rest variable declarators> ::= COMMA IDENTIFIER <variable declarators>
+<rest variable declarators> ::= COMMA THIS <variable declarators>
+<rest variable declarators> ::= COMMA SUPER <variable declarators>
+<variable declarator> ::= <rest variable declarator>
+<rest variable declarator> ::= LAMBDA
+<rest variable declarator> ::= ASSIGNMENT <expression>
+<statement> ::= <statement without trailing substatement>
+<statement> ::= <if start statement>
+<statement> ::= <while statement>
+<statement without trailing substatement> ::= <block>
+<statement without trailing substatement> ::= <empty statement>
+<statement without trailing substatement> ::= <expression statement>
+<statement without trailing substatement> ::= <return statement>
+<empty statement> ::= SCOLON
+<expression statement> ::= <statement expression> SCOLON
+<statement expression> ::= <method invocation>
+<if start statement> ::= IF PAREN_OPEN <expression> PAREN_CLOSE <statement> <rest if start statement>
+<rest if start statement> ::= LAMBDA
+<rest if start statement> ::= ELSE <statement>
+<while statement> ::= WHILE PAREN_OPEN <expression> PAREN_CLOSE <statement>
+<return statement> ::= RETURN <rest return statement>
+<rest return statement> ::= SCOLON
+<rest return statement> ::= <expression> SCOLON\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+\minisec{Expresiones}
+\begin{lstlisting}<expression> ::= <assignment expression>
+<assignment expression> ::= <conditional expression>
+<conditional expression> ::= <conditional or expression> <rest conditional expression>
+<rest conditional expression> ::= LAMBDA
+<rest conditional expression> ::= ASSIGNMENT <conditional expression>
+<conditional or expression> ::= <conditional and expression> <rest conditional or expression>
+<rest conditional or expression> ::= CONDITIONAL_OR <conditional or expression>
+<rest conditional or expression> ::= LAMBDA
+<conditional and expression> ::= <equality expression> <rest conditional and expression>
+<rest conditional and expression> ::= LAMBDA
+<rest conditional and expression> ::= CONDITIONAL_AND <conditional and expression>
+<equality expression> ::= <relational expression> <rest equality expression>
+<rest equality expression> ::= EQUALS <equality expression>
+<rest equality expression> ::= NOT_EQUALS <equality expression>
+<rest equality expression> ::= LAMBDA
+<relational expression> ::= <additive expression> <rest relational expression>
+<rest relational expression> ::= LT <relational expression>
+<rest relational expression> ::= GT <relational expression>
+<rest relational expression> ::= LT_EQ <relational expression>
+<rest relational expression> ::= GT_EQ <relational expression>
+<rest relational expression> ::= LAMBDA
+<additive expression> ::= <multiplicative expression> <rest additive expression>
+<rest additive expression> ::= ADD <additive expression>
+<rest additive expression> ::= SUB <additive expression>
+<rest additive expression> ::= LAMBDA
+<multiplicative expression> ::= <unary expression> <rest multiplicative expression>
+<rest multiplicative expression> ::= MUL <multiplicative expression>
+<rest multiplicative expression> ::= DIV <multiplicative expression>
+<rest multiplicative expression> ::= MOD <multiplicative expression>
+<rest multiplicative expression> ::= LAMBDA
+<unary expression> ::= ADD <unary expression>
+<unary expression> ::= SUB <unary expression>
+<unary expression> ::= <unary expression not plus minus>
+<unary expression not plus minus> ::= <postfix expression>
+<unary expression not plus minus> ::= NOT <unary expression>
+<postfix expression> ::= <primary>
+<primary> ::= <literal> <rest primary>
+<primary> ::= THIS <rest primary>
+<primary> ::= PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
+<primary> ::= <class instance creation expression> <rest primary>
+<primary> ::= SUPER ACCESSOR IDENTIFIER <rest primary>
+<primary> ::= <method invocation> <rest primary>
+<rest primary> ::= ACCESSOR IDENTIFIER <rest2 primary>
+<rest primary> ::= LAMBDA
+<rest2 primary> ::= PAREN_OPEN <rest2 method invocation> <rest primary>
+<rest2 primary> ::= LAMBDA
+<class instance creation expression> ::= NEW IDENTIFIER PAREN_OPEN <rest class instance creation expression>
+<rest class instance creation expression> ::= PAREN_CLOSE
+<rest class instance creation expression> ::= <argument list> PAREN_CLOSE
+<argument list> ::= <expression> <rest argument list>
+<rest argument list> ::= LAMBDA
+<rest argument list> ::= COMMA <argument list>
+<method invocation> ::= IDENTIFIER <rest primary> <rest method invocation>
+<method invocation> ::= <literal> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation> ::= THIS <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation> ::= PAREN_OPEN <expression> PAREN_CLOSE <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation> ::= <class instance creation expression> <rest primary> ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation> ::= SUPER <rest primary> <rest super>
+<rest super> ::= IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest super> ::= PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest method invocation> ::= ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest method invocation> ::= <variable declarators>
+<rest method invocation> ::= <rest variable declarators>
+<rest method invocation> ::= PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<rest method invocation> ::= LAMBDA
+<rest2 method invocation> ::= PAREN_CLOSE
+<rest2 method invocation> ::= <argument list> PAREN_CLOSE
+<boolean literal> ::= TRUE
+<boolean literal> ::= FALSE\end{lstlisting}
+
+% FIXXME: dirty hack to circumvent missing \n after lstlisting
+
+\hypertarget{_implementación}{}
+\section{Implementación}
+\subsection{Analizador Léxico}
+\label{_implementación}
+La principal decisión de diseño que afecto la implementación fue la abstracción de los estados del automata finito reconocedor.
+El analizador léxico se desarrolló utilizando únicamente la versión 2.7 del lenguaje Python (\texttt{www.python.org}).
+El archivo ejecutable para Windows se generó con la herramienta \texttt{py2exe} (\texttt{www.py2exe.org}).
+Para implementar el analizador léxico se realizó la especificación de la máquina
+de estados basándose en las expresiones regulares definidas en la sección
+anterior, para luego representarlo en código Python.
+\hypertarget{_archivos_y_clases}{}
+\subsubsection{Archivos y clases}
+\label{_archivos_y_clases}
+\hypertarget{_clase_texttt_state}{}
+\minisec{Clase \texttt{State}}
+\label{_clase_texttt_state}
+De esta forma, la clase principal utilizada es la llamada State. Esta
+no es más que una abstracción de la idea es estado de un autómata
+finito, que cuenta con una serie de funciones de checkeo para
+determinar si se debe pasar a un siguiente estado o no, y alrededor de
+esta idea se estableció la lógica para la detección de ciertos errores
+léxicos.
+En el archivo states.py se encuentra la definición de esta clase
+mencionada, y la del autómata finito reconocedor utilizado.
+\hypertarget{_clases_texttt_token_y_texttt_tokentype}{}
+\minisec{Clases \texttt{Token} y \texttt{TokenType}}
+\label{_clases_texttt_token_y_texttt_tokentype}
+Para representar a los tokens se armaron dos clases: TokenType y
+Token.  TokenType, definida en constants.py, es una abstracción sobre
+los distintos tipos de tokens reconocidos y especificados en la
+sección anterior.  Token, definida en lexor.py, abstrae un token
+instanciado según el análisis del archivo de código fuente en
+cuestión.
+\hypertarget{_clase_texttt_lexor}{}
+\minisec{Clase \texttt{Lexor}}
+\label{_clase_texttt_lexor}
+Por último, Lexor es la clase que representa al analizador léxico
+propiamente.  Este implementa el método get\_{}token() que devuelve
+secuencialmente todos los tokens reconocidos en un dado archivo que
+contiene código en MiniJava. Esta clase se encuentra definida en
+lexor.py.
+\hypertarget{_clase_texttt_lexicalerror}{}
+\minisec{Clase \texttt{LexicalError}}
+\label{_clase_texttt_lexicalerror}
+Para el manejo de errores, se creó el tipo de excepción LexicalError
+dentro del archivo errors.py.
+\hypertarget{_archivo_texttt_lexor___main_py}{}
+\minisec{Archivo \texttt{lexor\_{}main.py}}
+\label{_archivo_texttt_lexor___main_py}
+El módulo principal del analizador léxico esta implementado en este script.
+
+\subsection{Analizador Sintáctico}
+\hypertarget{_archivos_y_clases}{}
+\subsubsection{Archivos y clases}
+\label{_archivos_y_clases}
+\hypertarget{_archivo_texttt_syntaxor___main_py}{}
+\minisec{Archivo \texttt{syntaxor\_{}main.py}}
+\label{_archivo_texttt_syntaxor___main_py}
+Este es el módulo principal del analizador sintáctico, que hace uso del
+analizador léxico y de la clase Syntaxor para analizar el código MiniJava
+y establecer su correctitud sintáctica.
+\hypertarget{_clase_syntaxor}{}
+\minisec{Clase Syntaxor}
+\label{_clase_syntaxor}
+\minisec{Metodos:}  \begin{itemize}
+\item%
+\texttt{check\_{}syntax(self)}: punto de entrada al analizador sintáctico, comienza el proceso de parseo.
+
+\item%
+\texttt{update\_{}token(self)}: actualiza el token actual que se analiza, solicitandolo al analizador léxico.
+
+\item%
+\texttt{tok(self, tokentype)}: retorna verdadero si el token actual es del tipo pasado por parametro.
+
+\end{itemize}
+El resto de los metodos de esta clase corresponden cada uno a una de las
+producciones de la gramática LL(1).
+\hypertarget{_clase_syntaxerror}{}
+\minisec{Clase SyntaxError}
+\label{_clase_syntaxerror}
+La clase \texttt{SyntaxError}, definida en el archivo \texttt{errors.py}, encapsula el estado asociado a un error.
+En particular, mantiene la linea y columna donde se detecto el error, y el mensaje de error que se deberá mostrar.
+
+\section{Análisis Semántico}
+
+\subsection{Manejo de errores}
+
+Para el manejo de errores se utilizó un tipo nuevo de excepción llamado
+$SemanticError$, cuando se encuentra algún tipo de error semántico, esta
+excepción es lanzada con los datos necesarios para que el método general que la
+atrapa pueda mostrar el lugar en el código donde ocurrió el problema. Por una
+cuestión de simpleza en el esquema de traducción, SemanticError solo tendrá un
+parámetro de tipo String.
+
+\subsection{Esquema de Traducción}
+  \subsubsection{Consideraciones de la especificación}
+Se utilizó una sintaxis similar a la de CUP para la especificación del
+esquema de traducción. Particularmente, en este paso los atributos son
+sintentizados. Por ejemplo,
+
+\begin{lstlisting}
+<class declaration> ::= 
+PUBLIC CLASS IDENTIFIER:id <rest class declaration>:(ext_id, decls)
+{ return mjClass(id, ext_id, decls) }
+\end{lstlisting}
+
+En el lado derecho de la regla, PUBLIC y CLASS son únicamente
+utilizados para el análisis sintáctico. En cambio IDENTIFIER:id
+muestra que el identificador será referenciado con el nombre id en el
+código encerrado entre llaves, y rest class declaration:(ext\_id,
+decls) muestra que la regla rest class declaration devolverá
+una tupla de dos elementos y serán usados en el código con los nombres
+ext\_id y decls.
+
+  \subsubsection{Gramática y traducción}
+
+    \minisec{Programas}
+    \begin{lstlisting}
+<compilation unit> ::= <type declarations>:decls
+{ return decls }
+    \end{lstlisting}
+
+    \minisec{Declaraciones}
+    \begin{lstlisting}
+<type declarations> ::= <class declaration>:classdecl <type declarations>:rest
+{ return [classdecl] + rest }
+<type declarations> ::= LAMBDA
+{ return [] }
+<class declaration> ::= 
+PUBLIC CLASS IDENTIFIER:id <rest class declaration>:(ext_id, decls)
+{ return mjClass(id, ext_id, decls) }
+<rest class declaration> ::= <class body>:decls
+{ return (None, decls) }
+<rest class declaration> ::= ENTENDS IDENTIFIER:id <class body>:decls
+{ return (id, decls) }
+<class body> ::= BRACE_OPEN <rest class body>:decls
+{ return decls }
+<rest class body> ::= BRACE_CLOSE
+{ return [] }
+<rest class body> ::= <class body declarations>:decls BRACE_CLOSE
+{ return decls }
+<class body declarations> ::= 
+<class body declaration>:decl <rest class body declarations>:rest
+{ return [decl] + rest }
+<rest class body declarations> ::= LAMBDA
+{ return [] }
+<rest class body declarations> ::= <class body declarations>:decls
+{ return decls }
+<class body declaration> ::= 
+<field modifiers>:modifs <rest class body declaration>:(method_decl, id, init,
+list_ids, method_body)
+{
+  if method_decl:
+    if init == None: # constructor
+      return mjMethod(modifs = modifs, ret_type = None,
+		      name = id, params = list_ids, body = method_body)
+    else:
+      return mjMethod(modifs = modifs, ret_type = id,
+                      name = init, params = list_ids, body = method_body)
+  else:
+    # id es el tipo (custom, o primitive)
+    return mjClassVariableDecl(modifs, id, list_ids)
+}
+<rest class body declaration> ::= <type noident void>:_type
+<declarators>:(method_decl, init, list_ids, method_body)
+{
+  return (method_decl, _type, init, list_ids, method_body)
+}
+<rest class body declaration> ::= IDENTIFIER:id <rest2 class body
+declaration>:(method_decl, init, list_ids, method_body)
+{
+  # agregamos un campo mas: el id, 
+  # que es el tipo de return si es method_decl y no constructor
+  # o el nombre del constructor (que desp hay qeu ver que sea 
+  # igual al de la clase)
+  if method_decl:
+    if init == None: # entonces constructor declarator
+      return (method_decl, id, None, list_ids, method_body) 
+      # todavia faltan los field modifiers
+    else: # method decl comun, y id es un tipo custom de return
+      return (method_decl, id, init, list_ids, method_body)
+  else:
+    return (method_decl, id, None, list_ids, None)
+}
+<rest2 class body declaration> ::= <constructor declarator>:params <constructor
+body>:body
+{
+  # Se detecta que es un constructor, porque el 
+  # campo que corresponde al id (el segundo) es None
+  return (True, None, params, body)
+}
+<rest2 class body declaration> ::= <declarators>:(method_decl, init, list_ids,
+method_body)
+{
+  return (method_decl, init, list_ids, method_body)
+}
+<constructor declarator> ::= PAREN_OPEN <rest constructor declarator>:params
+{ return params }
+<rest constructor declarator> ::= PAREN_CLOSE
+{ return [] }
+<rest constructor declarator> ::= <formal parameter list>:params PAREN_CLOSE
+{ return params }
+<formal parameter list> ::= <formal parameter>:param <rest formal parameter
+list>:rest_params
+{ return [param] + rest_params }
+<rest formal parameter list> ::= COMMA <formal parameter list>:params
+{ return params }
+<rest formal parameter list> ::= LAMBDA
+{ return [] }
+<formal parameter> ::= <type>:_type IDENTIFIER:id 
+{ return (_type, id) }
+<constructor body> ::= BRACE_OPEN <rest constructor body>:body
+{ return body }
+<rest constructor body> ::= BRACE_CLOSE
+{ return mjBlock() } # un bloque vacio
+<rest constructor body> ::= <block statements>:stats BRACE_CLOSE
+{ return mjBlock(stats) }
+
+<field modifiers> ::= <field modifier>:modif <rest field modifiers>:rest_modif
+{ return [modif] + rest_modif }
+<rest field modifiers> ::= LAMBDA
+{ return [] }
+<rest field modifiers> ::= <field modifiers>:modif
+{ return modif }
+<field modifier> ::= PUBLIC
+{ return PUBLIC }
+<field modifier> ::= PROTECTED
+{ return PROTECTED }
+<field modifier> ::= STATIC
+{ return STATIC }
+
+<declarators> ::= IDENTIFIER:id <rest declarators>:(method_decl, init, list_ids,
+method_body)
+{
+  if method_decl:
+    return (method_decl, id, list_ids, method_body)
+  else:
+    return (method_decl, None, [(id, init)] + list_ids, method_body)
+}
+<rest declarators> ::= COMMA IDENTIFIER:id <rest2 declarators>:(method_decl,
+initializer, list_ids, method_body)
+{ return (False, None, [(id, initializer)] + list_ids, None) }
+<rest declarators> ::= ASSIGNMENT <expression>:expr <rest2 declarators>
+:(method_decl, initializer, list_ids, method_body)
+{ return (False, expr, list_ids, None) }
+<rest declarators> ::= PAREN_OPEN <rest method declarator>:params <method
+body>:bl
+{ return (True, None, params, bl) }
+<rest declarators> ::= SCOLON
+{ return (False, None, [], None) }
+<rest2 declarators> ::= COMMA IDENTIFIER:id <rest2 declarators>:(method_decl,
+init, list_ids, method_body)
+{ return (False, None, [(id, initializer)] + list_ids, None) }
+<rest2 declarators> ::= ASSIGNMENT <expression>:expr <rest2
+declarators>:(method_decl, init, list_ids, method_body)
+{ return (False, expr, list_ids, method_body) }
+<rest2 declarators> ::= SCOLON
+{ return (False, None, [], None) }
+
+<rest method declarator> ::= PAREN_CLOSE
+{ return [] }
+<rest method declarator> ::= <formal parameter list>:params PAREN_CLOSE
+{ return params }
+<method body> ::= <block>:bl
+{ return bl }
+    \end{lstlisting}
+    
+    \minisec{Tipos}
+    \begin{lstlisting}
+<type> ::= <primitive type>:prim_type
+{ return prim_type }
+<type> ::= IDENTIFIER:type_id
+{ return type_id }
+<type> ::= VOID_TYPE
+{ return VOID_TYPE }
+<type noident void> ::= <primitive type>:prim_type
+{ return prim_type }
+<type noident void> ::= VOID_TYPE
+{ return VOID_TYPE }
+<primitive type> ::= <numeric type>:num_type
+{ return num_type }
+<primitive type> ::= <boolean type>:bool_type
+{ return bool_type }
+<numeric type> ::= <integral type>:int_type
+{ return int_type }
+<integral type> ::= INT_TYPE
+{ return INT_TYPE }
+<integral type> ::= CHAR_TYPE
+{ return CHAR_TYPE }
+<boolean type> ::= BOOLEAN_TYPE
+{ return BOOLEAN_TYPE }
+    \end{lstlisting}
+
+    \begin{lstlisting}
+<block> ::= BRACE_OPEN <rest block>:rest
+{ return mjBlock(rest) }
+<rest block> ::= BRACE_CLOSE
+{ return [] }
+<rest block> ::= <block statements>:blstats BRACE_CLOSE
+{ return blstats }
+<block statements> ::= <block statement>:blstat <rest block statements>:rest
+{ return [blstat] + rest }
+<rest block statements> ::= LAMBDA
+{ return [] }
+<rest block statements> ::= <block statements>:blstats
+{ return blstats } # blstat es una list
+
+<block statement> ::= <primitive type>:primitive_type <local variable
+declaration statement>:vardecl
+{ return mjVariableDecl(primitive_type, vardecl) }
+<block statement> ::= <if start statement>:ifstat
+{ return ifstat }
+<block statement> ::= <while statement>:whilestat
+{ return whilestat }
+<block statement> ::= <block>:bl
+{ return bl }
+<block statement> ::= <empty statement>
+{ return None }
+<block statement> ::= <return statement>:retstat
+{ return retstat }
+<block statement> ::= <primary>:(prim_first, prim_last) <rest method
+invocation>:(where, _type, expr, first, last)
+{
+  if where == 2:
+    if _type == 1:
+      return mjAssignment(prim_last, expr)
+  return prim_last
+}
+<local variable declaration statement> ::= <local variable declaration>:localvar
+SCOLON
+{ return localvar }
+<local variable declaration> ::= IDENTIFIER:id <variable declarators>:(vardecls,
+rest)
+{ return [(id, vardecls)] + rest }
+
+<variable declarators> ::= <variable declarator>:vardecl <rest variable
+declarators>:rest
+{ return (vardecl, rest) }
+<rest variable declarators> ::= LAMBDA
+{ return [] }
+<rest variable declarators> ::= COMMA IDENTIFIER:id <variable declarators>:expr
+{ return [(id, expr)] }
+<variable declarator> ::= <rest variable declarator>:expr
+{ return expr }
+<rest variable declarator> ::= LAMBDA
+{ return None }
+<rest variable declarator> ::= ASSIGNMENT <expression>:expr
+{ return expr }
+<statement> ::= <statement without trailing substatement>:stat
+{ return stat }
+<statement> ::= <if start statement>:ifstat
+{ return ifstat }
+<statement> ::= <while statement>:whilestat
+{ return whilestat }
+<statement without trailing substatement> ::= <block>:bl
+{ return bl }
+<statement without trailing substatement> ::= <empty statement>
+{ return None }
+<statement without trailing substatement> ::= <expression statement>:expr
+{ return expr }
+<statement without trailing substatement> ::= <return statement>:ret
+{ return ret }
+<empty statement> ::= SCOLON
+{ return None }
+<expression statement> ::= <statement expression>:expr SCOLON
+{ return expr }
+<statement expression> ::= <method invocation>:methodinv
+{ return methodinv }
+<if start statement> ::= IF PAREN_OPEN <expression>:expr PAREN_CLOSE
+<statement>:stat <rest if start statement>:elsestat
+{ return mjIf(expr, stat, elsestat) }
+<rest if start statement> ::= LAMBDA
+{ return None }
+<rest if start statement> ::= ELSE <statement>:stat
+{ return stat }
+<while statement> ::= WHILE PAREN_OPEN <expression>:expr PAREN_CLOSE
+<statement>:stat
+{ return mjWhile(expr, stat) }
+<return statement> ::= RETURN <rest return statement>:expr
+{ return mjReturn(expr) }
+<rest return statement> ::= SCOLON
+{ return None }
+<rest return statement> ::= <expression>:expr SCOLON
+{ return expr }
+    \end{lstlisting}
+
+    \minisec{Expresiones}
+    \begin{lstlisting}
+<expression> ::= <assignment expression>:ae
+{ return ae }
+<assignment expression> ::= <conditional expression>:ce
+{ return ce }
+
+<conditional expression> ::= <conditional or expression>:expr <rest
+conditional expression>:(op, ce)
+{
+  if op != None:
+    return op(expr, ce)
+  else:
+    return expr
+}
+<rest conditional expression> ::= LAMBDA
+{ return (None, None) }
+<rest conditional expression> ::= ASSIGNMENT <conditional expression>:ce
+{ return (mjAssignment, ce) }
+<conditional or expression> ::= <conditional and expression>:expr <rest
+conditional or expression>:(op, coe)
+{
+  if op != None:
+    return op(expr, coe)
+  else:
+    return expr
+}
+<rest conditional or expression> ::= CONDITIONAL_OR <conditional or
+expression>:coe
+{ return (mjOr, coe) }
+<rest conditional or expression> ::= LAMBDA
+{ return (None, None) }
+<conditional and expression> ::= <equality expression>:expr
+<rest conditional and expression>:(op, cae)
+{
+  if op != None:
+    return op(expr, cae)
+  else:
+    return expr
+}
+<rest conditional and expression> ::= LAMBDA
+{ return (None, None) }
+<rest conditional and expression> ::= CONDITIONAL_AND <conditional
+and expression>:cae
+{ return (mjAnd, cae) }
+<equality expression> ::= <relational expression>:expr
+<rest equality expression>:(op, ee)
+{
+  if op != None:
+    return op(expr, ee)
+  else:
+    return expr
+}
+<rest equality expression> ::= EQUALS <equality
+expression>:ee
+{ return (mjEq, re) }
+<rest equality expression> ::= NOT_EQUALS <equality
+expression>:ee
+{ return (mjNotEq, re) }
+<rest equality expression> ::= LAMBDA
+{ return (None, None) }
+<relational expression> ::= <additive expression>:expr
+<rest relational expression>:(op, re)
+{
+  if op != None:
+    return op(expr, re)
+  else:
+    return expr
+}
+<rest relational expression> ::= LT <relational expression>:re
+{ return (mjLt, re) }
+<rest relational expression> ::= GT <relational expression>:re
+{ return (mjGt, re) }
+<rest relational expression> ::= LT_EQ <relational expression>:re
+{ return (mjLtEq, re) }
+<rest relational expression> ::= GT_EQ <relational expression>:re
+{ return (mjGtEq, re) }
+<rest relational expression> ::= LAMBDA
+{ return (None, None) }
+<additive expression> ::= <multiplicative expression>:expr <rest additive
+expression>:(op, ae)
+{
+  if op != None:
+    return op(expr, ae)
+  else:
+    return expr
+}
+<rest additive expression> ::= ADD <additive expression>:ae
+{ return (mjAdd, ae) }
+<rest additive expression> ::= SUB <additive expression>:ae
+{ return (mjSub, ae) }
+<rest additive expression> ::= LAMBDA
+{ return (None, None) }
+<multiplicative expression> ::= <unary expression>:ue <rest multiplicative
+expression>:(op, me)
+{ return op(ue, me) }
+<rest multiplicative expression> ::= MUL <multiplicative expression>:me
+{ return (mjMul, me) }
+<rest multiplicative expression> ::= DIV <multiplicative expression>:me
+{ return (mjDiv, me) }
+<rest multiplicative expression> ::= MOD <multiplicative expression>:me
+{ return (mjMod, me) }
+<rest multiplicative expression> ::= LAMBDA
+{ return (None, None) }
+<unary expression> ::= ADD <unary expression>:un
+{ return mjAdd(un) }
+<unary expression> ::= SUB <unary expression>:un
+{ return mjSub(un) }
+<unary expression> ::= <unary expression not plus minus>:un
+{ return un }
+<unary expression not plus minus> ::= <postfix expression>:prim_last
+{ return prim_last }
+<unary expression not plus minus> ::= NOT <unary expression>:expr
+{ return mjNot(expr) }
+<postfix expression> ::= <primary>:(prim_first, prim_last)
+{ return prim_last }
+
+<primary> ::= <literal>:lit <rest primary>:(first, last)
+{
+  if first == None:
+    return lit
+  first.from = lit
+  return (list, last)
+}
+<primary> ::= THIS:this <rest primary>:(first, last)
+{
+  if first == None:
+    return (this, this)
+  first.from = this
+  return (this, last)
+}
+<primary> ::= PAREN_OPEN <expression>:expr PAREN_CLOSE <rest primary>:(first,
+last)
+{
+  if last == None:
+    return expr
+  first.from = expr
+  return last
+}
+<primary> ::= <class instance creation expression>:classinst <rest
+primary>:(first, last)
+{
+  if last == None:
+    return classinst
+  first.from = classinst
+  return last
+}
+<primary> ::= <method invocation>:methodinv <rest primary>:(first, last)
+{
+  if last == None:
+    return methodinv
+  first.from = methodinv
+  return last
+}
+<rest primary> ::= ACCESSOR IDENTIFIER:id <rest2 primary>:(where, argList,
+first, last)
+{
+  if where == 1:
+    # entonces tenemos argList (aun cuando sea vacia), 
+    # o sea, id es un method inv
+    method = mjMethodInvocation(id, argList)
+    if first != None:
+      first.from = method
+      return (method, method)
+    return (method, last)
+  elif where == 2:
+    return (id, id)
+}
+<rest primary> ::= LAMBDA
+{ return (None, None) }
+
+<rest2 primary> ::= PAREN_OPEN <rest2 method invocation>:argList <rest
+primary>:(first, last)
+{
+  return (1, argList, first, last) # 1: es este caso
+}
+<rest2 primary> ::= <rest primary>:(first, last)
+{
+  return (2, [], first, last) # 2: es este
+}
+
+<class instance creation expression> ::= NEW IDENTIFIER:id PAREN_OPEN
+<rest class instance creation expression>:argList
+{
+  return mjClassInstanceCreation(id, argList)
+}
+<rest class instance creation expression> ::= PAREN_CLOSE
+{ return [] }
+<rest class instance creation expression> ::= <argument list>:argList
+PAREN_CLOSE
+{ return argList }
+<argument list> ::= <expression>:expr <rest argument list>:restList
+{
+  return [expr] + restList
+}
+<rest argument list> ::= LAMBDA
+{ return [] }
+<rest argument list> ::= COMMA <argument list>:argList
+{
+  return argList
+}
+<method invocation> ::= IDENTIFIER:id <rest primary>:(prim_first, prim_last)
+<rest method invocation>(where, _type, expr, first, last)
+{
+  # aca ya vamos a terminar la cadena del primary,
+  # enlazando id<-prim_first<-...<-prim_last<-first 
+  # y devolviendo last, que es el qeu importa en si
+  # el enlazado id<-prim_first dependera de si prim_first es None o no
+  if prim_first != None:
+    prim_first.from = id
+
+  # esto si bien se llama method invocation puede ser:
+  # 1: asignacion
+  # 2: method invocation
+  # 3: acceso a campo de un obj, o algo asi
+  # y lo sabemos segun el _type
+
+  # Pero antes tenemos qeu ver si viene algo con first y last
+  # y enlazarlos apropiadamente
+  if first != None:
+    if prim_first != None:
+      first.from = prim_last
+    else:
+      first.from = id
+
+# esto es para el where:
+# 1: primer caso (recursivo, accessor id)
+# 2: segundo (asignacion)
+# 3: posible method inv, depende, pero tiene (args)
+# 4: lambda
+
+  # caso especial, el rest fue lambda, o sea qeu _type no importa
+  if where == 4:
+    if prim_first != None:
+      return prim_last
+    else:
+      return id
+
+  if prim_last es un method invocation and where == 3:
+    raise SemanticError("Llamada a metodo invalida") # metodo()()
+  # si es una asignacion...
+  if _type == 1: # assignment
+    if where == 1:
+        return mjAssignment(last, expr)
+    elif where == 2:
+      # entonces la asignacion se hizo aca no mas
+      # first y last son None
+      if prim_last != None:
+        return mjAssignment(prim_last, expr)
+      else:
+        return mjAssignment(id, expr)
+    elif where == 3:
+      # entonces la asignacion se hizo mas lejos, 
+      # aca se hizo una llamada a un metodo con prim_last o id
+      # y first o last o ambos son != None
+      if prim_last != None:
+        method = mjMethodInvocation(prim_last.ref, expr) # expr es argList
+        if first != None:
+          first.from = prim_first
+      else:
+        method = mjMethodInvocation(id.ref, expr) # expr es argList
+        if first != None:
+          first.from = id
+
+      if last != None:
+        return mjAssignment(last, expr)
+      else:
+        if prim_last != None:
+          return mjAssignment(prim_last, expr)
+        else:
+          return mjAssignment(id, expr)
+    elif where == 4:
+      pass # es imposible
+  elif _type == 2: # method inv
+    if where == 1:
+      # recursivo accessor id rest
+      # el enlazado ya se hizo, asi que todo esta 
+      # listo, se retorna el ultimo eslabon
+      return last
+    elif where == 2:
+      # IMPOSIBLE, que venga de un assignment y tenga type method inv.
+      pass
+    elif where == 3:
+      # entonces aca prim_last o id son un method inv.
+      # y si first y last son None, entonces EL 
+      # method inv es este y hay que retornar eso
+      if last == None:
+        if prim_last != None:
+          return mjMethodInvocation(prim_last, expr)
+        else:
+          return mjMethodInvocation(id, expr)
+      else:
+        return last
+    elif where == 4:
+      pass # Otro imposible
+  elif _type == 3:
+    # es simplemente un acceso a campo
+    # asi qeu retornamos el ultimo eslabon
+    # sin importar desde donde se viene
+    if last != None:
+      return last
+    elif prim_last != None:
+      return prim_last
+    else:
+      return id
+  elif _type == 4:
+    if not isId(prim_ref):
+      raise Exception() # el tipo custom es un methodinv o algo invalido
+    return mjVariableDecl(prim_ref, expr)
+}
+
+# estos son iguales al anterior, salvo que cambia la primera parte
+<method invocation> ::= <literal> <rest primary> ACCESSOR IDENTIFIER
+PAREN_OPEN <rest2 method invocation> <rest method invocation>
+<method invocation> ::= THIS <rest primary> <rest method invocation>
+<method invocation> ::= PAREN_OPEN <expression> PAREN_CLOSE <rest primary>
+ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method
+invocation>
+<method invocation> ::= <class instance creation expression> <rest primary>
+ACCESSOR IDENTIFIER PAREN_OPEN <rest2 method invocation> <rest method
+invocation>
+<method invocation> ::= SUPER <rest primary> <rest method invocation>
+
+# Se usan las siguientes constantes para ver desde donde se viene:
+# 1: primer caso
+# 2: segundo (asignacion)
+# 3: posible method inv, depende
+# 4: lambda
+# y las siguientes para ver que es lo que se esta encontrando que es:
+# 1: asignacion
+# 2: method invocation
+# 3: acceso a campo de un obj, o algo asi
+
+<rest method invocation> ::= ACCESSOR IDENTIFIER:id <rest
+primary>:(prim_first, prim_last) <rest method invocation>(where, _type, expr,
+first, last) # es lo qeu sea que rest method invocation diga que es
+{
+  if where == 4: # lambda
+    # entonces si prim != None, este es el last, y id el first
+    if prim_first != None:
+      prim_first.from = id # enlazamos con el actual
+      return (1, _type, expr, id, prim_last)
+    else:
+      return (1, _type, expr, id, id)
+  elif where == 1:
+    # si prim != None, y last != None
+    # first sabemos que no va a ser None y 
+    # sabemos que van a estar conectados entre si por el .from
+    if prim_first != None:
+      first.from = prim_last
+      prim_first.from = id
+    else:
+      first.from = id
+    return (1, _type, expr, id, last)
+  elif where == 2: # asignacion
+    # sabemos que first y last van a ser None
+    # si prim == None, no importa, porque va a manejar despues
+    prim_first.from = id
+    return (1, _type, expr, id, prim_last)
+  elif where == 3:
+    # entonces id o prim_last es el nombre del metodo
+    if prim_first != None:
+      # prim hasta aca tiene type=id, y ref=>token, 
+      # ahora ese token es el nombre del metodo
+      # prim_last tiene type=methodInv, y ref=> a un obj methodinv
+      method = mjMethodInvocation(prim_last, expr) # expr es argList
+      method.from = prim_last.from
+      prim_first.from = id
+      if first != None: # significa que el rest method inv que 
+                        # se llamo desde 3 no resulto en lambda
+        # entonces en _type viene el tipo real de lo ultimo que 
+        # se hizo, esto seria algo asi como:
+        # algo.algo1().algo3, donde algo1 es id aca o prim, el 
+        # nombre del metodo, y algo3 seria el first, con last=None,
+        # si fuera mas largo: algo.algo1().algo3.algo4, tendriamos last
+        first.from = method # enlazamos normalmente
+
+        return (1, _type, expr, id, last)
+      else: # first == None: o sea qeu fue un lambda, 
+            # se termina aca este primary,
+        return (1, _type, expr,  id, prim_last)
+        # si no llega a ser None, solamente nos tenemos qeu 
+        # fijar que este enlazado bien
+    else:
+      # hace lo mismo pero con id
+  elif where == 5:
+    # esto puede ser algo.algo1() asd;
+    raise SemanticError("Identificador de tipo no valido") 
+}
+
+<rest method invocation> ::= ASSIGNMENT <expression>:expr SCOLON # asignacion
+comun
+{ return (2, 1, expr, None, None) }
+<rest method invocation> ::= PAREN_OPEN <rest2 method invocation>:argList
+<rest method invocation>:(where, _type, expr, first, last) # method inv
+{
+  if where == 4: # nada
+    return (3, 2, argList, first, last) 
+    # method invocation, el first y el last del resto
+  elif where == 2: # viene del assignment
+    raise Exception() # TODO!!!
+  elif where == 1: # aca es algo asi como: algo.algo2().algomas
+    # entonces, a traves del where, se va a saber que lo anterior es un method
+inv, pero el type en si
+    # es el que viene de las otras invs
+    return (3, _type, argList, first, last)
+  elif where == 3:
+    raise Exception() # se hizo una llamada a otro metodo pero sin id
+  elif where == 5:
+    raise Exception() # este caso puede ser: algo() asd;
+<rest method invocation> ::= <local variable declaration>:vardecls SCOLON
+# declaracion de vars de tipo custom
+{ return (5, 4, vardecls, None, None) }
+<rest method invocation> ::= LAMBDA # nada
+{ return (4, None, None, None, None) }
+<rest2 method invocation> ::= PAREN_CLOSE
+{ return [] }
+<rest2 method invocation> ::= <argument list>:argList
+PAREN_CLOSE
+  elif where == 5:
+    raise Exception() # esto puede ser algo.algo1() asd;
+}
+
+# esto viene por block statements
+# NOTA: antes era <variable declarators>, pero permitia cosas como: algo = 3,
+algomas = 4;, asi que se "forzo" un camino dentro de la regla
+<rest method invocation> ::= ASSIGNMENT <expression>:expr SCOLON # asignacion
+comun
+{ return (2, 1, expr, None, None) }
+<rest method invocation> ::= PAREN_OPEN <rest2 method invocation>:argList
+<rest method invocation>:(where, _type, expr, first, last) # method inv
+{
+  if where == 4: # nada
+    return (3, 2, argList, first, last) # method invocation, el first y el last
+del resto
+  elif where == 2: # viene del assignment
+    raise SemanticError("Asignacion invalida")
+  elif where == 1: # aca es algo asi como: algo.algo2().algomas
+    # entonces, a traves del where, se va a saber que lo anterior es un method
+inv, pero el type en si
+    # es el que viene de las otras invs
+    return (3, _type, argList, first, last)
+  elif where == 3:
+    raise SemanticError("Llamada a metodo invalida") # metodo()()
+  elif where == 5:
+    raise SemanticError("Declaracion de variable invalida") 
+    # este caso puede ser: algo() asd;
+<rest method invocation> ::= <local variable declaration>:vardecls SCOLON
+# declaracion de vars de tipo custom
+{ return (5, 4, vardecls, None, None) }
+<rest method invocation> ::= LAMBDA
+{ return (4, None, None, None, None) }
+<rest2 method invocation> ::= PAREN_CLOSE
+{ return [] }
+<rest2 method invocation> ::= <argument list>:argList
+PAREN_CLOSE
+{ return argList }
+    \end{lstlisting}
+
+\subsection{Tabla de símbolos}
+  \subsubsection{Implementación}
+Dadas las flexibilidades del lenguaje Python, la implementación de las
+diferentes tablas de símbolos fueron tratadas como una misma, y para
+diferenciar los distintos tipos se tuvo en cuenta lo siguiente:
+
+  \begin{itemize}
+   \item Tabla de símbolos global: es la única tabla de símbolos cuyo parent es
+None.
+   \item Tabla de símbolos de clase: es la única cuyo parent es una tabla de
+símbolos global.
+  \end{itemize}
+
+El resto de las tablas de símbolos utilizadas (para bloques internos, por
+ejemplo) son únicamente para almacenar variables locales declaradas en
+ese $scope$.
+
+En base a esto, el tipo tabla de símbolos (mjTS) está definido por el siguiente
+código:
+
+    \begin{lstlisting}
+class mjTS(object):
+  def __init__(self, parent=None, owner=None):
+    # Pueden ser classes, variables, methods
+    self._sections = {}
+    # Si parent es None, entonces es la TS global
+    self._parent = parent
+    # *cosa* que tiene como ts a self
+    self._owner = owner
+
+    # Usada en la global
+    self._sections["classes"] = {}
+
+    # Usadas en el resto
+    self._sections["variables"] = {}
+    self._sections["methods"] = {}
+
+  def owner(self):
+    return self._owner
+
+  def set_owner(self, o):
+    self._owner = o
+
+  def parent(self):
+    return self._parent
+
+  def has(self, section, value):
+    if section in self._sections.keys():
+      return (True, self._sections[section][value])
+
+    return (False, None)
+
+  def addClass(self, c):
+    self._sections["classes"][c.name.get_lexeme()] = c
+
+  def addMethod(self, m):
+    if self.methodExists(m):
+      return False
+    if m.name.get_lexeme() in self._sections["methods"].keys():
+      self._sections["methods"][m.name.get_lexeme()].append(m)
+    else:
+      self._sections["methods"][m.name.get_lexeme()] = [m]
+    return True
+
+  def typeExists(self, t):
+    # built-in
+    if t == "String":
+      return True
+
+    for c in self._sections["classes"].keys():
+      if c == t:
+        return True
+
+    return False
+
+  def classExists(self, cl):
+    redef = False
+    other = None
+    for c in self._sections["classes"].keys():
+      if c == cl.name.get_lexeme():
+        redef = (cl != self._sections["classes"][c])
+        if redef:
+          other = self._sections["classes"][c]
+          break
+    return (redef, other)
+
+  def validExtend(self, ext_name):
+    if ext_name.get_lexeme() in self._sections["classes"].keys():
+      return (True, self._sections["classes"][ext_name.get_lexeme()])
+    return (False, None)
+
+  def addVar(self, v):
+    if self.varExists(v.name.get_lexeme()):
+      return False
+    self._sections["variables"][v.name.get_lexeme()] = v
+    return True
+
+  def varExists(self, v):
+    return v in self._sections["variables"].keys()
+
+  def methodInvExists(self, m):
+    if not (m.ref.get_lexeme() in self._sections["methods"].keys()):
+      return False
+
+    # un metodo existe, si hay un metodo declarado con los mismos parametros
+    # un parametro es el mismo que otro si tiene el mismo tipo
+    for method in self._sections["methods"][m.ref.get_lexeme()]:
+      if self._compParams(m.args, method.params):
+        return True
+    return False
+
+  def _compParams(self, params1, params2):
+    if len(params1) != len(params2):
+      return False
+    i = 0
+    for i in range(0, len(params1)):
+      try:
+        if not params1[i].compatibleWith(params2[i][0]):
+          return False
+      except SemanticError, e:
+        return False
+    return True
+
+  def methodExists(self, m):
+    if not (m.name.get_lexeme() in self._sections["methods"].keys()):
+      return False
+
+    # un metodo existe, si hay un metodo declarado con los mismos parametros
+    # un parametro es el mismo que otro si tiene el mismo tipo
+    for method in self._sections["methods"][m.name.get_lexeme()]:
+      if self._sameParams(m.params, method.params):
+        return True
+    return False
+
+  def getExactMethod(self, m):
+    if not (m.name.get_lexeme() in self._sections["methods"].keys()):
+      return None
+
+    for method in self._sections["methods"][m.name.get_lexeme()]:
+      if self._sameParams(m.params, method.params):
+        return method
+    return None
+
+  def _sameParams(self, params1, params2):
+    if len(params1) != len(params2):
+      return False
+    i = 0
+    for i in range(0, len(params1)):
+      if params1[i][0].get_lexeme() != params2[i][0].get_lexeme():
+        return False
+    return True
+
+  def getVar(self, v):
+    return self._sections["variables"][v]
+
+  def getType(self, v):
+    if not v in self._sections["classes"]:
+      raise SemanticError(0,0,
+                          "No existe ningun tipo llamado %s" % v)
+    return self._sections["classes"][v]
+
+  def getMethod(self, m):
+    return self._sections["methods"][m.ref.get_lexeme()]
+
+  def recFindType(self, t):
+    if self.typeExists(t):
+      return self.getType(t)
+    else:
+      if not self._parent is None:
+        return self._parent.recFindType(t)
+    return None
+
+  def pprint(self, tabs=0):
+    print "  "*tabs + "-"*30
+    for k in self._sections.keys():
+      print "  "*tabs + k + ":"
+      for j in self._sections[k].keys():
+        print "  "*tabs + " " + j
+    print "  "*tabs + "-"*30
+
+  def create_predefs(self):
+    o = Token()
+    o._lexeme = "Object"
+    o._type = IDENTIFIER
+    o._line = 0
+    o._col = 0
+
+    cl = mjc.mjClass(o, None, [], self)
+
+  def check(self):
+    self.create_predefs()
+
+    for t in self._sections["classes"]:
+      self._sections["classes"][t].solve_extends()
+
+    code = ".code\n"
+    code += "push simple_heap_init\n"
+    code += "call\n"
+
+    for t in self._sections["classes"]:
+      if t == "Object":
+        continue
+      code += "push %s\n" % self._sections["classes"][t].preconstruct
+      code += "call\n"
+
+    rest_code = ""
+
+    ### PREDEF
+    rest_code += "simple_heap_init: ret 0\n"
+    rest_code += "simple_malloc: loadfp\n"
+    rest_code += "loadsp\n"
+    rest_code += "storefp\n"
+    rest_code += "loadhl\n"
+    rest_code += "dup\n"
+    rest_code += "push 1\n"
+    rest_code += "add\n"
+    rest_code += "store 4\n"
+    rest_code += "load 3\n"
+    rest_code += "add\n"
+    rest_code += "storehl\n"
+    rest_code += "storefp\n"
+    rest_code += "ret 1\n"
+    rest_code += string_code
+
+    for t in self._sections["classes"]:
+      rest_code += self._sections["classes"][t].check()
+    main_label = self.hasMain()
+    code += "push %s\n" % main_label
+    code += "call\n"
+    code += "halt\n"
+    code += rest_code
+
+    return code
+
+  def hasMain(self):
+    mains = []
+    for clstr in self._sections["classes"]:
+      cl = self.getType(clstr)
+      if "main" in cl.ts._sections["methods"].keys():
+        ms = cl.ts._sections["methods"]["main"]
+        for m in ms:
+          if len(m.params) == 0 and \
+             m.isStatic() and \
+             m.isPublic():
+            mains.append(m)
+
+    if len(mains) == 0:
+      raise SemanticError(0,0,
+                          "No existe ningun metodo static void main()")
+
+    if len(mains) > 1:
+      raise SemanticError(0,0,
+                          "Existen mas de un metodo static void main()")
+
+    return mains[0].label
+    \end{lstlisting}
+
+  \subsubsection{Breve descripción}
+
+  A continuación se describen brevemente los tipos de búsquedas implementadas
+en la tabla de símbolos.
+
+    \minisec{Redefinición de clases}
+
+    El método $classExists$, dado un objeto de tipo $mjClass$, busca otra clase
+definida con anterioridad bajo el mismo nombre. Devuelve una tupla (bool,
+mjClass), en la cual si el primer valor es True, en el segundo se encuentra qué
+clase redefine.
+
+    \minisec{Redefinición de métodos y variables}
+
+    Los métodos $varExists$ y $methodExists$ sirven para corroborar si ya
+existe alguna variable o algún método llamado como el parámetro que se les
+pasa ya definido.
+
+    $methodExists$ recibe un signature de método, no solo el nombre, y
+asi soportar sobrecarga.
+
+    \minisec{Checkeo de herencia}
+
+    El método $validExtend$ es utilizado para ver si la clase de la cual se
+está heredando existe, y obtener la definición de la misma en forma de objeto
+mjClass.
+
+    \minisec{Variables y métodos heredados}
+
+    Para búsqueda de variables y métodos heredados, se implementaron las
+búsquedas en la clase mjClass, ya que implica ``conocimiento'' extra que la
+tabla de símbolos no posee ni debería poseer.
+
+    \begin{lstlisting}
+  def hasVarAtAll(self, v):
+    if self.ts.varExists(v):
+      return (True, self.ts.getVar(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasVarAtAll(v)
+    else:
+      return (False, None)
+
+  def hasMethodAtAll(self, v):
+    if self.ts.methodExists(v):
+      return (True, self.ts.getMethod(v))
+    elif not self.ext_class is None:
+      return self.ext_class.hasMethodAtAll(v)
+    else:
+      return (False, None)
+    \end{lstlisting}
+
+Estos métodos, $hasVarAtAll$ y $hasMethodAtAll$ buscan recursivamente sobre la
+cadena de herencia ya resuelta, si existe o no una variable o método llamado de
+la manera especificada.
+
+\subsection{AST}
+  \subsubsection{Diagrama de clases}
+
+    \includegraphics[angle=90,scale=0.75]{classes.png}
+
+  \subsubsection{Etapas de definición del AST}
+
+El árbol de sintaxis abstracto se podría decir que se construye en dos etapas.
+Como primer paso, se crean las estructuras básicas del mismo en el esquema de
+traducción, cuyo código convive con el del análisis sintáctico. Lo que se
+saltea en esta etapa, es la creación y propagación de tablas de símbolos y el
+enlazado entre ciertas estructuras (los mjReturns con sus respectivos
+mjMethods, por ejemplo). La idea es mantener el código del análisis sintáctico
+lo más limpio posible.
+
+En la siguiente etapa, se realiza la creación y propagación de tablas de
+símbolos y los enlaces restantes.
+
+Si bien se habla de dos etapas, todo se ejecuta en una única etapa, la
+diferencia principal es que todos los datos que se propagan en la segunda parte
+no son llevados en el código de análisis sintáctico, sino que todo se realiza
+manipulando el árbol de forma directa dentro de los constructores de los
+objetos de mayor jerarquía (mjClass).
+
+    \subsubsection{Ejemplo}
+
+Para hacer más gráfico el enlace de estructuras, se brinda un ejemplo del
+código de input y como se forma el AST.
+
+\begin{lstlisting}
+public class ClaseHija extends ClasePadre {
+  protected int valorEntero = 1;
+  public String cadena;
+
+  public ClaseHija() {
+    super(valorEntero);
+  }
+
+  protected void metodo() {
+    System.println("Un metodo");
+  }
+}
+
+public class ClasePadre {
+  protected int otroValor;
+  public ClasePadre(int valor) {
+    this.otroValor = valor;
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+Class::ClaseHija
+Extends::ClasePadre
+  protected  int
+   valorEntero = 
+    [<INT_LITERAL>::1]
+  public  String
+   cadena
+  Constructor::ClaseHija
+    {{{
+      [MethodInv::super]
+      (((
+        [<IDENTIFIER>::valorEntero]
+      )))
+    }}}
+  Method::metodo : void
+    {{{
+      [MethodInv::println]
+      (((
+        [<STRING_LITERAL>::"Un metodo"]
+      )))
+        [<IDENTIFIER>::System]
+    }}}
+Class::ClasePadre
+  protected  int
+   otroValor
+  Constructor::ClasePadre
+    {{{
+      [Assignment]
+        [<IDENTIFIER>::otroValor]
+          [<THIS>::this]
+        [<IDENTIFIER>::valor]
+    }}}
+\end{lstlisting}
+
+\subsection{Checkeos semánticos realizados}
+  \subsubsection{Consideraciones}
+
+Para mantener el código lo más simple posible, la mayoría de los checkeos
+semánticos se realizaron sobre el AST directamente. Los que se realizaron sobre
+el esquema de traducción se especificaron dentro del mismo.
+
+Cada sección a partir de esta comentará los checkeos que realiza cada nodo del
+árbol. Si alguno de las condiciones especificadas en los items se cumple, se
+reportará un error.
+
+  \subsubsection{mjClass}
+
+  \begin{itemize}
+   \item Busca en la tabla de símbolos global por una clase con su mismo nombre
+definida con anterioridad.
+   \item Busca en la tabla de símbolos global a la clase de la cual hereda (si
+es que posee herencia explícita).
+   \item Ejecuta el checkeo de todas las declaraciones que componen la clase.
+  \end{itemize}
+
+  \subsubsection{mjReturn}
+  
+  Se informa error si:
+
+  \begin{itemize}
+   \item El método es un constructor, y el return contiene algún tipo de
+expresión.
+   \item El return no contiene una expresión, y el tipo de retorno del
+método no es $void$.
+   \item El tipo de la expresión de retorno difiere del tipo de retorno
+declarado en el método.
+  \end{itemize}
+
+  \subsubsection{mjWhile}
+
+  \begin{itemize}
+   \item Se informa error si el tipo de la expresión no es $boolean$.
+   \item Se ejecuta el checkeo en el cuerpo del while.
+  \end{itemize}
+
+  \subsubsection{mjIf}
+
+  \begin{itemize}
+   \item Se informa error si el tipo de la expresión no es $boolean$.
+   \item Se ejecuta el checkeo en el cuerpo del if, y de existir else, también
+se lo checkea.
+  \end{itemize}
+
+  \subsubsection{mjVariableDecl}
+
+  Se informa error si:
+
+  \begin{itemize}
+   \item El tipo de la expresión de inicialización no es de un tipo equivalente
+al de la declaración de la variable.
+   \item Existe otra variable en el mismo entorno con el mismo nombre.
+  \end{itemize}
+
+  \subsubsection{mjBlock}
+
+  \begin{itemize}
+    \item Se ejecuta el checkeo las sentencias del bloque.
+  \end{itemize}
+
+  \subsubsection{mjMethod}
+
+  En la primer pasada, en la creación del AST, se corrobora que no exista otro
+método con un signature igual al del actual. Se corrobora también que no haya
+más de un parámetro con el mismo nombre.
+
+  En la siguiente pasada, se informa error si:
+
+  \begin{itemize}
+   \item El tipo de retorno no está definido.
+   \item La lista de modificadores es inválida (distinta de ``public static'',
+``protected static'', ``public'', ``protected'').
+   \item Es un constructor con modificador estático.
+   \item Si alguno de los tipos de los parámetros no está definido.
+   \item Es un constructor con nombre distinto al de la clase a la que
+pertenece.
+   \item Si es un método que no retorna $void$ y existe un camino en el cual no
+se llega a una sentencia de return.
+   \item Si existe código inaccesible en el mismo (código luego de un mjReturn).
+  \end{itemize}
+
+  \subsubsection{mjClassVariableDecl}
+
+En la primera pasada se corrobora que la variable no haya sido definida con
+anterioridad.
+
+En la segunda pasada, se informa error si:
+
+  \begin{itemize}
+   \item El tipo de la misma no está definido.
+   \item Los modificadores son inválidos.
+   \item Si la expresión de inicialización es de tipo incompatible.
+  \end{itemize}
+
+  \subsubsection{mjPrimary}
+
+Se corrobora que pueda ser resuelto el primary. Esto significa que toda la
+cadena del mismo puede ser resuelta.
+
+  \subsubsection{mjMethodInvocation}
+
+Se corrobora lo mismo que en primary, pero reimplementa la forma en la cual se
+realiza la resolución.
+
+  \minisec{Nota sobre la resolución de llamada a métodos}
+
+Dada una invocación a método, el método selecto para ser llamado en caso de tener todos parámetros de tipos nativos, la resolución es directa. Pero cuando algún parámetro tiene un tipo definido por el usuario, que tal vez pertenece a una cadena de herencia compleja, la llamada debe invocar al método más ``cercano'' a este. Para establecer esta cercanía, se estableció una métrica que determina la distancia entre dos tipos compatibles simplemente sumando 1 por cada salto de herencia entre los tipos. Por ejemplo, en:
+
+\begin{lstlisting}
+public class A {}
+public class B : extends A {}
+public class C : extends B {}
+\end{lstlisting}
+
+la distancia entre A y A será 0, entre A y B será 1 y entre A y C será 2.
+
+A la vez, no solo hay que corroborar la cercanía de dos tipos, sino de todos los parámetros. Para esto se resolvió que la distancia entre dos signature de métodos es el promedio de las distancias entre sus parámetros. Lo que lleva a casos ambiguos como el siguiente:
+
+\begin{lstlisting}
+public class A {}
+public class B : extends A {}
+public class C : extends B {}
+
+public class D {
+  public void metodo(A a, B b) {}
+  public void metodo(B b, A a) {}
+
+  public D() {
+    metodo(new C(), new C());
+  }
+\end{lstlisting}
+
+En cuyo caso se le informará al usuario de este problema, junto con una lista de posibles métodos a llamar.
+
+  \subsubsection{mjClassInstanceCreation}
+
+De la misma forma, se corrobora lo mismo que en primary, también reimplementa
+la forma en la que se hace la resolución.
+
+Dado que la creación de objetos es una llamada implícita a un constructor, se llevan a cabo los mismos checkeos que en mjMethod en cuanto a especificidad y ambiguedad de la llamada.
+
+  \subsubsection{mjAssignment}
+
+Se resuelven el lado izquierdo y derecho de la asignación. Una vez realizado
+esto, se informa error si:
+
+  \begin{itemize}
+   \item El lado izquierdo es un literal (1, ``cadena'', true, etc).
+   \item El lado izquierdo es algo que no es mjVariable (mjMethodInvocation,
+por ejemplo).
+   \item El lado izquierdo es una variable, pero el nombre está prefijado con
+$@$, lo cual indica que la variable es generada por el compilador, por lo que
+no es una variable en sí, sino una representación de, por ejemplo, el tipo de
+una expresión.
+   \item Si el lado derecho es una llamada a método, y la misma es un
+constructor sin el operador new.
+   \item Si el tipo de la expresión del lado derecho es incompatible con el del
+lado izquierdo.
+  \end{itemize}
+
+  \subsubsection{mjOp}
+
+Se informa error si el tipo de la expresión no se puede resolver. En este caso,
+el tipo resuelto será el de todos sus operandos, y se espera que todos tengan
+el mismo tipo. A la vez, este tipo debe ser $String$, $int$, $char$ o $boolean$.
+
+  \subsubsection{mjArithOp}
+
+Similar a mjOp, con la diferencia que acepta operandos únicamente de tipo
+$int$ o $char$, y siempre retorna $int$.
+
+  \subsubsection{mjBoolOp}
+
+Similar a mjOp, con la diferencia que acepta operandos de tipo $int$, $char$ o
+$boolean$, y siempre retorna $boolean$.
+
+  \subsubsection{mjStrictIntBoolOp}
+
+Similar a mjOp, con la diferencia que acepta operandos únicamente de tipo
+$int$ o $char$, y siempre retorna $boolean$.
+
+  \subsubsection{mjStrictBoolOp}
+
+Similar a mjOp, con la diferencia que acepta operandos únicamente de tipo
+$boolean$, y siempre retorna $boolean$.
+
+  \subsubsection{Otros checkeos}
+
+Fuera del AST, se corrobora que existe un único método $main()$ que sea public
+static, caso contrario se informa error.
+
+\section{Generación de código}
+
+  \subsection{Estructura general}
+
+La estructura del código utilizada es la planteada por la cátedra en el documento de especificación de la CeIVM.
+
+  \subsection{mjClass}
+
+En la declaración de clases, el cual es el punto de entrada para las llamadas a generación de código del resto de la clase, se establecen los offsets a variables de instancia (en el CIR), variables estáticas (en el CR), y labels a los métodos.
+
+Estos últimos labels tienen la siguiente forma: clase\_metodo\$tipo1\_tipo2\$. Siendo tipo1 y tipo2 los tipos de los parámetros de ese método.
+
+Los offsets se setean de manera que la clase más vieja en la herencia sea la que tenga los offsets más bajos, y se ``apilan'' las clases que heredan de esta. En caso de redefinición de métodos, se busca el método que redefinen y se setea el mismo offset que este (es decir, se lo sobreescribe).
+
+Luego se ordenan las declaraciones en el siguiente orden: variables estáticas, variables de instancia, métodos estáticos, métodos de instancia. Y con esto se definen el Class Record, la vtable, el código del preconstructor estático (que será ejecutado al comienzo de la ejecución de la aplicación), el código del preconstructor de instancia (llamado antes de la ejecución del constructor explícito). 
+
+Por último, se concatena el código de las declaraciones.
+
+  \subsection{mjReturn}
+
+De existir una expresión de retorno, se genera el código de esta y se le concatena el store al offset del valor de retorno. Caso contrario, no genera código.
+
+  \subsection{mjWhile}
+
+El código del while estará estructurado de la siguiente manera:
+
+  \begin{lstlisting}
+while_true_<random>:
+   ... ; Codigo de la expresion
+   BF while_false_<random>
+   ... ; Codigo del bloque while
+   JUMP while_true_<random>
+while_false_<random>:
+   ... ; Codigo de las sentencias a continuacion del while
+  \end{lstlisting}
+
+Las etiquetas while\_true\_ y while\_false\_, poseen una cadena aleatoria, para
+evitar colisiones de labels.
+
+  \subsection{mjIf}
+
+El código del if estará estructurado de la siguiente manera:
+
+  \begin{lstlisting}
+   ... ; Codigo de la expresion
+   BF if_false_<random>
+   ... ; Codigo del bloque then del if
+   JUMP exit_if_<random>
+if_false_<random>:
+   ... ; Codigo del else (en caso de existir)
+if_exit_<random>:
+   ... ; Codigo de las sentencias a continuacion del if
+  \end{lstlisting}
+
+Las etiquetas son estructuradas de la misma forma que se explicó con el while.
+
+  \subsection{mjVariableDecl}
+
+La declaración de variable local puede contener más de un identificador, por lo
+que el código generado será:
+
+  \begin{lstlisting}
+RMEM N ; N = cantidad de variables declaradas
+  \end{lstlisting}
+
+Seguido del código de los inicializadores en caso de tener.
+
+  \subsection{mjBlock}
+
+Para cada sentencia del bloque, se ejecuta la rutina de generación de código. A
+la vez, se va propagando el nuevo offset desde el FP para cada llamada a la
+rutina.
+
+Además, libera el espacio almacenado por las variables locales al bloque.
+
+  \subsection{mjMethod}
+
+Primero se establecen los offsets para los parámetros y para el valor de retorno en caso de haber uno. Luego, en la generación en código en sí del método, se guarda el enlace dinámico en la pila, y se establece el nuevo de el frame de la llamada actual. Luego se le concatena el código generado por el bloque de definición, y por último se restablece el enlace dinámico y se retorna liberando el espacio utilizado para los parámetros.
+
+  \subsection{mjClassVariableDecl}
+
+Esta clase no genera código, la declaración es utiliza por otras clases para generar el código correspondiente.
+
+  \subsection{mjPrimary}
+
+Los distintos eslabones de mjPrimary están unidos por un atributo llamado
+$goesto$, en caso de ser el último, o ser un primary de un solo elemento,
+goesto es $None$.
+
+La lógica de generación de código estará muy ligada a la de resolución de
+símbolos. Por lo que estará delineado por el siguiente pseudocódigo como parte
+de la clase mjPrimary:
+
+\begin{lstlisting}
+if self.ref.get_type() in FIRST_literal:
+  # Es un literal
+  return PUSH valor(self.ref)
+
+if self.goesto is None:
+  if self.ref.get_type() == THIS or self.ref.get_type() == SUPER:
+    return LOAD 3
+  
+  # ahora puede ser o el nombre de una clase o una variable de instancia
+  if es una clase:
+    # no se genera nada, se va a generar el 
+    # codigo acorde en la siguiente vuelta
+  else:
+    if la variable es estatica:
+      return (
+      PUSH CR_ClaseActual
+      LOADREF self.M # siendo M el offset de la variable
+      )
+    else:
+      # variable de clase, sin this, hay que agregarlo
+      return (
+      LOAD N    # siendo N = len(ED) + len(ret) + len(params)
+      LOADREF self.M # siendo M el offset dentro del CIR
+      )
+else: # self.goesto != None
+  # se genera el codigo para todo lo que viene antes de este eslabon
+  val = self.goesto.resolve() 
+
+  if val es una clase: # dereferenciamiento estatico
+    return (
+    LOADHP
+    LOADREF val.N # siendo N el offset de la clase
+    LOADREF self.M # siendo M el offset de la variable
+    )
+  elif val es un metodo: 
+    # se invoco a val y ahora se accede a un atributo del objeto que devuelve
+    # en el tope esta el valor de retorno
+    if val.ret es primitivo:
+      # sabemos que esto es un error, y lo detectamos antes
+    else:
+      return LOADREF self.M # siendo M el offset de la variable en la clase
+  elif val es una variable:
+    # val es una variable de tipo referencia, y tengo que cargar ahora
+    # un atributo del objeto al que referencia
+    return LOADREF self.M # siendo M el offset de la variable en la clase
+\end{lstlisting}
+
+  \minisec{Referencia}
+
+  \begin{itemize}
+   \item $self.ref$: Es una referencia al token que representa el eslabón del
+primary.
+  \end{itemize}
+
+  \subsection{mjMethodInvocation}
+
+Este es muy similar a mjPrimary, ya que hereda de este, pero el eslabón que
+representa el $self$ en este caso, va a ser una llamada a método.
+
+\begin{lstlisting}
+if self.goesto is None:
+  if self.ref.get_type() == THIS or self.ref.get_type() == SUPER:
+    return LOAD N # siendo N = len(ED) + len(ret) + len(params)
+  
+  # sabemos que es una llamada a metodo de instancia
+  for p in self.params: # para cada parametro
+    # se genera el codigo para cada parametro
+  # y luego se realiza la llamada
+  return (
+  LOAD 3 # offset a this
+  LOADREF 0 # se carga la vtable
+  LOADREF M # siendo M el offset dentro de la vtable
+  CALL
+  )
+else: # self.goesto != None
+  # se genera el codigo para todo lo que viene antes de este eslabon
+  val = self.goesto.resolve() 
+
+  if val es una clase: # dereferenciamiento estatico
+    for p in self.params: # para cada parametro
+      # se genera el codigo para cada parametro
+    return (
+    PUSH self.label # nombreDeLaClase_nombreDeVariable
+    CALL
+    )
+  elif val es un metodo or val es una variable: 
+    # simplemente cargamos la vtable, y llamamos
+    # sabemos que la referencia al objeto en val ya esta en la pila
+    return (
+    LOADREF 0 # vtable
+    LOADREF self.M # offset en la vtable
+    CALL
+    )
+\end{lstlisting}
+
+Existe un caso especial que es la resolución de los métodos de System, que son manejados de forma ``built-in'' dentro de la resolución. 
+
+  \subsection{mjClassInstanceCreation}
+
+Este caso es igual al anterior, solo que el método se resuelve de una manera
+distinta ya que en este caso se buscan constructores, no métodos de instancia.
+
+El código generado es el mismo, solo que antes de realizar la llamada al
+constructor correspondiente, se crea el Class Instance Record:
+
+\begin{lstlisting}
+PUSH N # longitud del CIR
+PUSH malloc
+CALL
+DUP
+PUSH VT_ClaseActual ; label a la vtable
+STOREREF 0
+DUP
+PUSH ClaseActual_ipreconstructor ; preconstructor de instancia
+CALL
+DUP
+PUSH ClaseActual_constructorLlamado
+CALL
+\end{lstlisting}
+
+Antes de este código, se encuentra el de cada uno de los parámetros.
+
+  \subsection{mjAssignment}
+
+La resolución del símbolo a la izquierda de la asignación generará el código
+para acceder a su valor, pero lo que necesitamos es son las instrucciones
+necesarias para que un STOREREF modifique su valor. Por lo que el pseudocódigo
+sería el siguiente:
+
+\begin{lstlisting}
+simright = right.resolve()
+simleft = left.resolve()
+if simleft es variable de instancia:
+  simleft.code.replace_last_inst(SWAP, STOREREF simleft.offset)
+else:
+  simleft.code.replace_last_inst(STORE simleft.offset)
+return simright.code + simleft.code
+\end{lstlisting}
+
+  \subsection{mjOp}
+
+Para generar el código necesario para las expresiones, simplemente se genera el
+código de cada operando y se agrega la operación en cuestion. Esto funciona
+porque cada operando va a apilar su valor, y la operación siguiente usará los
+últimos dos valores de la pila.
+
+El pseudocódigo sería el siguiente:
+
+\begin{lstlisting}
+code = ""
+for o in operands:
+  if o es un literal:
+    code += PUSH valor(o)
+  else:
+    code += o.gen_code()
+code += ADD # asumiendo que se trata de una suma
+\end{lstlisting}
+
+Si el operando es \&\& o || se agrega ademas el código para realizar los checkeos por cortocircuito. En el caso de que sea \&\& se agrega un ``BF label'', para que no se evalúe el lado izquierdo de la condición, dado que el resultado será siempre el mismo. Por otro lado, en caso de que sea || se agrega el análogo ``BT label''.
+
+\subsection{Ejemplo}
+
+\begin{lstlisting}
+public class Algo
+{
+  public int j = 1;
+  protected char n = metodo(1);
+
+  public char metodo(int b)
+    {
+      return 'j';
+    }
+
+  public Algo()
+    {
+      int n = 0;
+
+      if(3>='b')
+        while(n < 10) {
+          System.print(n);
+          n = n + 1;
+        }
+      else
+        System.println("Falso.");
+
+      {
+        int b = 3;
+        b = 49;
+        System.pritnln(b);
+      }
+    }
+
+  protected void metodo2(int j)
+    {
+      Algo m = new Algo();
+    }
+
+  public static void main()
+    {
+      Algo b;
+      b = new Algo();
+    }
+}
+\end{lstlisting}
+
+
+\begin{lstlisting}
+.code
+                        push simple_heap_init
+                        call
+                        push Algo_spreconstr
+                        call
+                        push Algo_main$$
+                        call
+                        halt
+simple_heap_init:       ret 0
+simple_malloc:          loadfp
+                        loadsp
+                        storefp
+                        loadhl
+                        dup
+                        push 1
+                        add
+                        store 4
+                        load 3
+                        add
+                        storehl
+                        storefp
+                        ret 1
+.data
+CR_String:              dw 0
+VT_String:              dw String_length,String_charAt,String_concat,String_equals
+.code
+String_length:         
+                        loadfp
+                        loadsp
+                        storefp
+                        push 0               ; al principio la longitud es 0
+                        store 4              ; lo guardo en el ret_val
+prin_length:           
+                        load 3               ; this
+                        load 4
+                        push 1
+                        add                  ; le sumo 1 al ret_val para saltear la vtable
+                        add                  ; le sumo la posicion actual
+                        deref                ; accedemos al char
+                        bf fin_length        ; si es \0, ya esta
+                        load 4               ; cargo la longitud hasta el momento
+                        push 1
+                        add
+                        store 4              ; le sumo 1
+                        jump prin_length
+fin_length:             nop
+                        storefp
+                        ret 1
+String_charAt:         
+                        loadfp
+                        loadsp
+                        storefp
+                        push 0
+                        store 5              ; por default, el charAt actual es \0
+                        load 4               ; cargo el indice pedido
+                        rmem 1
+                        load 3
+                        push String_length
+                        call                 ; calculo la longitud
+                        lt                   ; menor estricto, poruqe sino pide el char \0
+                        bf fin_charAt        ; si no es menor o igual, no hay nada para hacer
+                        load 3
+                        push 1
+                        add                  ; salteo la vtable
+                        load 4
+                        add                  ; le sumo 1
+                        deref
+                        store 5              ; guardo el char actual como restulado
+fin_charAt:            
+                        storefp
+                        ret 2
+String_concat:         
+                        loadfp
+                        loadsp
+                        storefp
+                        rmem 2               ; reservo una variable temporal para guardar la posicion actual
+                                             ; una para el offset actual y otra para el offset en el string final
+                        push 1
+                        store 0
+                        push 1
+                        store -1             ; inicializo ambos en 1, en 0 esta la vtable
+                        rmem 1               ; este es para el simple_malloc de mas abajo
+                        rmem 1
+                        load 3
+                        push String_length
+                        call
+                        rmem 1
+                        load 4
+                        push String_length
+                        call                 ; calculo los lengths
+                        add                  ; los sumo para obtener el length final
+                        push 2               ; vtable y \0
+                        add
+                        push simple_malloc
+                        call                 ; alloc de la memoria necesaria
+                        dup
+                        store 5              ; guardo el puntero en el ret_val
+                        push VT_String
+                        storeref 0
+prin_concat1:          
+                        load 3               ; this
+                        load 0
+                        add                  ; le sumo la posicion actual
+                        deref
+                        dup                  ; duplico, porque el bf lo vuela de la pila sino
+                        bf fin_concat1       ; si es \0, ya esta
+                                             ; en el tope de la pila tengo el char actual
+                        load 5               ; cargo el puntero al string final
+                        load -1              ; cargo la posicion actual en el
+                        add
+                        swap
+                        storeref 0           ; guardo en la posicion 0 porque ya se sumo el offset
+                        load 0
+                        push 1
+                        add                  ; le sumo 1 a la posicion actual
+                        store 0
+                        load -1
+                        push 1
+                        add                  ; idem
+                        store -1
+                        jump prin_concat1
+fin_concat1:            nop
+                        push 1
+                        store 0              ; reseteamos el char actual para el segundo string
+prin_concat2:          
+                        load 4               ; el otro string
+                        load 0
+                        add                  ; le sumo la posicion actual
+                        deref
+                        dup                  ; duplico, porque el bf lo vuela de la pila sino
+                        bf fin_concat2       ; si es \0, ya esta
+                                             ; en el tope de la pila tengo el char actual
+                        load 5               ; cargo el puntero al string final
+                        load -1              ; cargo la posicion actual en el
+                        add
+                        swap
+                        storeref 0           ; guardo en la posicion 0 porque ya se sumo el offset
+                        load 0
+                        push 1
+                        add                  ; le sumo 1 a la posicion actual
+                        store 0
+                        load -1
+                        push 1
+                        add
+                        store -1
+                        jump prin_concat2
+fin_concat2:            nop
+                        load 5
+                        load -1
+                        add
+                        push 0
+                        storeref 0           ; finalizamos el string
+                        fmem 2
+                        pop
+                        pop                  ; algo me estoy olvidando, pero estos pops tienen que estar
+                        storefp
+                        ret 2
+String_equals:         
+                        loadfp
+                        loadsp
+                        storefp
+                        rmem 1               ; var tmp para posicion
+                        push 1
+                        store 0
+                        push 0
+                        store 5              ; por default es false
+                        rmem 1
+                        load 3
+                        push String_length
+                        call                 ; calculo la longitud
+                        rmem 1
+                        load 4               ; cargo el indice pedido
+                        push String_length
+                        call
+                        eq
+                        bf fin_equals        ; si no es igual de longitud, no hay nada para hacer
+prin_equals:           
+                        load 3
+                        load 0
+                        add
+                        deref                ; cargo el char actual del primer string
+                        load 4
+                        load 0
+                        add
+                        deref                ; cargo el otro
+                        dup                  ; caso especial, es \0?
+                        bf fin_equals_true
+                        eq                   ; sino, si son iguales
+                        load 0
+                        push 1
+                        add
+                        store 0
+                        bt prin_equals       ; vamos al qeu sigue
+                        jump fin_equals
+fin_equals_true:       
+                        pop
+                        pop                  ; y otra vez el mismo tema
+                        push 1
+                        store 5              ; pongo el ret_val en true
+fin_equals:            
+                        fmem 1
+                        storefp
+                        ret 2
+.data
+CR_Object:              dw 0
+VT_Object:              dw 0
+.code
+Object_spreconstr:      loadfp
+                        loadsp
+                        storefp
+                        storefp
+                        ret 0
+Object_ipreconstr:      loadfp
+                        loadsp
+                        storefp
+                        storefp
+                        ret 1
+Object$$:               loadfp
+                        loadsp
+                        storefp
+                        storefp
+                        ret 1
+.data
+CR_Algo:                dw 0
+VT_Algo:                dw Algo_metodo$int$,Algo_metodo2$int$
+.code
+Algo_spreconstr:        loadfp
+                        loadsp
+                        storefp
+                        push Object_spreconstr
+                        call
+                        storefp
+                        ret 0
+Algo_ipreconstr:        loadfp
+                        loadsp
+                        storefp
+                        load 3               ; this
+                        push Object_ipreconstr
+                        call
+                        push 1               ; int lit
+                        dup
+                        load 3               ; this
+                        swap
+                        storeref 1           ; offset a j
+                        pop
+                        rmem 1
+                        push 1               ; int lit
+                        load 3               ; this
+                        dup
+                        loadref 0            ; vtable
+                        loadref 0            ; offset de metodo(int) en la vtable
+                        call
+                        dup
+                        load 3               ; this
+                        swap
+                        storeref 2           ; offset a n
+                        pop
+                        storefp
+                        ret 1
+Algo_metodo$int$:       loadfp
+                        loadsp
+                        storefp
+                        push 106             ; char lit 'j'
+                        store 5              ; offset a ret_val
+                        storefp
+                        ret 2
+Algo$$:                 loadfp
+                        loadsp
+                        storefp
+                        rmem 1
+                        push 0               ; int lit
+                        dup
+                        store 0              ; offset a n
+                        pop
+                        push 3               ; int lit
+                        push 98              ; char lit 'b'
+                        ge
+                        bf if_false_M6H02ZQzth
+if_true_M6H02ZQzth:     nop
+while_true_kPQcmub6QX:  nop
+                        load 0               ; n
+                        push 10              ; int lit
+                        lt
+                        bf while_false_kPQcmub6QX
+                        load 0               ; n
+                        iprint
+                        load 0               ; n
+                        push 1               ; int lit
+                        add
+                        dup
+                        store 0              ; assignment (local var) n
+                        pop
+                        jump while_true_kPQcmub6QX
+while_false_kPQcmub6QX: nop
+                        jump else_false_M6H02ZQzth
+if_false_M6H02ZQzth:    nop
+                        rmem 1
+                        push 8               ; len("Falso.") + \0 + vtable
+                        push simple_malloc
+                        call
+                        dup
+                        push VT_String
+                        storeref 0
+                        dup
+                        push 'F'
+                        storeref 1
+                        dup
+                        push 'a'
+                        storeref 2
+                        dup
+                        push 'l'
+                        storeref 3
+                        dup
+                        push 's'
+                        storeref 4
+                        dup
+                        push 'o'
+                        storeref 5
+                        dup
+                        push '.'
+                        storeref 6
+                        dup
+                        push 0
+                        storeref 7
+                        push 1
+                        add
+                        sprint
+                        prnln
+else_false_M6H02ZQzth:  nop
+                        rmem 1
+                        push 3               ; int lit
+                        dup
+                        store -1             ; offset a b
+                        pop
+                        push 49              ; int lit
+                        dup
+                        store -1             ; assignment (local var) b
+                        pop
+                        load -1              ; b
+                        iprint
+                        prnln
+                        fmem 1               ; liberando b
+                        fmem 1               ; liberando n
+                        storefp
+                        ret 1
+Algo_metodo2$int$:      loadfp
+                        loadsp
+                        storefp
+                        rmem 1
+                        rmem 1
+                        push 3               ; long CIR Algo
+                        push simple_malloc
+                        call
+                        dup
+                        push VT_Algo         ; vtable
+                        storeref 0
+                        dup
+                        push Algo_ipreconstr ; preconstructor
+                        call
+                        dup
+                        push Algo$$          ; constructor
+                        call
+                        dup
+                        store 0              ; offset a m
+                        pop
+                        fmem 1               ; liberando m
+                        storefp
+                        ret 2
+Algo_main$$:            loadfp
+                        loadsp
+                        storefp
+                        rmem 1
+                        rmem 1
+                        push 3               ; long CIR Algo
+                        push simple_malloc
+                        call
+                        dup
+                        push VT_Algo         ; vtable
+                        storeref 0
+                        dup
+                        push Algo_ipreconstr ; preconstructor
+                        call
+                        dup
+                        push Algo$$          ; constructor
+                        call
+                        dup
+                        store 0              ; assignment (local var) b
+                        pop
+                        fmem 1               ; liberando b
+                        storefp
+                        ret 0
+\end{lstlisting}
+
+
+\end{document}
