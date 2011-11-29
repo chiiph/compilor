@@ -31,9 +31,9 @@ def find_comment(line):
   while not found and pos < len(line):
     if line[pos] == ";":
       return pos
-    if line[pos] == "\"":
+    if line[pos] == "'":
       pos += 1
-      while line[pos] != "\"":
+      while line[pos] != "'":
         pos += 1
 
     pos += 1
@@ -56,8 +56,12 @@ def align_comments(code):
 def align_labels(code):
   i = find_biggest_label(code)
   pretty_code = ""
+  char_dots = -1
   for l in code.split("\n"):
+    char_dots = l.find("':'")
     has = l.find(":")
+    if char_dots != -1 and char_dots+1 == has:
+      has = l.find(":", char_dots+2)
     if has == -1:
       sep = " "*(i+2)
       if l.find(".") == 0:
@@ -73,6 +77,15 @@ def align_labels(code):
 
 def prettify_code(code):
   return align_comments(align_labels(code))
+
+def strip_code(code):
+  final = ""
+  for l in code.split("\n"):
+    s = l.strip()
+    if len(s) == 0:
+      continue
+    final += s + "\n"
+  return final
 
 def pretty_print_error_message(input_filepath, exc):
   input_file = open(input_filepath, 'r')
@@ -131,7 +144,8 @@ if __name__ == "__main__":
       #   cl.pprint()
       #   cl.pprint_ts()
 
-      code = prettify_code(ts.check()).replace("\n", os.linesep)
+      code = prettify_code(strip_code(ts.check())).replace("\n", os.linesep)
+      #code = ts.check().replace("\n", os.linesep)
 
       fileobj = None
       if argv_len == 3:

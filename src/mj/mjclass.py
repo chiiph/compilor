@@ -272,8 +272,11 @@ class mjClass(mjCheckable):
 
     code += ".data\n"
     # Creamos el CR
-    code += "CR_%s: dw %d DUP(0)\n" % (self.name.get_lexeme(),
-                                       len(all_static_vars))
+    if len(all_static_vars) == 0:
+      code += "CR_%s: dw 0\n" % (self.name.get_lexeme(),)
+    else:
+      code += "CR_%s: dw %d DUP(0)\n" % (self.name.get_lexeme(),
+                                         len(all_static_vars))
 
     # Creamos el VT
     self.vtable = "VT_%s" % self.name.get_lexeme()
@@ -313,10 +316,13 @@ class mjClass(mjCheckable):
     self.long = len(all_vars)+1 # +1: vtable
 
     if not self.ext_class is None:
+      code += "load 3 ; this\n"
       code += "push %s\n" % self.ext_class.ipreconstruct
       code += "call\n"
 
-    for v in all_vars:
+    for v in self.ts._sections["variables"].values():
+      if v.isStatic():
+        continue
       init_code = ""
       if not v.val is None:
         init_code = v.val.check()
@@ -400,7 +406,10 @@ class mjReturn(mjCheckable):
                               "Se esta retornando %s en un metodo de tipo %s"
                               % (t.type.get_lexeme(), self.method.ret_type.get_lexeme()))
 
-      return self.expr.check()+"store %d ; offset a ret_val\n" % (3 + len(self.method.params) + 1)
+      offset = 3
+      if self.method.isStatic():
+        offset = 2 # no hay this
+      return self.expr.check()+"store %d ; offset a ret_val\n" % (offset + len(self.method.params) + 1)
     return ""
 
 class mjWhile(mjCheckable):
@@ -655,10 +664,13 @@ class mjBlock(mjCheckable):
           self.code += s.check()
           if mjp.isAssignment(s):
             self.code += "pop\n"
+          if mjp.isClassInstanceCreation(s) or \
+             (mjp.isMethodInv(s) and s.resolve().ret_type.get_type() != VOID_TYPE):
+            self.code += "fmem 1\n"
 
     if len(self.ts._sections["variables"]) > 0:
       vars_freed =  ",".join(self.ts._sections["variables"])
-      self.code += "fmem %d ; libreando %s\n" % (len(self.ts._sections["variables"]), vars_freed)
+      self.code += "fmem %d ; liberando %s\n" % (len(self.ts._sections["variables"]), vars_freed)
     return self.code
 
   def set_owning_method(self, m):
@@ -763,7 +775,7 @@ class mjMethod(mjCheckable):
     if not self.isStatic():
       param_offset = 4
 
-    param_offset = len(self.params) + param_offset + 1
+    param_offset = len(self.params) + param_offset
 
     for (t, v) in self.params:
       param_offset -= 1

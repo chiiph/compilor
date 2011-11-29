@@ -1,6 +1,7 @@
 from errors import SemanticError
 from lexor import Token
 from constants import IDENTIFIER
+from mj.string_predef import string_code
 import mjclass as mjc
 
 class mjTS(object):
@@ -176,15 +177,36 @@ class mjTS(object):
 
     for t in self._sections["classes"]:
       self._sections["classes"][t].solve_extends()
+
     code = ".code\n"
-    code += "push heap_init\n"
+    code += "push simple_heap_init\n"
     code += "call\n"
 
     for t in self._sections["classes"]:
+      if t == "Object":
+        continue
       code += "push %s\n" % self._sections["classes"][t].preconstruct
       code += "call\n"
 
     rest_code = ""
+
+    ### PREDEF
+    rest_code += "simple_heap_init: ret 0\n"
+    rest_code += "simple_malloc: loadfp\n"
+    rest_code += "loadsp\n"
+    rest_code += "storefp\n"
+    rest_code += "loadhl\n"
+    rest_code += "dup\n"
+    rest_code += "push 1\n"
+    rest_code += "add\n"
+    rest_code += "store 4\n"
+    rest_code += "load 3\n"
+    rest_code += "add\n"
+    rest_code += "storehl\n"
+    rest_code += "storefp\n"
+    rest_code += "ret 1\n"
+    rest_code += string_code
+
     for t in self._sections["classes"]:
       rest_code += self._sections["classes"][t].check()
     main_label = self.hasMain()

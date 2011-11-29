@@ -122,12 +122,13 @@ class mjPrimary(mjCheckable):
         raise Exception()
 
   def _resolve_class(self, val):
-    if val.ts.varExists(self.ref.get_lexeme()):
-      var = val.ts.getVar(self.ref.get_lexeme())
+    (hasvar, var) = val.hasVarAtAll(self.ref.get_lexeme())
+    if hasvar:
       if var.isPublic() and var.isStatic():
 
+        cr = var.ts.owner().cr
         ### CODE
-        self.code += "push %s ; %s\n" % (val.cr, val.name.get_lexeme())
+        self.code += "push %s ; %s\n" % (cr, val.name.get_lexeme())
         self.code += "loadref %d ; .%s\n" % (var.offset, var.name.get_lexeme())
         ### /CODE
 
@@ -144,8 +145,9 @@ class mjPrimary(mjCheckable):
                                 "Se esta tratando de acceder a un miembro protegido de %s"
                                 % val.name.get_lexeme())
 
+          cr = var.ts.owner().cr
           ### CODE
-          self.code += "push %s ; %s\n" % (val.cr, val.name.get_lexeme())
+          self.code += "push %s ; %s\n" % (cr, val.name.get_lexeme())
           self.code += "loadref %d ; .%s\n" % (var.offset, var.name.get_lexeme())
           ### /CODE
 
@@ -240,18 +242,21 @@ class mjPrimary(mjCheckable):
 
       ### CODE
       # len + 1 (\0) + 1 (vtable)
+      self.code += "rmem 1\n"
       self.code += "push %d ; len(%s) + \\0 + vtable \n" % (len(self.ref.get_lexeme()[:-1][1:])+1+1,
                                                             self.ref.get_lexeme())
-      self.code += "push malloc\n"
+      self.code += "push simple_malloc\n"
       self.code += "call\n"
       self.code += "dup\n"
-      self.code += "push VT_string\n"
+      self.code += "push VT_String\n"
       self.code += "storeref 0\n"
       self.code += "dup\n"
       i = 0
       for ch in self.ref.get_lexeme()[:-1][1:]:
+        if ch == "\\":
+          continue
         i += 1
-        self.code += "push \"%s\"\n" % ch
+        self.code += "push '%s'\n" % ch
         self.code += "storeref %d\n" % i
         self.code += "dup\n"
       i += 1
@@ -389,6 +394,9 @@ class mjPrimary(mjCheckable):
         if mt.isStatic() and isClassVariable(v) and not v.isStatic():
           raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                               "Referencia a identificador no static desde un metodo static")
+        if isClassVariable(v) and v.isStatic():
+          raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                              "Para acceder a variables estaticas se debe hacer Clase.variable")
         ### CODE
         if isClassVariable(v):
           # si es una var de instancia, cargo this y despues loadref del offset en el CIR
@@ -679,10 +687,14 @@ class mjMethodInvocation(mjPrimary):
       r = self.args[0].resolve()
       if len(self.args) == 1:
         if isMethodInv(r):
-          if not r.ret_type.get_lexeme() in ["boolean", "int",
-                                             "char", "String"] or \
-           r.type in [BOOLEAN_TYPE, INT_TYPE, CHAR_TYPE] or \
-           r.type == IDENTIFIER:# and self.args[0].type.get_lexeme() == "String":
+          if not r.ret_type.get_lexeme() in ["boolean", "int", "char", "String"]:
+            raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                                "Llamada con parametros invalidos a %s."
+                                % self.ref.get_lexeme())
+        elif isVariable(r):
+          if (not r.type.get_type() in [BOOLEAN_TYPE, INT_TYPE, CHAR_TYPE, STRING_LITERAL]) and \
+             (r.type.get_type() == IDENTIFIER and r.type.get_lexeme() != "String"):
+            print r.type
             raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                                 "Llamada con parametros invalidos a %s."
                                 % self.ref.get_lexeme())
@@ -695,7 +707,10 @@ class mjMethodInvocation(mjPrimary):
         if isMethod(r):
           t = r.ret_type.get_lexeme()
         else:
-          t = r.type.get_lexeme()
+          if isToken(r):
+            t = typeToStr(literalToType(r.get_type()))
+          else:
+            t = r.type.get_lexeme()
 
       if m == "print" or m == "println" and len(self.args) == 1:
         if t == "boolean":
@@ -705,6 +720,8 @@ class mjMethodInvocation(mjPrimary):
         elif t == "char":
           self.code += "cprint\n"
         elif t == "String":
+          self.code += "push 1\n"
+          self.code += "add\n"
           self.code += "sprint\n"
 
       if m == "println":
@@ -759,6 +776,10 @@ class mjMethodInvocation(mjPrimary):
                           "%s no puede ser dereferenciado."
                           % val.ret_type.get_lexeme())
 
+    (doret, retval) = self.handle_string(val)
+    if doret:
+      return retval
+
     # sino
     if val.ret_type.get_type() == VOID_TYPE:
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
@@ -791,6 +812,10 @@ class mjMethodInvocation(mjPrimary):
       raise SemanticError(self.ref.get_line(), self.ref.get_col(),
                           "void no puede ser dereferenciado.")
 
+    (doret, retval) = self.handle_string(val)
+    if doret:
+      return retval
+
     t = val.ts.recFindType(val.type.get_lexeme())
     (hasmethod, methods) = t.hasMethodInvAtAll(self)
     if not hasmethod:
@@ -815,8 +840,9 @@ class mjMethodInvocation(mjPrimary):
 
     ### CODE
     if val.name.get_lexeme() == "@super":
-      self.code += "load 3\n ; this para el super"
-      self.code += "push %s\n" % method.label
+      # buscamos el metodo en el parent
+      m = method.ts.parent().owner().ext_class.ts.getExactMethod(method)
+      self.code += "push %s\n" % m.label
       self.code += "call\n"
     else:
       self.code += "dup\n"
@@ -825,6 +851,88 @@ class mjMethodInvocation(mjPrimary):
       self.code += "call\n"
     ### /CODE
     return method
+
+  def handle_string(self, val):
+    if isMethod(val):
+      if val.ret_type.get_lexeme() != "String":
+        return (False, None)
+    elif isVariable(val):
+      if val.type.get_lexeme() != "String":
+        return (False, None)
+
+    if self.ref.get_lexeme() == "concat":
+      return self.handle_concat(val)
+    elif self.ref.get_lexeme() == "length":
+      return self.handle_length(val)
+    elif self.ref.get_lexeme() == "charAt":
+      return self.handle_charAt(val)
+    elif self.ref.get_lexeme() == "equals":
+      return self.handle_equals(val)
+
+    return (False, None)
+
+  def handle_concat(self, val):
+    if len(self.args) != 1:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "concat toma un unico parametro de tipo String")
+    r = self.args[0].resolve()
+    if isMethod(r) and r.ret_type.get_lexeme() != "String" or \
+       isVariable(r) and r.type.get_lexeme() != "String":
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "concat toma un unico parametro de tipo String")
+
+    self.code += "push String_concat\n"
+    self.code += "call\n"
+    ret = Token()
+    ret._lexeme = "String"
+    ret._type = IDENTIFIER
+    return (True, mjMethod([], ret, self.ref, [], mjBlock(), None))
+
+  def handle_length(self, val):
+    if len(self.args) != 0:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "length se llama sin parametros")
+
+    self.code += "push String_length\n"
+    self.code += "call\n"
+    ret = Token()
+    ret._lexeme = "int"
+    ret._type = INT_TYPE
+    return (True, mjMethod([], ret, self.ref, [], mjBlock(), None))
+
+  def handle_charAt(self, val):
+    if len(self.args) != 1:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "charAt toma un unico parametro de tipo int")
+    r = self.args[0].resolve()
+    if isMethod(r) and r.ret_type.get_lexeme() != "int" or \
+       isVariable(r) and r.type.get_lexeme() != "int":
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "charAt toma un unico parametro de tipo int")
+
+    self.code += "push String_charAt\n"
+    self.code += "call\n"
+    ret = Token()
+    ret._lexeme = "char"
+    ret._type = CHAR_TYPE
+    return (True, mjMethod([], ret, self.ref, [], mjBlock(), None))
+
+  def handle_equals(self, val):
+    if len(self.args) != 1:
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "equals toma un unico parametro de tipo String")
+    r = self.args[0].resolve()
+    if isMethod(r) and r.ret_type.get_lexeme() != "String" or \
+       isVariable(r) and r.type.get_lexeme() != "String":
+      raise SemanticError(self.ref.get_line(), self.ref.get_col(),
+                          "equals toma un unico parametro de tipo String")
+
+    self.code += "push String_equals\n"
+    self.code += "call\n"
+    ret = Token()
+    ret._lexeme = "boolean"
+    ret._type = BOOLEAN_TYPE
+    return (True, mjMethod([], ret, self.ref, [], mjBlock(), None))
 
   def to_string(self):
     return "[" + self.type_to_str() + "::" + self.ref.get_lexeme() + "]"
@@ -921,8 +1029,9 @@ class mjClassInstanceCreation(mjMethodInvocation):
                               % self.call_signature())
 
         ### CODE
+        self.code += "rmem 1\n"
         self.code += "push %d ; long CIR %s\n" % (cl.long, cl.name.get_lexeme())
-        self.code += "push malloc\n"
+        self.code += "push simple_malloc\n"
         self.code += "call\n"
         self.code += "dup\n"
         self.code += "push %s ; vtable\n" % (cl.vtable)
@@ -1056,6 +1165,7 @@ class mjOp(mjPrimary):
     self.ts = None
     self.label_cc_true = None
     self.label_cc_false = None
+    self.is_string = False
 
   def set_ts(self, ts):
     self.ts = ts
@@ -1101,6 +1211,9 @@ class mjOp(mjPrimary):
       raise SemanticError(self.symbol.get_line(), self.symbol.get_col(),
                           "Operacion con tipos no validos, solo pueden "
                           "ser int, boolean, char o String.")
+
+    if s[0] == "String":
+      self.is_string = True
 
     name = Token()
     name._lexeme = "@" + ("".join(random.choice(string.letters + string.digits) for i in xrange(10)))
@@ -1149,8 +1262,13 @@ class mjOp(mjPrimary):
           code += "push 0 ; retorna el valor de verdad\n"
 
     self.resolve()
-    code += "%s \n" % mne_ops[self.symbol.get_lexeme()]
+    if self.is_string and self.symbol.get_type() == ADD:
+      code += "swap\npush String_concat\ncall\n"
+    else:
+      code += "%s \n" % mne_ops[self.symbol.get_lexeme()]
 
+    if self.is_string:
+      code = "rmem 1\n" + code
     return code
 
 class mjArithOp(mjOp):
